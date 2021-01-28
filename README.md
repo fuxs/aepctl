@@ -26,9 +26,15 @@ Planed APIs:
 * Catalog Service API
 
 # Installation
-At the moment you have to build the binary on your own:
+## macOS
 
-    make build
+The recommended installation method is [homebrew](https://brew.sh/). Visit the
+website and install it if you haven't already.
 
+Run the following command to install aepctl:
+
+```terminal
+$ brew install fuxs/formulae/aepctl
+```
 # License
 aepctl is released under the Apache 2.0 license.
