@@ -64,7 +64,7 @@ func (claim *Claim) JWT(key *rsa.PrivateKey) (string, error) {
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	signature, err := rsa.SignPKCS1v15(rng, key, crypto.SHA256, hashed[:])
 	if err != nil {
-		return "", fmt.Errorf("Could not sign JWT: %w", err)
+		return "", fmt.Errorf("Could not sign JWT: %v", err)
 	}
 	result := message + "." + base64.RawStdEncoding.EncodeToString(signature)
 	return result, nil

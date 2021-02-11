@@ -39,6 +39,14 @@ func Example(s string) string {
 	return (&normalizer{s}).heredoc().indent().string
 }
 
+// Form normalizes the form text
+func Form(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	return (&normalizer{s}).heredoc().string
+}
+
 type normalizer struct {
 	string
 }

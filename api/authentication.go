@@ -20,12 +20,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/fuxs/aepctl/util"
@@ -77,6 +79,29 @@ func (o *AuthenticationConfig) UpdateHeader(req *http.Request) error {
 	return nil
 }
 
+func handleErrorResponse(res *http.Response) error {
+	var sb strings.Builder
+	sb.WriteString("Error (")
+	sb.WriteString(res.Status)
+	sb.WriteString("): ")
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return errors.New(sb.String())
+	}
+	if q, err := util.UnmarshallQuery(body); err == nil {
+		if s := q.Str("error_description"); s != "" {
+			sb.WriteString(s)
+			return errors.New(sb.String())
+		}
+		if s := q.Str("error"); s != "" {
+			sb.WriteString(s)
+			return errors.New(sb.String())
+		}
+	}
+	sb.Write(body)
+	return errors.New(sb.String())
+}
+
 // GetToken uses JWT to get a bearer token
 func (o *AuthenticationConfig) GetToken() (*BearerToken, error) {
 	if o.Cache && o.LoadToken != nil {
@@ -86,16 +111,18 @@ func (o *AuthenticationConfig) GetToken() (*BearerToken, error) {
 			}
 		}
 	}
-
-	var (
-		token string
-	)
+	//
+	// build audience string
+	audience := o.Audience
+	if audience == "" {
+		audience = "https://ims-na1.adobelogin.com/c/" + o.ClientID
+	}
 	//
 	// create claim
 	claim := &util.Claim{
 		Iss: o.Organization,     // organization id
 		Sub: o.TechnicalAccount, // technical account id
-		Aud: o.Audience,         // uses client id
+		Aud: audience,           // uses client id
 	}
 	//
 	// load private key
@@ -105,33 +132,31 @@ func (o *AuthenticationConfig) GetToken() (*BearerToken, error) {
 	}
 	//
 	// sign claim with key
-	token, err = claim.JWT(pKey)
+	token, err := claim.JWT(pKey)
 	if err != nil {
 		return nil, err
 	}
-
-	//log.Print(token)
-
 	values := url.Values{
 		"client_id":     {o.ClientID},
 		"client_secret": {o.ClientSecret},
 		"jwt_token":     {token},
 	}
-
-	res, err := http.PostForm(o.Server, values)
+	server := o.Server
+	if server == "" {
+		server = "https://ims-na1.adobelogin.com/ims/exchange/jwt/"
+	}
+	res, err := http.PostForm(server, values)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		return nil, handleErrorResponse(res)
+	}
 	var data []byte
 	data, err = ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
-	}
-
-	if res.StatusCode < 200 || res.StatusCode >= 300 {
-		return nil, fmt.Errorf("[%d %s]%s", res.StatusCode, res.Status, string(data))
 	}
 
 	response := &struct {
@@ -235,6 +260,9 @@ func (o *AuthenticationConfig) FullRequest(ctx context.Context, verb string, hea
 		return nil, err
 	}
 	defer res.Body.Close()
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		return nil, handleErrorResponse(res)
+	}
 	var data []byte
 	data, err = ioutil.ReadAll(res.Body)
 	if err != nil {
@@ -242,10 +270,6 @@ func (o *AuthenticationConfig) FullRequest(ctx context.Context, verb string, hea
 	}
 	if log.Debug().Enabled() {
 		log.Debug().Int("Code", res.StatusCode).Str("Status", res.Status).Str("Body", string(data)).Msg("Dumping http response")
-	}
-
-	if res.StatusCode < 200 || res.StatusCode >= 300 {
-		return nil, fmt.Errorf("[%d %s]%s", res.StatusCode, res.Status, string(data))
 	}
 
 	if len(data) == 0 {

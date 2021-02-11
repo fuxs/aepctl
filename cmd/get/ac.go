@@ -176,8 +176,8 @@ var validArgs = []string{
 	"/resource-types/streaming-source",
 }
 
-// NewACLCommand creates an initialized command object
-func NewACLCommand(auth *helper.Authentication) *cobra.Command {
+// NewACCommand creates an initialized command object
+func NewACCommand(auth *helper.Authentication) *cobra.Command {
 	output := helper.NewOutputConf(&acTransformer{})
 	cmd := &cobra.Command{
 		Use:                   "ac [(RESOURCE | PERMISSION)*]",

@@ -3,3 +3,4 @@ bin/
 .DS_Store
 *.pem
 config.yaml
+ascii_art.txt

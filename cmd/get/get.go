@@ -28,7 +28,7 @@ func NewCommand(auth *helper.Authentication) *cobra.Command {
 		Use:   "get [acl|token|od|sandbox]",
 		Short: "Display one or many resources",
 	}
-	cmd.AddCommand(NewACLCommand(auth))
+	cmd.AddCommand(NewACCommand(auth))
 	cmd.AddCommand(NewTokenCommand(auth))
 	cmd.AddCommand(NewODCommand(auth))
 	cmd.AddCommand(NewSandboxCommand(auth))

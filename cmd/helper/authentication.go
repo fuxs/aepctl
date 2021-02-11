@@ -17,6 +17,9 @@ specific language governing permissions and limitations under the License.
 package helper
 
 import (
+	"errors"
+	"strings"
+
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
@@ -71,7 +74,7 @@ func (a *Authentication) AddAuthenticationFlags(cmd *cobra.Command) {
 	flags.StringVar(&o.ClientID, "client-id", "", "client id")
 	flags.StringVar(&o.ClientSecret, "client-secret", "", "client secret")
 	flags.StringVar(&o.Sandbox, "sandbox", "prod", "selects the sandbox (default is the name of the production sandbox: prod)")
-	flags.StringVar(&o.Key, "key", "./extern/private.key", "path to private key file")
+	flags.StringVar(&o.Key, "key", "private.key", "path to private key file")
 	cache := util.NewJSONCache(func() []string { return a.UniquePath("token.json") })
 	o.LoadToken = func() (*api.BearerToken, error) {
 		token := &api.BearerToken{}
@@ -89,6 +92,87 @@ func (a *Authentication) AddAuthenticationFlags(cmd *cobra.Command) {
 	}); err != nil {
 		fatal("Error in AddAuthenticationFlags", 1)
 	}
+}
+
+func (a *Authentication) Validate() error {
+	o := a.Config
+
+	var clientID, clientSecret, techAccount, organization, key bool
+	errCounter := 0
+	if o.ClientID == "" {
+		clientID = true
+		errCounter++
+	}
+	if o.ClientSecret == "" {
+		clientSecret = true
+		errCounter++
+	}
+	if o.TechnicalAccount == "" {
+		techAccount = true
+		errCounter++
+	}
+	if o.Organization == "" {
+		organization = true
+		errCounter++
+	}
+	if o.Key == "" {
+		key = true
+		errCounter++
+	}
+
+	if errCounter > 0 {
+		var (
+			b     strings.Builder
+			comma bool
+		)
+		if errCounter == 1 {
+			b.WriteString("Missing authentication parameter ")
+		} else {
+			b.WriteString("Missing authentication parameters ")
+		}
+		if clientID {
+			b.WriteString("Client ID (--client-id)")
+			comma = true
+		}
+		if clientSecret {
+			if comma {
+				b.WriteString(", ")
+			}
+			comma = true
+			b.WriteString("Client Secret (--client-secret)")
+		}
+		if techAccount {
+			if comma {
+				b.WriteString(", ")
+			}
+			comma = true
+			b.WriteString("Technial Account ID (--tech-account)")
+		}
+		if organization {
+			if comma {
+				b.WriteString(", ")
+			}
+			comma = true
+			b.WriteString("Organization ID (--organization)")
+		}
+		if key {
+			if comma {
+				b.WriteString(", ")
+			}
+			b.WriteString("Private Key File (--key)")
+		}
+
+		b.WriteString("\n")
+		b.WriteString(util.Form(`
+		Please provide all required flags or a configuration file (--config).
+
+		Execute the following command to initialize aepctl:
+		
+		  aepctl configure`))
+
+		return errors.New(b.String())
+	}
+	return nil
 }
 
 // NoDryRun creates a copy of the current AuthenticationConfig  and disables the dry-run falg

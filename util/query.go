@@ -16,7 +16,10 @@ specific language governing permissions and limitations under the License.
 */
 package util
 
-import "bytes"
+import (
+	"bytes"
+	"encoding/json"
+)
 
 // Query supports queries on raw json objects
 type Query struct {
@@ -26,6 +29,15 @@ type Query struct {
 // NewQuery creates an initialized query object
 func NewQuery(obj interface{}) *Query {
 	return &Query{obj: obj}
+}
+
+// UnmarshallQuery unmarshal JSON data and returns a Query object
+func UnmarshallQuery(data []byte) (*Query, error) {
+	var obj map[string]interface{}
+	if err := json.Unmarshal(data, &obj); err != nil {
+		return nil, err
+	}
+	return NewQuery(obj), nil
 }
 
 // Path queries nested objects, e.g. property a.b.c will be queried with Path("a","b","c")
