@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"github.com/fuxs/aepctl/cmd/completion"
+	"github.com/fuxs/aepctl/cmd/configure"
 	"github.com/fuxs/aepctl/cmd/create"
 	"github.com/fuxs/aepctl/cmd/delete"
 	"github.com/fuxs/aepctl/cmd/get"
@@ -57,6 +58,7 @@ func NewCommand() *cobra.Command {
 	cmd.AddCommand(delete.NewCommand(auth))
 	cmd.AddCommand(update.NewCommand(auth))
 	cmd.AddCommand(completion.NewCommand())
+	cmd.AddCommand(configure.NewConfigureCommand(gcfg))
 	return cmd
 }
 

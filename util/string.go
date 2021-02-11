@@ -17,6 +17,7 @@ specific language governing permissions and limitations under the License.
 package util
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -204,4 +205,55 @@ func ContainsS(value string, ar []string) string {
 		}
 	}
 	return "◯"
+}
+
+// StringOr returns the first string if it is not empty, otherwise the last one
+func StringOr(a, b string) string {
+	if a != "" {
+		return a
+	}
+	return b
+}
+
+// ByteCountSI returns the byte size in SI units
+func ByteCountSI(b int64) string {
+	const unit = 1000
+	if b < unit {
+		return fmt.Sprintf("%d B", b)
+	}
+	div, exp := int64(unit), 0
+	for n := b / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB",
+		float64(b)/float64(div), "kMGTPE"[exp])
+}
+
+// ByteCountIEC returns the byte size in IEC units
+func ByteCountIEC(b int64) string {
+	const unit = 1024
+	if b < unit {
+		return fmt.Sprintf("%d B", b)
+	}
+	div, exp := int64(unit), 0
+	for n := b / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %ciB",
+		float64(b)/float64(div), "KMGTPE"[exp])
+}
+
+// LineCount returns the number of lines
+func LineCount(str string) int {
+	l := len(str)
+	if l == 0 {
+		return 0
+	}
+	n := strings.Count(str, "\n")
+	if str[l-1] != '\n' {
+		n++
+	}
+	return n
 }
