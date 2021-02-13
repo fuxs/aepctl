@@ -18,6 +18,7 @@ package ui
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/fuxs/aepctl/util"
@@ -206,11 +207,11 @@ func (t *tableComp) updateRow(i int, f os.FileInfo) {
 	var name string
 	var color tcell.Color
 	if f.IsDir() {
-		name = "/" + f.Name()
+		name = string(filepath.Separator) + f.Name()
 		color = tcell.ColorBlue
 	} else {
 		name = f.Name()
-		color = tcell.ColorLightGray
+		color = tcell.ColorWhite
 	}
 	t.Table.SetCell(i, 0, tview.NewTableCell(name).SetTextColor(color))
 	t.Table.SetCell(i, 1, tview.NewTableCell(f.ModTime().Format("02.01.06 15:04")).SetTextColor(color))
@@ -237,6 +238,8 @@ func buildHeader(text string, set, asc bool) string {
 	return b.String()
 }
 
+var parentDirStr = string(filepath.Separator) + ".."
+
 func (t *tableComp) updateView() {
 
 	t.Table.SetTitle(t.dir.Path).SetTitleAlign(tview.AlignLeft)
@@ -245,7 +248,7 @@ func (t *tableComp) updateView() {
 		SetCell(0, 2, tview.NewTableCell(buildHeader("Size", t.bySize, t.ascending)).SetTextColor(tcell.ColorYellow))
 	offset := 1
 	if t.dir.HasParent() {
-		t.Table.SetCell(1, 0, tview.NewTableCell("/..").SetTextColor(tcell.ColorBlue)).
+		t.Table.SetCell(1, 0, tview.NewTableCell(parentDirStr).SetTextColor(tcell.ColorBlue)).
 			SetCell(1, 1, tview.NewTableCell("").SetTextColor(tcell.ColorBlue)).
 			SetCell(1, 2, tview.NewTableCell("").SetTextColor(tcell.ColorBlue))
 		offset = 2

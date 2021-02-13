@@ -19,7 +19,7 @@ package util
 import (
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -76,9 +76,9 @@ func (o *GlobalConfig) Configure(cmd *cobra.Command) error {
 	} else {
 		viper.SetConfigName("config")
 		viper.SetConfigType("yaml")
-		viper.AddConfigPath("/etc/" + o.Name + "/")
+		viper.AddConfigPath(filepath.Join(string(filepath.Separator), "etc", o.Name))
 		if home, err := os.UserHomeDir(); err != nil {
-			viper.AddConfigPath(path.Join(home, "."+o.Name+"/"))
+			viper.AddConfigPath(filepath.Join(home, "."+o.Name))
 		}
 		viper.AddConfigPath(".")
 		if err := viper.ReadInConfig(); err != nil {
@@ -176,7 +176,7 @@ func (f *ConfigFile) SetSandbox(sandbox string) {
 
 func configPath() (string, error) {
 	home, err := os.UserHomeDir()
-	return path.Join(home, ".aepctl", "config.yaml"), err
+	return filepath.Join(home, ".aepctl", "config.yaml"), err
 }
 
 // LoadConfigFile loads the configuration file in YAML format for the passed
@@ -230,7 +230,7 @@ func (f *ConfigFile) Save() error {
 		if !os.IsNotExist(err) {
 			return err
 		}
-		if err = os.MkdirAll(path.Dir(f.Path), 0700); err != nil {
+		if err = os.MkdirAll(filepath.Dir(f.Path), 0700); err != nil {
 			return err
 		}
 	}

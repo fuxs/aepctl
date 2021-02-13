@@ -18,7 +18,6 @@ package util
 
 import (
 	"os"
-	"path"
 	"path/filepath"
 	"sort"
 )
@@ -93,7 +92,7 @@ func (d *Dir) Parent() (*Dir, error) {
 
 // PathI returns the full path for the ith child
 func (d *Dir) PathI(i int) string {
-	return path.Join(d.Path, d.current[i].Name())
+	return filepath.Join(d.Path, d.current[i].Name())
 }
 
 // ChildI returns the Dir object of the ith child
@@ -103,7 +102,7 @@ func (d *Dir) ChildI(i int) (*Dir, error) {
 
 // Child returns the Dir object for the child with the passed name
 func (d *Dir) Child(name string) (*Dir, error) {
-	return NewDirPath(path.Join(d.Path, name))
+	return NewDirPath(filepath.Join(d.Path, name))
 }
 
 // SortedByName returns a list of FileInfo objects sorted by name

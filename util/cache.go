@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 )
 
 // LazyPath builds a path on the first call
@@ -85,7 +85,7 @@ func (jc *JSONCache) Invalidate() {
 	if err != nil {
 		return
 	}
-	p := path.Join(append([]string{home, ".aepctl", "cache"}, jc.lp.Full()...)...)
+	p := filepath.Join(append([]string{home, ".aepctl", "cache"}, jc.lp.Full()...)...)
 	os.Remove(p)
 }
 
@@ -95,7 +95,7 @@ func (jc *JSONCache) Save(obj interface{}) error {
 	if err != nil {
 		return err
 	}
-	p := path.Join(append([]string{home, ".aepctl", "cache"}, jc.lp.Path()...)...)
+	p := filepath.Join(append([]string{home, ".aepctl", "cache"}, jc.lp.Path()...)...)
 	if _, err = os.Stat(p); os.IsNotExist(err) {
 		if err = os.MkdirAll(p, 0700); err != nil {
 			return err
@@ -106,7 +106,7 @@ func (jc *JSONCache) Save(obj interface{}) error {
 	if err != nil {
 		return err
 	}
-	p = path.Join(p, jc.lp.Name())
+	p = filepath.Join(p, jc.lp.Name())
 	return ioutil.WriteFile(p, data, 0700)
 }
 
@@ -116,7 +116,7 @@ func (jc *JSONCache) Load(obj interface{}) error {
 	if err != nil {
 		return err
 	}
-	p := path.Join(append([]string{home, ".aepctl", "cache"}, jc.lp.Full()...)...)
+	p := filepath.Join(append([]string{home, ".aepctl", "cache"}, jc.lp.Full()...)...)
 	var data []byte
 	data, err = ioutil.ReadFile(p)
 	if err != nil {
