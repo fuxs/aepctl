@@ -25,13 +25,13 @@ lint-in-container:
 	DOCKER_BUILDKIT=1 docker build . --target lint \
 	--file aepctl.dockerfile
 
-build-dbg: dependencies $(bin) 
+build-dbg: dependencies 
 	go build -gcflags="all=-N -l" -o "$(AEPCTLDBG)"  main.go
 
 debug: build-dbg
 	dlv --listen=:2345 --headless --api-version=2 exec "$(AEPCTLDBG)" -- configure
 
-build: dependencies $(bin) 
+build: dependencies
 	go build -o "$(AEPCTL)" main.go
 
 dependencies:
