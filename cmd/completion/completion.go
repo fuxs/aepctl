@@ -31,13 +31,13 @@ func NewCommand() *cobra.Command {
 	
 	Bash:
 	
-	$ source <(yourprogram completion bash)
+	$ source <(aepctl completion bash)
 	
 	# To load completions for each session, execute once:
 	Linux:
-	  $ yourprogram completion bash > /etc/bash_completion.d/yourprogram
+	  $ aepctl completion bash > /etc/bash_completion.d/aepctl
 	MacOS:
-	  $ yourprogram completion bash > /usr/local/etc/bash_completion.d/yourprogram
+	  $ aepctl completion bash > /usr/local/etc/bash_completion.d/aepctl
 	
 	Zsh:
 	
@@ -47,16 +47,24 @@ func NewCommand() *cobra.Command {
 	$ echo "autoload -U compinit; compinit" >> ~/.zshrc
 	
 	# To load completions for each session, execute once:
-	$ yourprogram completion zsh > "${fpath[1]}/_yourprogram"
+	$ aepctl completion zsh > "${fpath[1]}/_aepctl"
 	
 	# You will need to start a new shell for this setup to take effect.
 	
 	Fish:
 	
-	$ yourprogram completion fish | source
+	$ aepctl completion fish | source
 	
 	# To load completions for each session, execute once:
-	$ yourprogram completion fish > ~/.config/fish/completions/yourprogram.fish
+	$ aepctl completion fish > ~/.config/fish/completions/aepctl.fish
+
+	PowerShell:
+
+	PS> aepctl completion powershell | Out-String | Invoke-Expression
+
+	# To load completions for every new session, run:
+	PS> aepctl completion powershell > aepctl.ps1
+	# and source this file from your PowerShell profile.
 	`,
 		DisableFlagsInUseLine: true,
 		ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
