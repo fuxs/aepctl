@@ -57,14 +57,14 @@ func (q *QueryConf) AddQueryFlags(cmd *cobra.Command) {
 }
 
 // NewGetCommand creates an initialized command object
-func NewGetCommand(auth *helper.Authentication, os *util.KVCache, schema, use string, t helper.Transformer) *cobra.Command {
+func NewGetCommand(conf *helper.Configuration, os *util.KVCache, schema, use string, t helper.Transformer) *cobra.Command {
 	output := helper.NewOutputConf(t)
-	ac := auth.AC //helper.NewAutoContainer(auth)
+	ac := conf.AC //helper.NewAutoContainer(auth)
 	cmd := &cobra.Command{
 		Use:  use,
 		Args: cobra.MinimumNArgs(1),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-			if err := auth.Update(cmd); err != nil {
+			if err := conf.Update(cmd); err != nil {
 				return []string{}, cobra.ShellCompDirectiveNoFileComp
 			}
 			valid, err := os.Keys()
@@ -74,10 +74,10 @@ func NewGetCommand(auth *helper.Authentication, os *util.KVCache, schema, use st
 			return util.Difference(valid, args), cobra.ShellCompDirectiveNoFileComp
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErrs(auth.Validate(cmd), output.ValidateFlags())
+			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErr(ac.AutoFillContainer())
 			for _, name := range args {
-				output.PrintResult(od.Get(context.Background(), auth.Config, ac.ContainerID, schema, os.GetValue(name)))
+				output.PrintResult(od.Get(context.Background(), conf.Authentication, ac.ContainerID, schema, os.GetValue(name)))
 			}
 		},
 	}
@@ -87,17 +87,17 @@ func NewGetCommand(auth *helper.Authentication, os *util.KVCache, schema, use st
 }
 
 // NewQueryCommand creates an initialized command object
-func NewQueryCommand(auth *helper.Authentication, schema, use string, t helper.Transformer) *cobra.Command {
+func NewQueryCommand(conf *helper.Configuration, schema, use string, t helper.Transformer) *cobra.Command {
 	output := helper.NewOutputConf(t)
 	qc := &QueryConf{}
-	ac := auth.AC
+	ac := conf.AC
 	cmd := &cobra.Command{
 		Use:  use,
 		Args: cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErrs(auth.Validate(cmd), output.ValidateFlags())
+			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErr(ac.AutoFillContainer())
-			output.PrintResult(od.Query(context.Background(), auth.Config, ac.ContainerID, schema, qc.Query, qc.QOP, qc.Field, qc.OrderBy, qc.Limit))
+			output.PrintResult(od.Query(context.Background(), conf.Authentication, ac.ContainerID, schema, qc.Query, qc.QOP, qc.Field, qc.OrderBy, qc.Limit))
 		},
 	}
 	output.AddOutputFlags(cmd)

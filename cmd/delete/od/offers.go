@@ -22,6 +22,6 @@ import (
 )
 
 // NewDeleteOffersCommand creates an initialized command object
-func NewDeleteOffersCommand(auth *helper.Authentication) *cobra.Command {
-	return NewDeleteCommand(auth, auth.OS, "offer")
+func NewDeleteOffersCommand(conf *helper.Configuration) *cobra.Command {
+	return NewDeleteCommand(conf, conf.OS, "offer")
 }

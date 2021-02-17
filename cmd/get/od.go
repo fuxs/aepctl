@@ -23,23 +23,23 @@ import (
 )
 
 // NewODCommand creates an initialized command object
-func NewODCommand(auth *helper.Authentication) *cobra.Command {
+func NewODCommand(conf *helper.Configuration) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "od",
 	}
-	cmd.AddCommand(od.NewActivitiesCommand(auth))
-	cmd.AddCommand(od.NewActivityCommand(auth))
-	cmd.AddCommand(od.NewCollectionsCommand(auth))
-	cmd.AddCommand(od.NewCollectionCommand(auth))
-	cmd.AddCommand(od.NewFallbacksCommand(auth))
-	cmd.AddCommand(od.NewFallbackCommand(auth))
-	cmd.AddCommand(od.NewOffersCommand(auth))
-	cmd.AddCommand(od.NewOfferCommand(auth))
-	cmd.AddCommand(od.NewPlacementsCommand(auth))
-	cmd.AddCommand(od.NewPlacementCommand(auth))
-	cmd.AddCommand(od.NewRulesCommand(auth))
-	cmd.AddCommand(od.NewRuleCommand(auth))
-	cmd.AddCommand(od.NewTagsCommand(auth))
-	cmd.AddCommand(od.NewTagCommand(auth))
+	cmd.AddCommand(od.NewActivitiesCommand(conf))
+	cmd.AddCommand(od.NewActivityCommand(conf))
+	cmd.AddCommand(od.NewCollectionsCommand(conf))
+	cmd.AddCommand(od.NewCollectionCommand(conf))
+	cmd.AddCommand(od.NewFallbacksCommand(conf))
+	cmd.AddCommand(od.NewFallbackCommand(conf))
+	cmd.AddCommand(od.NewOffersCommand(conf))
+	cmd.AddCommand(od.NewOfferCommand(conf))
+	cmd.AddCommand(od.NewPlacementsCommand(conf))
+	cmd.AddCommand(od.NewPlacementCommand(conf))
+	cmd.AddCommand(od.NewRulesCommand(conf))
+	cmd.AddCommand(od.NewRuleCommand(conf))
+	cmd.AddCommand(od.NewTagsCommand(conf))
+	cmd.AddCommand(od.NewTagCommand(conf))
 	return cmd
 }

@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func prepareCollection(auth *helper.Authentication, collection *od.Collection) {
+func prepareCollection(conf *helper.Configuration, collection *od.Collection) {
 	schema := od.OfferSchema
 	if collection.Filter == "" {
 		collection.Filter = "offers"
@@ -38,18 +38,18 @@ func prepareCollection(auth *helper.Authentication, collection *od.Collection) {
 		}
 	}
 
-	store := helper.NewNameToID(auth, schema)
+	store := helper.NewNameToID(conf, schema)
 	for i, o := range collection.IDs {
 		collection.IDs[i] = store.GetValue(o)
 	}
 }
 
 // NewCreateCollectionCommand creates an initialized command object
-func NewCreateCollectionCommand(auth *helper.Authentication) *cobra.Command {
-	ac := auth.AC
+func NewCreateCollectionCommand(conf *helper.Configuration) *cobra.Command {
+	ac := conf.AC
 	fc := &helper.FileConfig{}
-	ts := auth.TS
-	os := auth.OS
+	ts := conf.TS
+	os := conf.OS
 	cmd := &cobra.Command{
 		Use:     "collection",
 		Aliases: []string{"collections"},
@@ -72,7 +72,7 @@ func NewCreateCollectionCommand(auth *helper.Authentication) *cobra.Command {
 			return result, cobra.ShellCompDirectiveNoFileComp
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			helper.CheckErr(auth.Validate(cmd))
+			helper.CheckErr(conf.Validate(cmd))
 			helper.CheckErr(ac.AutoFillContainer())
 			l := len(args)
 			if l == 1 || l == 2 {
@@ -88,8 +88,8 @@ func NewCreateCollectionCommand(auth *helper.Authentication) *cobra.Command {
 					Filter: filter,
 					IDs:    args[2:],
 				}
-				prepareCollection(auth, collection)
-				_, err := od.Create(context.Background(), auth.Config, ac.ContainerID, od.CollectionSchema, collection)
+				prepareCollection(conf, collection)
+				_, err := od.Create(context.Background(), conf.Authentication, ac.ContainerID, od.CollectionSchema, collection)
 				helper.CheckErr(err)
 			}
 			i, err := fc.Open()
@@ -99,9 +99,9 @@ func NewCreateCollectionCommand(auth *helper.Authentication) *cobra.Command {
 					collection := &od.Collection{}
 					if err := i.Load(collection); err == nil {
 						if fc.IsYAML() {
-							prepareCollection(auth, collection)
+							prepareCollection(conf, collection)
 						}
-						_, err = od.Create(context.Background(), auth.Config, ac.ContainerID, od.CollectionSchema, collection)
+						_, err = od.Create(context.Background(), conf.Authentication, ac.ContainerID, od.CollectionSchema, collection)
 						helper.CheckErr(err)
 					} else {
 						helper.CheckErrEOF(err)

@@ -47,12 +47,12 @@ func NewCommand() *cobra.Command {
 		Long:                  longDesc,
 		DisableFlagsInUseLine: true,
 	}
-	gcfg := util.NewGlobalConfig("aepctl", version, cmd)
-	auth := helper.NewAuthentication(gcfg)
-	cmd.AddCommand(create.NewCommand(auth))
-	cmd.AddCommand(get.NewCommand(auth))
-	cmd.AddCommand(delete.NewCommand(auth))
-	cmd.AddCommand(update.NewCommand(auth))
+	gcfg := util.NewRootConfig("aepctl", version, cmd)
+	conf := helper.NewConfiguration(gcfg)
+	cmd.AddCommand(create.NewCommand(conf))
+	cmd.AddCommand(get.NewCommand(conf))
+	cmd.AddCommand(delete.NewCommand(conf))
+	cmd.AddCommand(update.NewCommand(conf))
 	cmd.AddCommand(completion.NewCommand())
 	cmd.AddCommand(configure.NewConfigureCommand(gcfg))
 	return cmd

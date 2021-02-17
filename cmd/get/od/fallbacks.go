@@ -61,21 +61,21 @@ func (t *fallbackTransformer) ToWideTable(i interface{}) (*util.Table, error) {
 }
 
 // NewFallbacksCommand creates an initialized command object
-func NewFallbacksCommand(auth *helper.Authentication) *cobra.Command {
+func NewFallbacksCommand(conf *helper.Configuration) *cobra.Command {
 	ft := &fallbackTransformer{}
 	return NewQueryCommand(
-		auth,
+		conf,
 		od.FallbackSchema,
 		"fallbacks",
 		ft)
 }
 
 // NewFallbackCommand creates an initialized command object
-func NewFallbackCommand(auth *helper.Authentication) *cobra.Command {
+func NewFallbackCommand(conf *helper.Configuration) *cobra.Command {
 	ft := &fallbackTransformer{}
 	return NewGetCommand(
-		auth,
-		helper.NewFallbackIDCache(auth.AC),
+		conf,
+		helper.NewFallbackIDCache(conf.AC),
 		od.FallbackSchema,
 		"fallback",
 		ft)

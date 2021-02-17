@@ -26,7 +26,7 @@ import (
 )
 
 // NewContainerCache creates a new container cache
-func NewContainerCache(auth *Authentication) *util.KVCache {
+func NewContainerCache(auth *Configuration) *util.KVCache {
 	return util.NewKVCache(
 		auth.ReadCache,
 		auth.WriteCache,
@@ -46,7 +46,7 @@ func NewContainerCache(auth *Authentication) *util.KVCache {
 }
 
 // NewSandboxCache creates a new sandbox cache
-func NewSandboxCache(auth *Authentication) *util.StringCache {
+func NewSandboxCache(auth *Configuration) *util.StringCache {
 	return util.NewStringCache(
 		auth.ReadCache,
 		auth.WriteCache,

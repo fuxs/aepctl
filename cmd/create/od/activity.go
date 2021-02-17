@@ -25,10 +25,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func prepareActivity(auth *helper.Authentication, activity *od.Activity) {
-	ps := helper.NewNameToID(auth, od.PlacementSchema)
-	cs := helper.NewNameToID(auth, od.CollectionSchema)
-	fs := helper.NewNameToID(auth, od.FallbackSchema)
+func prepareActivity(conf *helper.Configuration, activity *od.Activity) {
+	ps := helper.NewNameToID(conf, od.PlacementSchema)
+	cs := helper.NewNameToID(conf, od.CollectionSchema)
+	fs := helper.NewNameToID(conf, od.FallbackSchema)
 	for _, c := range activity.Criteria {
 		for i, p := range c.Placements {
 			c.Placements[i] = ps.GetValue(p)
@@ -78,8 +78,8 @@ var (
 )
 
 // NewCreateActivityCommand creates an initialized command object
-func NewCreateActivityCommand(auth *helper.Authentication) *cobra.Command {
-	ac := auth.AC
+func NewCreateActivityCommand(conf *helper.Configuration) *cobra.Command {
+	ac := conf.AC
 	fc := &helper.FileConfig{}
 	cmd := &cobra.Command{
 		Use:                   "activity",
@@ -90,7 +90,7 @@ func NewCreateActivityCommand(auth *helper.Authentication) *cobra.Command {
 		DisableFlagsInUseLine: true,
 		Args:                  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErr(auth.Validate(cmd))
+			helper.CheckErr(conf.Validate(cmd))
 			helper.CheckErr(ac.AutoFillContainer())
 			i, err := fc.Open()
 			helper.CheckErr(err)
@@ -99,9 +99,9 @@ func NewCreateActivityCommand(auth *helper.Authentication) *cobra.Command {
 					activity := &od.Activity{}
 					if err := i.Load(activity); err == nil {
 						if fc.IsYAML() {
-							prepareActivity(auth, activity)
+							prepareActivity(conf, activity)
 						}
-						_, err = od.Create(context.Background(), auth.Config, ac.ContainerID, od.ActivitySchema, activity)
+						_, err = od.Create(context.Background(), conf.Authentication, ac.ContainerID, od.ActivitySchema, activity)
 						helper.CheckErr(err)
 					} else {
 						helper.CheckErrEOF(err)

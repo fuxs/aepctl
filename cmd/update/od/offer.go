@@ -23,6 +23,6 @@ import (
 )
 
 // NewUpdateOfferCommand creates an initialized command object
-func NewUpdateOfferCommand(auth *helper.Authentication) *cobra.Command {
-	return NewUpdateCommand(auth, "offer", od.OfferSchema)
+func NewUpdateOfferCommand(conf *helper.Configuration) *cobra.Command {
+	return NewUpdateCommand(conf, "offer", od.OfferSchema)
 }

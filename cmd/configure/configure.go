@@ -271,7 +271,7 @@ func newApp(cfg *util.ConfigFile) {
 }
 
 // NewConfigureCommand creates an initialized command object
-func NewConfigureCommand(gcfg *util.GlobalConfig) *cobra.Command {
+func NewConfigureCommand(gcfg *util.RootConfig) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:                   "configure",

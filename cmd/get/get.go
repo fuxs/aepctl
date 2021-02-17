@@ -23,16 +23,16 @@ import (
 )
 
 // NewCommand creates an initialized command object
-func NewCommand(auth *helper.Authentication) *cobra.Command {
+func NewCommand(conf *helper.Configuration) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get [acl|token|od|sandbox]",
 		Short: "Display one or many resources",
 	}
-	auth.AddAuthenticationFlags(cmd)
-	cmd.AddCommand(NewACCommand(auth))
-	cmd.AddCommand(NewTokenCommand(auth))
-	cmd.AddCommand(NewODCommand(auth))
-	cmd.AddCommand(NewSandboxCommand(auth))
-	cmd.AddCommand(NewSandboxesCommand(auth))
+	conf.AddAuthenticationFlags(cmd)
+	cmd.AddCommand(NewACCommand(conf))
+	cmd.AddCommand(NewTokenCommand(conf))
+	cmd.AddCommand(NewODCommand(conf))
+	cmd.AddCommand(NewSandboxCommand(conf))
+	cmd.AddCommand(NewSandboxesCommand(conf))
 	return cmd
 }

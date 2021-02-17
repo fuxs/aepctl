@@ -22,6 +22,6 @@ import (
 )
 
 // NewDeleteTagsCommand creates an initialized command object
-func NewDeleteTagsCommand(auth *helper.Authentication) *cobra.Command {
-	return NewDeleteCommand(auth, auth.TS, "tag")
+func NewDeleteTagsCommand(conf *helper.Configuration) *cobra.Command {
+	return NewDeleteCommand(conf, conf.TS, "tag")
 }

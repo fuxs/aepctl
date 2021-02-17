@@ -25,15 +25,15 @@ import (
 )
 
 // NewCreateRuleCommand creates an initialized command object
-func NewCreateRuleCommand(auth *helper.Authentication) *cobra.Command {
-	ac := auth.AC
+func NewCreateRuleCommand(conf *helper.Configuration) *cobra.Command {
+	ac := conf.AC
 	fc := &helper.FileConfig{}
 	cmd := &cobra.Command{
 		Use:     "rule",
 		Aliases: []string{"rules"},
 		Args:    cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErr(auth.Validate(cmd))
+			helper.CheckErr(conf.Validate(cmd))
 			helper.CheckErr(ac.AutoFillContainer())
 			i, err := fc.Open()
 			helper.CheckErr(err)
@@ -41,7 +41,7 @@ func NewCreateRuleCommand(auth *helper.Authentication) *cobra.Command {
 				for {
 					rule := &od.Rule{}
 					if err := i.Load(rule); err == nil {
-						_, err = od.Create(context.Background(), auth.Config, ac.ContainerID, od.RuleSchema, rule)
+						_, err = od.Create(context.Background(), conf.Authentication, ac.ContainerID, od.RuleSchema, rule)
 						helper.CheckErr(err)
 					} else {
 						helper.CheckErrEOF(err)

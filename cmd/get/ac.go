@@ -177,7 +177,7 @@ var validArgs = []string{
 }
 
 // NewACCommand creates an initialized command object
-func NewACCommand(auth *helper.Authentication) *cobra.Command {
+func NewACCommand(conf *helper.Configuration) *cobra.Command {
 	output := helper.NewOutputConf(&acTransformer{})
 	cmd := &cobra.Command{
 		Use:                   "ac [(RESOURCE | PERMISSION)*]",
@@ -189,13 +189,13 @@ func NewACCommand(auth *helper.Authentication) *cobra.Command {
 			return util.Difference(validArgs, args), cobra.ShellCompDirectiveNoFileComp
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErrs(auth.Validate(cmd), output.ValidateFlags())
+			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			ctx := context.Background()
 			if len(args) == 0 {
-				output.PrintResult(acl.GetPermissionsAndResources(ctx, auth.Config))
+				output.PrintResult(acl.GetPermissionsAndResources(ctx, conf.Authentication))
 			} else {
 				output.SetTransformation(&effectiveTransformer{})
-				output.PrintResult(acl.GetEffecticeACLPolicies(ctx, auth.Config, args))
+				output.PrintResult(acl.GetEffecticeACLPolicies(ctx, conf.Authentication, args))
 			}
 		},
 	}

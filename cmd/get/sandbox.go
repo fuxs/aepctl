@@ -98,25 +98,25 @@ func (t *sandboxDetailTransformer) ToWideTable(i interface{}) (*util.Table, erro
 }
 
 // NewSandboxCommand creates an initialized command object
-func NewSandboxCommand(auth *helper.Authentication) *cobra.Command {
+func NewSandboxCommand(conf *helper.Configuration) *cobra.Command {
 	output := helper.NewOutputConf(&sandboxTransformer{})
 	cmd := &cobra.Command{
 		Use: "sandbox",
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-			if err := auth.Update(cmd); err != nil {
+			if err := conf.Update(cmd); err != nil {
 				return []string{}, cobra.ShellCompDirectiveNoFileComp
 			}
-			sandboxes, _ := helper.NewSandboxCache(auth).GetList()
+			sandboxes, _ := helper.NewSandboxCache(conf).GetList()
 			return sandboxes, cobra.ShellCompDirectiveNoFileComp
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			helper.CheckErrs(auth.Validate(cmd), output.ValidateFlags())
+			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			switch len(args) {
 			case 0:
-				output.PrintResult(sandbox.List(context.Background(), auth.Config))
+				output.PrintResult(sandbox.List(context.Background(), conf.Authentication))
 			case 1:
 				output.SetTransformation(&sandboxDetailTransformer{})
-				output.PrintResult(sandbox.Get(context.Background(), auth.Config, args[0]))
+				output.PrintResult(sandbox.Get(context.Background(), conf.Authentication, args[0]))
 			default:
 				return errors.New("Too many arguments")
 			}
@@ -128,23 +128,23 @@ func NewSandboxCommand(auth *helper.Authentication) *cobra.Command {
 }
 
 // NewSandboxesCommand creates an initialized command object
-func NewSandboxesCommand(auth *helper.Authentication) *cobra.Command {
+func NewSandboxesCommand(conf *helper.Configuration) *cobra.Command {
 	output := helper.NewOutputConf(&sandboxTransformer{})
 	cmd := &cobra.Command{
 		Use:       "sandboxes",
 		ValidArgs: []string{"all", "types"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			helper.CheckErrs(auth.Validate(cmd), output.ValidateFlags())
+			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			switch len(args) {
 			case 0:
-				output.PrintResult(sandbox.List(context.Background(), auth.Config))
+				output.PrintResult(sandbox.List(context.Background(), conf.Authentication))
 			case 1:
 				switch args[0] {
 				case "all":
-					output.PrintResult(sandbox.ListAll(context.Background(), auth.Config))
+					output.PrintResult(sandbox.ListAll(context.Background(), conf.Authentication))
 				case "types":
 					output.SetTransformation(&sandboxTypeTransformer{})
-					output.PrintResult(sandbox.ListTypes(context.Background(), auth.Config))
+					output.PrintResult(sandbox.ListTypes(context.Background(), conf.Authentication))
 				default:
 					return fmt.Errorf("Unknown argument %s", args[0])
 				}

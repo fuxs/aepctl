@@ -24,11 +24,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func prepareFallback(auth *helper.Authentication, fallback *od.Fallback) {
-	oc := helper.NewPlacementsCache(auth.AC)
+func prepareFallback(conf *helper.Configuration, fallback *od.Fallback) {
+	oc := helper.NewPlacementsCache(conf.AC)
 	ps := helper.NameToID(oc)
 	cs := oc.Mapper([]string{"_instance", "@id"}, []string{"_instance", "xdm:channel"})
-	ts := helper.NewNameToID(auth, od.TagSchema)
+	ts := helper.NewNameToID(conf, od.TagSchema)
 	for _, r := range fallback.Representations {
 		for _, c := range r.Components {
 			c.Type = helper.ContentSToL.GetL(c.Type)
@@ -46,15 +46,15 @@ func prepareFallback(auth *helper.Authentication, fallback *od.Fallback) {
 }
 
 // NewCreateFallbackCommand creates an initialized command object
-func NewCreateFallbackCommand(auth *helper.Authentication) *cobra.Command {
-	ac := auth.AC
+func NewCreateFallbackCommand(conf *helper.Configuration) *cobra.Command {
+	ac := conf.AC
 	fc := &helper.FileConfig{}
 	cmd := &cobra.Command{
 		Use:     "fallback",
 		Aliases: []string{"fallbacks"},
 		Args:    cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErr(auth.Validate(cmd))
+			helper.CheckErr(conf.Validate(cmd))
 			helper.CheckErr(ac.AutoFillContainer())
 			i, err := fc.Open()
 			helper.CheckErr(err)
@@ -63,9 +63,9 @@ func NewCreateFallbackCommand(auth *helper.Authentication) *cobra.Command {
 					fallback := &od.Fallback{}
 					if err := i.Load(fallback); err == nil {
 						if fc.IsYAML() {
-							prepareFallback(auth, fallback)
+							prepareFallback(conf, fallback)
 						}
-						_, err = od.Create(context.Background(), auth.Config, ac.ContainerID, od.FallbackSchema, fallback)
+						_, err = od.Create(context.Background(), conf.Authentication, ac.ContainerID, od.FallbackSchema, fallback)
 						helper.CheckErr(err)
 					} else {
 						helper.CheckErrEOF(err)

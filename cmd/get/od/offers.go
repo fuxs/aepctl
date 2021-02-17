@@ -69,21 +69,21 @@ func (t *offerTransformer) ToWideTable(i interface{}) (*util.Table, error) {
 }
 
 // NewOffersCommand creates an initialized command object
-func NewOffersCommand(auth *helper.Authentication) *cobra.Command {
+func NewOffersCommand(conf *helper.Configuration) *cobra.Command {
 	ot := &offerTransformer{}
 	return NewQueryCommand(
-		auth,
+		conf,
 		od.OfferSchema,
 		"offers",
 		ot)
 }
 
 // NewOfferCommand creates an initialized command object
-func NewOfferCommand(auth *helper.Authentication) *cobra.Command {
+func NewOfferCommand(conf *helper.Configuration) *cobra.Command {
 	ot := &offerTransformer{}
 	return NewGetCommand(
-		auth,
-		helper.NewOfferIDCache(auth.AC),
+		conf,
+		helper.NewOfferIDCache(conf.AC),
 		od.OfferSchema,
 		"offer",
 		ot)

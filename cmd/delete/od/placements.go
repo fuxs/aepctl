@@ -22,6 +22,6 @@ import (
 )
 
 // NewDeletePlacementsCommand creates an initialized command object
-func NewDeletePlacementsCommand(auth *helper.Authentication) *cobra.Command {
-	return NewDeleteCommand(auth, auth.PS, "placement")
+func NewDeletePlacementsCommand(conf *helper.Configuration) *cobra.Command {
+	return NewDeleteCommand(conf, conf.PS, "placement")
 }

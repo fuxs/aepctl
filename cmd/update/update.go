@@ -33,14 +33,14 @@ var (
 )
 
 // NewCommand creates an initialized command object
-func NewCommand(auth *helper.Authentication) *cobra.Command {
+func NewCommand(conf *helper.Configuration) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                   "update",
 		Short:                 "Update a resource",
 		Long:                  longDesc,
 		DisableFlagsInUseLine: true,
 	}
-	auth.AddAuthenticationFlags(cmd)
-	cmd.AddCommand(NewODCommand(auth))
+	conf.AddAuthenticationFlags(cmd)
+	cmd.AddCommand(NewODCommand(conf))
 	return cmd
 }

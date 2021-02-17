@@ -23,6 +23,6 @@ import (
 )
 
 // NewUpdateTagCommand creates an initialized command object
-func NewUpdateTagCommand(auth *helper.Authentication) *cobra.Command {
-	return NewUpdateCommand(auth, "tag", od.TagSchema)
+func NewUpdateTagCommand(conf *helper.Configuration) *cobra.Command {
+	return NewUpdateCommand(conf, "tag", od.TagSchema)
 }

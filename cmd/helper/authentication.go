@@ -25,30 +25,30 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Authentication encapsulates the authentication configuration
-type Authentication struct {
-	Global *util.GlobalConfig
-	Config *api.AuthenticationConfig
-	Read   bool
-	Write  bool
-	AC     *AutoContainer
-	AS     *util.KVCache
-	TS     *util.KVCache
-	PS     *util.KVCache
-	OS     *util.KVCache
-	FS     *util.KVCache
-	CS     *util.KVCache
-	RS     *util.KVCache
+// Configuration encapsulates the global settings
+type Configuration struct {
+	Root           *util.RootConfig
+	Authentication *api.AuthenticationConfig
+	Read           bool
+	Write          bool
+	AC             *AutoContainer
+	AS             *util.KVCache
+	TS             *util.KVCache
+	PS             *util.KVCache
+	OS             *util.KVCache
+	FS             *util.KVCache
+	CS             *util.KVCache
+	RS             *util.KVCache
 }
 
-// NewAuthentication creates an initialized Authentication object
-func NewAuthentication(gcfg *util.GlobalConfig) *Authentication {
-	result := &Authentication{
-		Global: gcfg,
-		Config: &api.AuthenticationConfig{},
+// NewConfiguration creates an initialized Authentication object
+func NewConfiguration(gcfg *util.RootConfig) *Configuration {
+	result := &Configuration{
+		Root:           gcfg,
+		Authentication: &api.AuthenticationConfig{},
 	}
 	cache := util.NewJSONCache(func() []string { return result.UniquePath("token.json") })
-	o := result.Config
+	o := result.Authentication
 	o.LoadToken = func() (*api.BearerToken, error) {
 		token := &api.BearerToken{}
 		if err := cache.Load(token); err != nil {
@@ -74,13 +74,13 @@ func NewAuthentication(gcfg *util.GlobalConfig) *Authentication {
 }
 
 // Update loads the configuration and updates the command flags
-func (a *Authentication) Update(cmd *cobra.Command) error {
-	return a.Global.Configure(cmd)
+func (a *Configuration) Update(cmd *cobra.Command) error {
+	return a.Root.Configure(cmd)
 }
 
 // AddAuthenticationFlags adds all required flags for authentication
-func (a *Authentication) AddAuthenticationFlags(cmd *cobra.Command) {
-	o := a.Config
+func (a *Configuration) AddAuthenticationFlags(cmd *cobra.Command) {
+	o := a.Authentication
 	flags := cmd.PersistentFlags()
 	flags.BoolVar(&o.Cache, "cache", true, "stores the retrieved token in ~/.aepctl/token.json")
 	flags.BoolVar(&a.Read, "read-cache", true, "stores the retrieved token in ~/.aepctl/token.json")
@@ -105,11 +105,11 @@ func (a *Authentication) AddAuthenticationFlags(cmd *cobra.Command) {
 }
 
 // Validate updates the command flags and validates the final configuration
-func (a *Authentication) Validate(cmd *cobra.Command) error {
+func (a *Configuration) Validate(cmd *cobra.Command) error {
 	if err := a.Update(cmd); err != nil {
 		return err
 	}
-	o := a.Config
+	o := a.Authentication
 
 	var clientID, clientSecret, techAccount, organization, key bool
 	errCounter := 0
@@ -190,28 +190,28 @@ func (a *Authentication) Validate(cmd *cobra.Command) error {
 }
 
 // NoDryRun creates a copy of the current AuthenticationConfig  and disables the dry-run falg
-func (a *Authentication) NoDryRun() *api.AuthenticationConfig {
-	cfg := *a.Config
+func (a *Configuration) NoDryRun() *api.AuthenticationConfig {
+	cfg := *a.Authentication
 	cfg.DryRun = false
 	return &cfg
 }
 
 // UniquePath generates a unique path based on the client id
-func (a *Authentication) UniquePath(path ...string) []string {
-	return append([]string{a.Config.ClientID}, path...)
+func (a *Configuration) UniquePath(path ...string) []string {
+	return append([]string{a.Authentication.ClientID}, path...)
 }
 
 // UniqueSandboxPath generates a unique path based on the client id and sandbox name
-func (a *Authentication) UniqueSandboxPath(path ...string) []string {
-	return append([]string{a.Config.ClientID, a.Config.Sandbox}, path...)
+func (a *Configuration) UniqueSandboxPath(path ...string) []string {
+	return append([]string{a.Authentication.ClientID, a.Authentication.Sandbox}, path...)
 }
 
 // ReadCache returns the read-cache flag
-func (a *Authentication) ReadCache() bool {
+func (a *Configuration) ReadCache() bool {
 	return a.Read
 }
 
 // WriteCache returns the write-cache flag
-func (a *Authentication) WriteCache() bool {
+func (a *Configuration) WriteCache() bool {
 	return a.Write
 }

@@ -26,14 +26,14 @@ import (
 )
 
 // NewDeleteCommand creates an initialized command object
-func NewDeleteCommand(auth *helper.Authentication, os *util.KVCache, name string) *cobra.Command {
-	ac := auth.AC //helper.NewAutoContainer(auth)
+func NewDeleteCommand(conf *helper.Configuration, os *util.KVCache, name string) *cobra.Command {
+	ac := conf.AC //helper.NewAutoContainer(auth)
 	use := util.Plural(name)
 	cmd := &cobra.Command{
 		Use:     use,
 		Aliases: []string{name},
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-			if err := auth.Update(cmd); err != nil {
+			if err := conf.Update(cmd); err != nil {
 				return []string{}, cobra.ShellCompDirectiveNoFileComp
 			}
 			valid, err := os.Keys()
@@ -43,10 +43,10 @@ func NewDeleteCommand(auth *helper.Authentication, os *util.KVCache, name string
 			return util.Difference(valid, args), cobra.ShellCompDirectiveNoFileComp
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErr(auth.Validate(cmd))
+			helper.CheckErr(conf.Validate(cmd))
 			helper.CheckErr(ac.AutoFillContainer())
 			for _, name := range args {
-				helper.CheckErr(od.Delete(context.Background(), auth.Config, ac.ContainerID, os.GetValue(name)))
+				helper.CheckErr(od.Delete(context.Background(), conf.Authentication, ac.ContainerID, os.GetValue(name)))
 				os.Remove(name)
 			}
 		},

@@ -49,12 +49,12 @@ var FilterTypeSToL = util.Mapper{
 }
 
 // NewNameToInstanceID resolves name to @id
-func NewNameToInstanceID(auth *Authentication, schema string) *util.KVCache {
+func NewNameToInstanceID(auth *Configuration, schema string) *util.KVCache {
 	return NewTemporaryCache(auth.AC, schema, []string{"_instance", "xdm:name"}, []string{"instanceId"})
 }
 
 // NewNameToID resolves name to @id
-func NewNameToID(auth *Authentication, schema string) *util.KVCache {
+func NewNameToID(auth *Configuration, schema string) *util.KVCache {
 	return NewTemporaryCache(auth.AC, schema, []string{"_instance", "xdm:name"}, []string{"_instance", "@id"})
 }
 

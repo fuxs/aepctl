@@ -26,8 +26,8 @@ import (
 )
 
 // NewCreatePlacementCommand creates an initialized command object
-func NewCreatePlacementCommand(auth *helper.Authentication) *cobra.Command {
-	ac := auth.AC
+func NewCreatePlacementCommand(conf *helper.Configuration) *cobra.Command {
+	ac := conf.AC
 	fc := &helper.FileConfig{}
 	cmd := &cobra.Command{
 		Use:     "placement",
@@ -49,7 +49,7 @@ func NewCreatePlacementCommand(auth *helper.Authentication) *cobra.Command {
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErr(auth.Validate(cmd))
+			helper.CheckErr(conf.Validate(cmd))
 			helper.CheckErr(ac.AutoFillContainer())
 			l := len(args)
 			if l == 1 || l == 2 || l > 4 {
@@ -69,7 +69,7 @@ func NewCreatePlacementCommand(auth *helper.Authentication) *cobra.Command {
 					placement.Channel = helper.ChannelSToL.GetL(placement.Channel)
 					placement.Content = helper.ContentSToL.GetL(placement.Content)
 				}
-				_, err := od.Create(context.Background(), auth.Config, ac.ContainerID, od.PlacementSchema, placement)
+				_, err := od.Create(context.Background(), conf.Authentication, ac.ContainerID, od.PlacementSchema, placement)
 				helper.CheckErr(err)
 			}
 			//
@@ -84,7 +84,7 @@ func NewCreatePlacementCommand(auth *helper.Authentication) *cobra.Command {
 							placement.Channel = helper.ChannelSToL.GetL(placement.Channel)
 							placement.Content = helper.ContentSToL.GetL(placement.Content)
 						}
-						_, err = od.Create(context.Background(), auth.Config, ac.ContainerID, od.PlacementSchema, placement)
+						_, err = od.Create(context.Background(), conf.Authentication, ac.ContainerID, od.PlacementSchema, placement)
 						helper.CheckErr(err)
 					} else {
 						helper.CheckErrEOF(err)

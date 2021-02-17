@@ -57,7 +57,7 @@ func (t *tagTransformer) ToWideTable(i interface{}) (*util.Table, error) {
 }
 
 // NewTagsCommand creates an initialized command object
-func NewTagsCommand(auth *helper.Authentication) *cobra.Command {
+func NewTagsCommand(auth *helper.Configuration) *cobra.Command {
 	tt := &tagTransformer{}
 	return NewQueryCommand(
 		auth,
@@ -67,7 +67,7 @@ func NewTagsCommand(auth *helper.Authentication) *cobra.Command {
 }
 
 // NewTagCommand creates an initialized command object
-func NewTagCommand(auth *helper.Authentication) *cobra.Command {
+func NewTagCommand(auth *helper.Configuration) *cobra.Command {
 	tt := &tagTransformer{}
 	return NewGetCommand(
 		auth,

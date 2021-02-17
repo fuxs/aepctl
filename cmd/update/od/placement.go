@@ -23,6 +23,6 @@ import (
 )
 
 // NewUpdatePlacementCommand creates an initialized command object
-func NewUpdatePlacementCommand(auth *helper.Authentication) *cobra.Command {
-	return NewUpdateCommand(auth, "placement", od.PlacementSchema)
+func NewUpdatePlacementCommand(conf *helper.Configuration) *cobra.Command {
+	return NewUpdateCommand(conf, "placement", od.PlacementSchema)
 }

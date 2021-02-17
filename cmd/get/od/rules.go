@@ -59,21 +59,21 @@ func (t *ruleTransformer) ToWideTable(i interface{}) (*util.Table, error) {
 }
 
 // NewRulesCommand creates an initialized command object
-func NewRulesCommand(auth *helper.Authentication) *cobra.Command {
+func NewRulesCommand(conf *helper.Configuration) *cobra.Command {
 	rt := &ruleTransformer{}
 	return NewQueryCommand(
-		auth,
+		conf,
 		od.RuleSchema,
 		"rules",
 		rt)
 }
 
 // NewRuleCommand creates an initialized command object
-func NewRuleCommand(auth *helper.Authentication) *cobra.Command {
+func NewRuleCommand(conf *helper.Configuration) *cobra.Command {
 	rt := &ruleTransformer{}
 	return NewGetCommand(
-		auth,
-		helper.NewRuleIDCache(auth.AC),
+		conf,
+		helper.NewRuleIDCache(conf.AC),
 		od.RuleSchema,
 		"rule",
 		rt)

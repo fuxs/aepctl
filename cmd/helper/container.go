@@ -25,11 +25,11 @@ import (
 type AutoContainer struct {
 	ContainerID string
 	Store       *util.KVCache
-	Auth        *Authentication
+	Auth        *Configuration
 }
 
 // NewAutoContainer creates an initialized AutoContainer object
-func NewAutoContainer(auth *Authentication) *AutoContainer {
+func NewAutoContainer(auth *Configuration) *AutoContainer {
 	return &AutoContainer{
 		Store: NewContainerCache(auth),
 		Auth:  auth,
@@ -51,7 +51,7 @@ func (q *AutoContainer) AddContainerFlag(cmd *cobra.Command) {
 // AutoFillContainer retrieves the container id
 func (q *AutoContainer) AutoFillContainer() error {
 	if q.ContainerID == "" {
-		id, err := q.Store.GetValueE(q.Auth.Config.Sandbox)
+		id, err := q.Store.GetValueE(q.Auth.Authentication.Sandbox)
 		if err != nil {
 			return err
 		}
@@ -65,6 +65,6 @@ func (q *AutoContainer) UniquePath(path ...string) []string {
 	if err := q.AutoFillContainer(); err != nil {
 		return []string{}
 	}
-	auth := q.Auth.Config
+	auth := q.Auth.Authentication
 	return append([]string{auth.ClientID, auth.Sandbox, q.ContainerID}, path...)
 }

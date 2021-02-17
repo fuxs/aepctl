@@ -23,6 +23,6 @@ import (
 )
 
 // NewUpdateRuleCommand creates an initialized command object
-func NewUpdateRuleCommand(auth *helper.Authentication) *cobra.Command {
-	return NewUpdateCommand(auth, "rule", od.RuleSchema)
+func NewUpdateRuleCommand(conf *helper.Configuration) *cobra.Command {
+	return NewUpdateCommand(conf, "rule", od.RuleSchema)
 }

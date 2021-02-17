@@ -22,6 +22,6 @@ import (
 )
 
 // NewDeleteRulesCommand creates an initialized command object
-func NewDeleteRulesCommand(auth *helper.Authentication) *cobra.Command {
-	return NewDeleteCommand(auth, auth.RS, "rule")
+func NewDeleteRulesCommand(conf *helper.Configuration) *cobra.Command {
+	return NewDeleteCommand(conf, conf.RS, "rule")
 }

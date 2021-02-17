@@ -25,9 +25,9 @@ import (
 )
 
 // NewCreateTagCommand creates an initialized command object
-func NewCreateTagCommand(auth *helper.Authentication) *cobra.Command {
-	ac := auth.AC
-	ts := auth.TS
+func NewCreateTagCommand(conf *helper.Configuration) *cobra.Command {
+	ac := conf.AC
+	ts := conf.TS
 	fc := &helper.FileConfig{}
 	cmd := &cobra.Command{
 		Use:     "tags",
@@ -36,11 +36,11 @@ func NewCreateTagCommand(auth *helper.Authentication) *cobra.Command {
 			return []string{}, cobra.ShellCompDirectiveNoFileComp
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErr(auth.Validate(cmd))
+			helper.CheckErr(conf.Validate(cmd))
 			helper.CheckErr(ac.AutoFillContainer())
 			for i, name := range args {
 				tag := &od.Tag{Name: name}
-				_, err := od.Create(context.Background(), auth.Config, ac.ContainerID, od.TagSchema, tag)
+				_, err := od.Create(context.Background(), conf.Authentication, ac.ContainerID, od.TagSchema, tag)
 				helper.CheckErr(err)
 				if i == 0 {
 					ts.Invalidate()
@@ -54,7 +54,7 @@ func NewCreateTagCommand(auth *helper.Authentication) *cobra.Command {
 					tag := &od.Tag{}
 					err = i.Load(tag)
 					if err == nil {
-						_, err = od.Create(context.Background(), auth.Config, ac.ContainerID, od.TagSchema, tag)
+						_, err = od.Create(context.Background(), conf.Authentication, ac.ContainerID, od.TagSchema, tag)
 						helper.CheckErr(err)
 					} else {
 						helper.CheckErrEOF(err)

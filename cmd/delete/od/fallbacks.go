@@ -22,6 +22,6 @@ import (
 )
 
 // NewDeleteFallbacksCommand creates an initialized command object
-func NewDeleteFallbacksCommand(auth *helper.Authentication) *cobra.Command {
-	return NewDeleteCommand(auth, auth.FS, "fallback")
+func NewDeleteFallbacksCommand(conf *helper.Configuration) *cobra.Command {
+	return NewDeleteCommand(conf, conf.FS, "fallback")
 }

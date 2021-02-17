@@ -23,16 +23,16 @@ import (
 )
 
 // NewODCommand creates an initialized command object
-func NewODCommand(auth *helper.Authentication) *cobra.Command {
+func NewODCommand(conf *helper.Configuration) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "od",
 	}
-	cmd.AddCommand(od.NewCreateActivityCommand(auth))
-	cmd.AddCommand(od.NewCreateCollectionCommand(auth))
-	cmd.AddCommand(od.NewCreateFallbackCommand(auth))
-	cmd.AddCommand(od.NewCreateOfferCommand(auth))
-	cmd.AddCommand(od.NewCreateTagCommand(auth))
-	cmd.AddCommand(od.NewCreatePlacementCommand(auth))
-	cmd.AddCommand(od.NewCreateRuleCommand(auth))
+	cmd.AddCommand(od.NewCreateActivityCommand(conf))
+	cmd.AddCommand(od.NewCreateCollectionCommand(conf))
+	cmd.AddCommand(od.NewCreateFallbackCommand(conf))
+	cmd.AddCommand(od.NewCreateOfferCommand(conf))
+	cmd.AddCommand(od.NewCreateTagCommand(conf))
+	cmd.AddCommand(od.NewCreatePlacementCommand(conf))
+	cmd.AddCommand(od.NewCreateRuleCommand(conf))
 	return cmd
 }

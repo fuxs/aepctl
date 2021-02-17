@@ -29,9 +29,9 @@ type activityTransformer struct {
 	idStore *util.KVCache
 }
 
-func newActivityTransformer(auth *helper.Authentication) *activityTransformer {
+func newActivityTransformer(conf *helper.Configuration) *activityTransformer {
 	// get list of placements and store map[@id]channel
-	store := helper.NewTemporaryCache(auth.AC, od.PlacementSchema, []string{"_instance", "@id"}, []string{"_instance", "xdm:channel"})
+	store := helper.NewTemporaryCache(conf.AC, od.PlacementSchema, []string{"_instance", "@id"}, []string{"_instance", "xdm:channel"})
 	return &activityTransformer{
 		idStore: store,
 	}
@@ -90,21 +90,21 @@ func (t *activityTransformer) ToWideTable(i interface{}) (*util.Table, error) {
 }
 
 // NewActivitiesCommand creates an initialized command object
-func NewActivitiesCommand(auth *helper.Authentication) *cobra.Command {
-	at := newActivityTransformer(auth)
+func NewActivitiesCommand(conf *helper.Configuration) *cobra.Command {
+	at := newActivityTransformer(conf)
 	return NewQueryCommand(
-		auth,
+		conf,
 		od.ActivitySchema,
 		"activities",
 		at)
 }
 
 // NewActivityCommand creates an initialized command object
-func NewActivityCommand(auth *helper.Authentication) *cobra.Command {
-	at := newActivityTransformer(auth)
+func NewActivityCommand(conf *helper.Configuration) *cobra.Command {
+	at := newActivityTransformer(conf)
 	return NewGetCommand(
-		auth,
-		helper.NewActivityIDCache(auth.AC),
+		conf,
+		helper.NewActivityIDCache(conf.AC),
 		od.ActivitySchema,
 		"activity",
 		at)

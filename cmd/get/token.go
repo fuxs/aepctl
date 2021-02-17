@@ -47,7 +47,7 @@ func (t *tokenTransformer) ToWideTable(i interface{}) (*util.Table, error) {
 }
 
 // NewTokenCommand creates an initialized command object
-func NewTokenCommand(auth *helper.Authentication) *cobra.Command {
+func NewTokenCommand(conf *helper.Configuration) *cobra.Command {
 	output := helper.NewOutputConf(&tokenTransformer{})
 	cmd := &cobra.Command{
 		Use:  "token",
@@ -56,8 +56,8 @@ func NewTokenCommand(auth *helper.Authentication) *cobra.Command {
 			return []string{}, cobra.ShellCompDirectiveNoFileComp
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErrs(auth.Validate(cmd), output.ValidateFlags())
-			output.PrintResult(auth.Config.GetToken())
+			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
+			output.PrintResult(conf.Authentication.GetToken())
 		},
 	}
 	output.AddOutputFlags(cmd)

@@ -64,21 +64,21 @@ func (t *placementTransformer) ToWideTable(i interface{}) (*util.Table, error) {
 }
 
 // NewPlacementsCommand creates an initialized command object
-func NewPlacementsCommand(auth *helper.Authentication) *cobra.Command {
+func NewPlacementsCommand(conf *helper.Configuration) *cobra.Command {
 	pt := &placementTransformer{}
 	return NewQueryCommand(
-		auth,
+		conf,
 		od.PlacementSchema,
 		"placements",
 		pt)
 }
 
 // NewPlacementCommand creates an initialized command object
-func NewPlacementCommand(auth *helper.Authentication) *cobra.Command {
+func NewPlacementCommand(conf *helper.Configuration) *cobra.Command {
 	pt := &placementTransformer{}
 	return NewGetCommand(
-		auth,
-		helper.NewPlacementIDCache(auth.AC),
+		conf,
+		helper.NewPlacementIDCache(conf.AC),
 		od.PlacementSchema,
 		"placement",
 		pt)

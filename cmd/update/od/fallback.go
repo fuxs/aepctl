@@ -23,6 +23,6 @@ import (
 )
 
 // NewUpdateFallbackCommand creates an initialized command object
-func NewUpdateFallbackCommand(auth *helper.Authentication) *cobra.Command {
-	return NewUpdateCommand(auth, "fallback", od.FallbackSchema)
+func NewUpdateFallbackCommand(conf *helper.Configuration) *cobra.Command {
+	return NewUpdateCommand(conf, "fallback", od.FallbackSchema)
 }

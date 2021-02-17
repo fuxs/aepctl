@@ -23,6 +23,6 @@ import (
 )
 
 // NewUpdateActivityCommand creates an initialized command object
-func NewUpdateActivityCommand(auth *helper.Authentication) *cobra.Command {
-	return NewUpdateCommand(auth, "activity", od.ActivitySchema)
+func NewUpdateActivityCommand(conf *helper.Configuration) *cobra.Command {
+	return NewUpdateCommand(conf, "activity", od.ActivitySchema)
 }

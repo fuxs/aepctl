@@ -22,6 +22,6 @@ import (
 )
 
 // NewDeleteCollectionsCommand creates an initialized command object
-func NewDeleteCollectionsCommand(auth *helper.Authentication) *cobra.Command {
-	return NewDeleteCommand(auth, auth.CS, "collection")
+func NewDeleteCollectionsCommand(conf *helper.Configuration) *cobra.Command {
+	return NewDeleteCommand(conf, conf.CS, "collection")
 }

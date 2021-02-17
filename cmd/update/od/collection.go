@@ -23,6 +23,6 @@ import (
 )
 
 // NewUpdateCollectionCommand creates an initialized command object
-func NewUpdateCollectionCommand(auth *helper.Authentication) *cobra.Command {
-	return NewUpdateCommand(auth, "collection", od.CollectionSchema)
+func NewUpdateCollectionCommand(conf *helper.Configuration) *cobra.Command {
+	return NewUpdateCommand(conf, "collection", od.CollectionSchema)
 }

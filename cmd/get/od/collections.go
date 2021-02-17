@@ -61,21 +61,21 @@ func (t *collectionTransformer) ToWideTable(i interface{}) (*util.Table, error) 
 }
 
 // NewCollectionsCommand creates an initialized command object
-func NewCollectionsCommand(auth *helper.Authentication) *cobra.Command {
+func NewCollectionsCommand(conf *helper.Configuration) *cobra.Command {
 	ct := &collectionTransformer{}
 	return NewQueryCommand(
-		auth,
+		conf,
 		od.CollectionSchema,
 		"collections",
 		ct)
 }
 
 // NewCollectionCommand creates an initialized command object
-func NewCollectionCommand(auth *helper.Authentication) *cobra.Command {
+func NewCollectionCommand(conf *helper.Configuration) *cobra.Command {
 	ct := &collectionTransformer{}
 	return NewGetCommand(
-		auth,
-		helper.NewCollectionIDCache(auth.AC),
+		conf,
+		helper.NewCollectionIDCache(conf.AC),
 		od.CollectionSchema,
 		"collection",
 		ct)

@@ -25,23 +25,23 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func prepareUpdate(auth *helper.Authentication, update *od.Update, schema string) {
-	store := helper.NewNameToInstanceID(auth, schema)
+func prepareUpdate(conf *helper.Configuration, update *od.Update, schema string) {
+	store := helper.NewNameToInstanceID(conf, schema)
 	for i, name := range update.IDs {
 		update.IDs[i] = store.GetValue(name)
 	}
 }
 
 // NewUpdateCommand creates an initialized update command object
-func NewUpdateCommand(auth *helper.Authentication, use, schema string) *cobra.Command {
-	ac := auth.AC
+func NewUpdateCommand(conf *helper.Configuration, use, schema string) *cobra.Command {
+	ac := conf.AC
 	fc := &helper.FileConfig{}
 	cmd := &cobra.Command{
 		Use:     use,
 		Aliases: []string{util.Plural(use)},
 		Args:    cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErr(auth.Validate(cmd))
+			helper.CheckErr(conf.Validate(cmd))
 			helper.CheckErr(ac.AutoFillContainer())
 			i, err := fc.Open()
 			helper.CheckErr(err)
@@ -50,11 +50,11 @@ func NewUpdateCommand(auth *helper.Authentication, use, schema string) *cobra.Co
 					update := &od.Update{}
 					if err := i.Load(update); err == nil {
 						if fc.IsYAML() {
-							prepareUpdate(auth, update, schema)
+							prepareUpdate(conf, update, schema)
 						}
 						for _, name := range update.IDs {
 							for _, apply := range update.Apply {
-								_, err = od.Patch(context.Background(), auth.Config, ac.ContainerID, name, schema, apply)
+								_, err = od.Patch(context.Background(), conf.Authentication, ac.ContainerID, name, schema, apply)
 								helper.CheckErr(err)
 							}
 						}

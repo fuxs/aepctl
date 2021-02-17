@@ -22,6 +22,6 @@ import (
 )
 
 // NewDeleteActivitiesCommand creates an initialized command object
-func NewDeleteActivitiesCommand(auth *helper.Authentication) *cobra.Command {
-	return NewDeleteCommand(auth, auth.AS, "activity")
+func NewDeleteActivitiesCommand(conf *helper.Configuration) *cobra.Command {
+	return NewDeleteCommand(conf, conf.AS, "activity")
 }

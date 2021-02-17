@@ -24,8 +24,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func prepareOffer(auth *helper.Authentication, offer *od.Offer) {
-	ps := helper.NewNameToID(auth, od.PlacementSchema)
+func prepareOffer(conf *helper.Configuration, offer *od.Offer) {
+	ps := helper.NewNameToID(conf, od.PlacementSchema)
 	for _, r := range offer.Representations {
 		for _, c := range r.Components {
 			c.Type = helper.ContentSToL.GetL(c.Type)
@@ -36,25 +36,25 @@ func prepareOffer(auth *helper.Authentication, offer *od.Offer) {
 		r.Placement = ps.GetValue(r.Placement)
 	}
 	//rules
-	rs := helper.NewNameToID(auth, od.RuleSchema)
+	rs := helper.NewNameToID(conf, od.RuleSchema)
 	offer.Constraint.Rule = rs.GetValue(offer.Constraint.Rule)
 	// tags
-	ts := helper.NewNameToID(auth, od.TagSchema)
+	ts := helper.NewNameToID(conf, od.TagSchema)
 	for i, t := range offer.Tags {
 		offer.Tags[i] = ts.GetValue(t)
 	}
 }
 
 // NewCreateOfferCommand creates an initialized command object
-func NewCreateOfferCommand(auth *helper.Authentication) *cobra.Command {
-	ac := auth.AC
+func NewCreateOfferCommand(conf *helper.Configuration) *cobra.Command {
+	ac := conf.AC
 	fc := &helper.FileConfig{}
 	cmd := &cobra.Command{
 		Use:     "offer",
 		Aliases: []string{"offers"},
 		Args:    cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErr(auth.Validate(cmd))
+			helper.CheckErr(conf.Validate(cmd))
 			helper.CheckErr(ac.AutoFillContainer())
 			i, err := fc.Open()
 			helper.CheckErr(err)
@@ -63,9 +63,9 @@ func NewCreateOfferCommand(auth *helper.Authentication) *cobra.Command {
 					offer := &od.Offer{}
 					if err := i.Load(offer); err == nil {
 						if fc.IsYAML() {
-							prepareOffer(auth, offer)
+							prepareOffer(conf, offer)
 						}
-						_, err = od.Create(context.Background(), auth.Config, ac.ContainerID, od.OfferSchema, offer)
+						_, err = od.Create(context.Background(), conf.Authentication, ac.ContainerID, od.OfferSchema, offer)
 						helper.CheckErr(err)
 					} else {
 						helper.CheckErrEOF(err)

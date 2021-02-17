@@ -29,8 +29,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// GlobalConfig contains the global configuration
-type GlobalConfig struct {
+// RootConfig contains the global configuration
+type RootConfig struct {
 	Name    string
 	Version string
 	Config  string
@@ -38,9 +38,9 @@ type GlobalConfig struct {
 	Human   bool
 }
 
-// NewGlobalConfig returns an initilized configuration.
-func NewGlobalConfig(name, version string, cmd *cobra.Command) *GlobalConfig {
-	o := &GlobalConfig{
+// NewRootConfig returns an initilized configuration.
+func NewRootConfig(name, version string, cmd *cobra.Command) *RootConfig {
+	o := &RootConfig{
 		Name:    name,
 		Version: version,
 	}
@@ -53,7 +53,7 @@ func NewGlobalConfig(name, version string, cmd *cobra.Command) *GlobalConfig {
 }
 
 // Configure loads the configuration file encoded in json or yaml.
-func (o *GlobalConfig) Configure(cmd *cobra.Command) error {
+func (o *RootConfig) Configure(cmd *cobra.Command) error {
 	// set up logging
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
