@@ -52,13 +52,6 @@ func NewGlobalConfig(name, version string, cmd *cobra.Command) *GlobalConfig {
 	return o
 }
 
-// GetPreRunE returns the function for PreRunE function of cobra.Comamand
-func (o *GlobalConfig) GetPreRunE() func(*cobra.Command, []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		return o.Configure(cmd)
-	}
-}
-
 // Configure loads the configuration file encoded in json or yaml.
 func (o *GlobalConfig) Configure(cmd *cobra.Command) error {
 	// set up logging

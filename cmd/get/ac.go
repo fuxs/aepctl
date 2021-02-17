@@ -189,7 +189,7 @@ func NewACCommand(auth *helper.Authentication) *cobra.Command {
 			return util.Difference(validArgs, args), cobra.ShellCompDirectiveNoFileComp
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErr(output.ValidateFlags())
+			helper.CheckErrs(auth.Validate(cmd), output.ValidateFlags())
 			ctx := context.Background()
 			if len(args) == 0 {
 				output.PrintResult(acl.GetPermissionsAndResources(ctx, auth.Config))

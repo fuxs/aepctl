@@ -49,6 +49,7 @@ func NewCreatePlacementCommand(auth *helper.Authentication) *cobra.Command {
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+			helper.CheckErr(auth.Validate(cmd))
 			helper.CheckErr(ac.AutoFillContainer())
 			l := len(args)
 			if l == 1 || l == 2 || l > 4 {

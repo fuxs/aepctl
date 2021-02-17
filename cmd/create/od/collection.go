@@ -72,6 +72,7 @@ func NewCreateCollectionCommand(auth *helper.Authentication) *cobra.Command {
 			return result, cobra.ShellCompDirectiveNoFileComp
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			helper.CheckErr(auth.Validate(cmd))
 			helper.CheckErr(ac.AutoFillContainer())
 			l := len(args)
 			if l == 1 || l == 2 {

@@ -103,11 +103,14 @@ func NewSandboxCommand(auth *helper.Authentication) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "sandbox",
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			if err := auth.Update(cmd); err != nil {
+				return []string{}, cobra.ShellCompDirectiveNoFileComp
+			}
 			sandboxes, _ := helper.NewSandboxCache(auth).GetList()
 			return sandboxes, cobra.ShellCompDirectiveNoFileComp
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			helper.CheckErr(output.ValidateFlags())
+			helper.CheckErrs(auth.Validate(cmd), output.ValidateFlags())
 			switch len(args) {
 			case 0:
 				output.PrintResult(sandbox.List(context.Background(), auth.Config))
@@ -131,7 +134,7 @@ func NewSandboxesCommand(auth *helper.Authentication) *cobra.Command {
 		Use:       "sandboxes",
 		ValidArgs: []string{"all", "types"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			helper.CheckErr(output.ValidateFlags())
+			helper.CheckErrs(auth.Validate(cmd), output.ValidateFlags())
 			switch len(args) {
 			case 0:
 				output.PrintResult(sandbox.List(context.Background(), auth.Config))

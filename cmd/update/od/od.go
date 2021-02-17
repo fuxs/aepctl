@@ -41,6 +41,7 @@ func NewUpdateCommand(auth *helper.Authentication, use, schema string) *cobra.Co
 		Aliases: []string{util.Plural(use)},
 		Args:    cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
+			helper.CheckErr(auth.Validate(cmd))
 			helper.CheckErr(ac.AutoFillContainer())
 			i, err := fc.Open()
 			helper.CheckErr(err)

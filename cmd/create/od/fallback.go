@@ -54,6 +54,7 @@ func NewCreateFallbackCommand(auth *helper.Authentication) *cobra.Command {
 		Aliases: []string{"fallbacks"},
 		Args:    cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
+			helper.CheckErr(auth.Validate(cmd))
 			helper.CheckErr(ac.AutoFillContainer())
 			i, err := fc.Open()
 			helper.CheckErr(err)

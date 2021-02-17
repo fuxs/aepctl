@@ -27,6 +27,7 @@ import (
 
 // Authentication encapsulates the authentication configuration
 type Authentication struct {
+	Global *util.GlobalConfig
 	Config *api.AuthenticationConfig
 	Read   bool
 	Write  bool
@@ -41,10 +42,24 @@ type Authentication struct {
 }
 
 // NewAuthentication creates an initialized Authentication object
-func NewAuthentication() *Authentication {
+func NewAuthentication(gcfg *util.GlobalConfig) *Authentication {
 	result := &Authentication{
+		Global: gcfg,
 		Config: &api.AuthenticationConfig{},
 	}
+	cache := util.NewJSONCache(func() []string { return result.UniquePath("token.json") })
+	o := result.Config
+	o.LoadToken = func() (*api.BearerToken, error) {
+		token := &api.BearerToken{}
+		if err := cache.Load(token); err != nil {
+			return nil, err
+		}
+		return token, nil
+	}
+	o.SaveToken = func(token *api.BearerToken) error {
+		return cache.Save(token)
+	}
+
 	ac := NewAutoContainer(result)
 	result.AC = ac
 	result.AS = NewActivityCache(ac)
@@ -56,6 +71,11 @@ func NewAuthentication() *Authentication {
 	result.CS = NewCollectionCache(ac)
 	result.RS = NewRuleCache(ac)
 	return result
+}
+
+// Update loads the configuration and updates the command flags
+func (a *Authentication) Update(cmd *cobra.Command) error {
+	return a.Global.Configure(cmd)
 }
 
 // AddAuthenticationFlags adds all required flags for authentication
@@ -75,17 +95,7 @@ func (a *Authentication) AddAuthenticationFlags(cmd *cobra.Command) {
 	flags.StringVar(&o.ClientSecret, "client-secret", "", "client secret")
 	flags.StringVar(&o.Sandbox, "sandbox", "prod", "selects the sandbox (default is the name of the production sandbox: prod)")
 	flags.StringVar(&o.Key, "key", "private.key", "path to private key file")
-	cache := util.NewJSONCache(func() []string { return a.UniquePath("token.json") })
-	o.LoadToken = func() (*api.BearerToken, error) {
-		token := &api.BearerToken{}
-		if err := cache.Load(token); err != nil {
-			return nil, err
-		}
-		return token, nil
-	}
-	o.SaveToken = func(token *api.BearerToken) error {
-		return cache.Save(token)
-	}
+
 	if err := cmd.RegisterFlagCompletionFunc("sandbox", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		sandboxes, _ := NewSandboxCache(a).GetList()
 		return sandboxes, cobra.ShellCompDirectiveNoFileComp
@@ -94,7 +104,11 @@ func (a *Authentication) AddAuthenticationFlags(cmd *cobra.Command) {
 	}
 }
 
-func (a *Authentication) Validate() error {
+// Validate updates the command flags and validates the final configuration
+func (a *Authentication) Validate(cmd *cobra.Command) error {
+	if err := a.Update(cmd); err != nil {
+		return err
+	}
 	o := a.Config
 
 	var clientID, clientSecret, techAccount, organization, key bool

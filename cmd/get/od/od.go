@@ -64,6 +64,9 @@ func NewGetCommand(auth *helper.Authentication, os *util.KVCache, schema, use st
 		Use:  use,
 		Args: cobra.MinimumNArgs(1),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			if err := auth.Update(cmd); err != nil {
+				return []string{}, cobra.ShellCompDirectiveNoFileComp
+			}
 			valid, err := os.Keys()
 			if err != nil {
 				return []string{}, cobra.ShellCompDirectiveNoFileComp
@@ -71,9 +74,9 @@ func NewGetCommand(auth *helper.Authentication, os *util.KVCache, schema, use st
 			return util.Difference(valid, args), cobra.ShellCompDirectiveNoFileComp
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+			helper.CheckErrs(auth.Validate(cmd), output.ValidateFlags())
 			helper.CheckErr(ac.AutoFillContainer())
 			for _, name := range args {
-				helper.CheckErrs(output.ValidateFlags(), ac.AutoFillContainer())
 				output.PrintResult(od.Get(context.Background(), auth.Config, ac.ContainerID, schema, os.GetValue(name)))
 			}
 		},
@@ -92,7 +95,8 @@ func NewQueryCommand(auth *helper.Authentication, schema, use string, t helper.T
 		Use:  use,
 		Args: cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErrs(output.ValidateFlags(), ac.AutoFillContainer())
+			helper.CheckErrs(auth.Validate(cmd), output.ValidateFlags())
+			helper.CheckErr(ac.AutoFillContainer())
 			output.PrintResult(od.Query(context.Background(), auth.Config, ac.ContainerID, schema, qc.Query, qc.QOP, qc.Field, qc.OrderBy, qc.Limit))
 		},
 	}

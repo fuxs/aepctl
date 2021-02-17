@@ -56,7 +56,7 @@ func NewTokenCommand(auth *helper.Authentication) *cobra.Command {
 			return []string{}, cobra.ShellCompDirectiveNoFileComp
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErrs(auth.Validate(), output.ValidateFlags())
+			helper.CheckErrs(auth.Validate(cmd), output.ValidateFlags())
 			output.PrintResult(auth.Config.GetToken())
 		},
 	}

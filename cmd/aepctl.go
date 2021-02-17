@@ -48,9 +48,7 @@ func NewCommand() *cobra.Command {
 		DisableFlagsInUseLine: true,
 	}
 	gcfg := util.NewGlobalConfig("aepctl", version, cmd)
-	cmd.PersistentPreRunE = gcfg.GetPreRunE()
-	auth := helper.NewAuthentication()
-	//auth.AddAuthenticationFlags(cmd)
+	auth := helper.NewAuthentication(gcfg)
 	cmd.AddCommand(create.NewCommand(auth))
 	cmd.AddCommand(get.NewCommand(auth))
 	cmd.AddCommand(delete.NewCommand(auth))

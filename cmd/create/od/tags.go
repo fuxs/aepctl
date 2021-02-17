@@ -36,6 +36,7 @@ func NewCreateTagCommand(auth *helper.Authentication) *cobra.Command {
 			return []string{}, cobra.ShellCompDirectiveNoFileComp
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+			helper.CheckErr(auth.Validate(cmd))
 			helper.CheckErr(ac.AutoFillContainer())
 			for i, name := range args {
 				tag := &od.Tag{Name: name}

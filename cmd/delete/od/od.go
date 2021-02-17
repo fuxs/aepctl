@@ -33,6 +33,9 @@ func NewDeleteCommand(auth *helper.Authentication, os *util.KVCache, name string
 		Use:     use,
 		Aliases: []string{name},
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			if err := auth.Update(cmd); err != nil {
+				return []string{}, cobra.ShellCompDirectiveNoFileComp
+			}
 			valid, err := os.Keys()
 			if err != nil {
 				return []string{}, cobra.ShellCompDirectiveNoFileComp
@@ -40,6 +43,7 @@ func NewDeleteCommand(auth *helper.Authentication, os *util.KVCache, name string
 			return util.Difference(valid, args), cobra.ShellCompDirectiveNoFileComp
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+			helper.CheckErr(auth.Validate(cmd))
 			helper.CheckErr(ac.AutoFillContainer())
 			for _, name := range args {
 				helper.CheckErr(od.Delete(context.Background(), auth.Config, ac.ContainerID, os.GetValue(name)))
