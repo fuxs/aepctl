@@ -31,6 +31,7 @@ import (
 )
 
 var (
+	version  = "v0.1.2"
 	longDesc = util.LongDesc(`
 	The command line tool for AEP
 	
@@ -46,10 +47,10 @@ func NewCommand() *cobra.Command {
 		Long:                  longDesc,
 		DisableFlagsInUseLine: true,
 	}
-	gcfg := util.NewGlobalConfig("aepctl", cmd)
+	gcfg := util.NewGlobalConfig("aepctl", version, cmd)
 	cmd.PersistentPreRunE = gcfg.GetPreRunE()
 	auth := helper.NewAuthentication()
-	auth.AddAuthenticationFlags(cmd)
+	//auth.AddAuthenticationFlags(cmd)
 	cmd.AddCommand(create.NewCommand(auth))
 	cmd.AddCommand(get.NewCommand(auth))
 	cmd.AddCommand(delete.NewCommand(auth))

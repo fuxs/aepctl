@@ -31,16 +31,19 @@ import (
 
 // GlobalConfig contains the global configuration
 type GlobalConfig struct {
-	Name   string
-	Config string
-	Debug  bool
-	Human  bool
+	Name    string
+	Version string
+	Config  string
+	Debug   bool
+	Human   bool
 }
 
 // NewGlobalConfig returns an initilized configuration.
-func NewGlobalConfig(name string, cmd *cobra.Command) *GlobalConfig {
-	o := &GlobalConfig{}
-	o.Name = name
+func NewGlobalConfig(name, version string, cmd *cobra.Command) *GlobalConfig {
+	o := &GlobalConfig{
+		Name:    name,
+		Version: version,
+	}
 	flags := cmd.PersistentFlags()
 
 	flags.StringVar(&o.Config, "config", "", "path to configuration file")
@@ -67,7 +70,9 @@ func (o *GlobalConfig) Configure(cmd *cobra.Command) error {
 	if o.Human {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
-
+	if log.Debug().Enabled() {
+		log.Debug().Str("Service", o.Name).Str("Version", o.Version).Msg("Starting")
+	}
 	if o.Config != "" {
 		viper.SetConfigFile(o.Config)
 		if err := viper.ReadInConfig(); err != nil {
@@ -77,13 +82,16 @@ func (o *GlobalConfig) Configure(cmd *cobra.Command) error {
 		viper.SetConfigName("config")
 		viper.SetConfigType("yaml")
 		viper.AddConfigPath(filepath.Join(string(filepath.Separator), "etc", o.Name))
-		if home, err := os.UserHomeDir(); err != nil {
+		if home, err := os.UserHomeDir(); err == nil {
 			viper.AddConfigPath(filepath.Join(home, "."+o.Name))
+		} else {
+			log.Debug().Str("Service", o.Name).Err(err).Msg("Could not add config path ~/.aepctl")
 		}
 		viper.AddConfigPath(".")
 		if err := viper.ReadInConfig(); err != nil {
 			if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 				// Config file not found; ignore error
+				log.Debug().Str("Service", o.Name).Msg("Could not find any configuration file")
 			} else {
 				// Config file was found but another error was produced
 				return err

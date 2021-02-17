@@ -40,6 +40,7 @@ func NewCommand(auth *helper.Authentication) *cobra.Command {
 		Long:                  longDesc,
 		DisableFlagsInUseLine: true,
 	}
+	auth.AddAuthenticationFlags(cmd)
 	cmd.AddCommand(NewODCommand(auth))
 	return cmd
 }
