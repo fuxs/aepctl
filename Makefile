@@ -40,11 +40,13 @@ build-win-386: dependencies
 	@GOOS=windows GOARCH=386 go build -o $(DIST)/windows/386/bin/aepctl.exe main.go
 	@tar -C $(DIST)/windows/386 -czf $(DIST)/aepctl-windows-386.tgz bin/aepctl.exe
 	@shasum -a 256 $(DIST)/aepctl-windows-386.tgz | head -c 64 > $(DIST)/aepctl-windows-386.tgz.sha256
+	@shasum -a 256 $(DIST)/windows/386/bin/aepctl.exe | head -c 64 > $(DIST)/windows/386/bin/aepctl.exe.sha256
 
 build-win-amd64: dependencies
 	@GOOS=windows GOARCH=amd64 go build -o $(DIST)/windows/amd64/bin/aepctl.exe main.go
 	@tar -C $(DIST)/windows/amd64 -czf $(DIST)/aepctl-windows-amd64.tgz bin/aepctl.exe
 	@shasum -a 256 $(DIST)/aepctl-windows-amd64.tgz | head -c 64 > $(DIST)/aepctl-windows-amd64.tgz.sha256
+	@shasum -a 256 $(DIST)/windows/amd64/bin/aepctl.exe | head -c 64 > $(DIST)/windows/amd64/bin/aepctl.exe.sha256
 
 dependencies:
 	go get ./...
