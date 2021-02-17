@@ -37,13 +37,13 @@ Planed APIs:
         Invoke-WebRequest https://www.bungenstock.de/aepctl/releases/v0.1.1/windows/amd64/aepctl.exe -OutFile aepctl.exe
         ```
         Add `aepctl.exe` to your `PATH`
-2. Create an [Adobe I/O Project](https://console.adobe.io/projects)
+2. Create an [Adobe I/O Project](https://console.adobe.io/projects) ([detailed documentation](doc/new_project.md))
 3. Provide a  `config.yaml` file with the following command
     ```terminal
     aepctl configure
     ```
     Paste authentication credentials from the Adobe I/O project (click on *Service
-      Account(JWT)* of your Adobe I/O project)
+      Account(JWT)* of your Adobe I/O project) and select a private key file. ([detailed documentation](doc/configuration.md))
 4. Test the configuration by getting an access token.
     ```terminal
     aepctl get token
