@@ -9,6 +9,13 @@ else
 	AEPCTLDBG=$(BIN)/aepctldbg
 endif
 
+COMMIT=$(shell git rev-list -1 HEAD)
+BUILD_TIME=$(shell date)
+VERSION=$(shell git describe --tags)
+LDFLAGS=-X 'github.com/fuxs/aepctl/cmd/version.Commit=${COMMIT}'
+LDFLAGS+=-X 'github.com/fuxs/aepctl/cmd/version.BuildTime=${BUILD_TIME}'
+LDFLAGS+=-X 'github.com/fuxs/aepctl/cmd.Version=${VERSION}'
+
 .PHONY: build build-dbg build-dist build-win-386 build-win-amd64 debug dependencies lint vet build-in-container lint-in-container
 
 $(BIN):
@@ -32,18 +39,18 @@ debug: build-dbg
 	dlv --listen=:2345 --headless --api-version=2 exec "$(AEPCTLDBG)" -- configure
 
 build: dependencies
-	go build -o "$(AEPCTL)" main.go
+	@go build -ldflags="$(LDFLAGS)" -o "$(AEPCTL)" main.go
 
 build-dist: build-win-386 build-win-amd64
 
 build-win-386: dependencies
-	@GOOS=windows GOARCH=386 go build -o $(DIST)/windows/386/bin/aepctl.exe main.go
+	@GOOS=windows GOARCH=386 go build -ldflags="$(LDFLAGS)" -o $(DIST)/windows/386/bin/aepctl.exe main.go
 	@tar -C $(DIST)/windows/386 -czf $(DIST)/aepctl-windows-386.tgz bin/aepctl.exe
 	@shasum -a 256 $(DIST)/aepctl-windows-386.tgz | head -c 64 > $(DIST)/aepctl-windows-386.tgz.sha256
 	@shasum -a 256 $(DIST)/windows/386/bin/aepctl.exe | head -c 64 > $(DIST)/windows/386/bin/aepctl.exe.sha256
 
 build-win-amd64: dependencies
-	@GOOS=windows GOARCH=amd64 go build -o $(DIST)/windows/amd64/bin/aepctl.exe main.go
+	@GOOS=windows GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o $(DIST)/windows/amd64/bin/aepctl.exe main.go
 	@tar -C $(DIST)/windows/amd64 -czf $(DIST)/aepctl-windows-amd64.tgz bin/aepctl.exe
 	@shasum -a 256 $(DIST)/aepctl-windows-amd64.tgz | head -c 64 > $(DIST)/aepctl-windows-amd64.tgz.sha256
 	@shasum -a 256 $(DIST)/windows/amd64/bin/aepctl.exe | head -c 64 > $(DIST)/windows/amd64/bin/aepctl.exe.sha256

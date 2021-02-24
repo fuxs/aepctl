@@ -24,6 +24,7 @@ import (
 	"github.com/fuxs/aepctl/cmd/get"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/cmd/update"
+	"github.com/fuxs/aepctl/cmd/version"
 	"github.com/fuxs/aepctl/util"
 
 	"github.com/spf13/cobra"
@@ -31,7 +32,8 @@ import (
 )
 
 var (
-	version  = "v0.1.2"
+	// Version will be filled with version info
+	Version  = "unknown"
 	longDesc = util.LongDesc(`
 	The command line tool for AEP
 	
@@ -47,7 +49,7 @@ func NewCommand() *cobra.Command {
 		Long:                  longDesc,
 		DisableFlagsInUseLine: true,
 	}
-	gcfg := util.NewRootConfig("aepctl", version, cmd)
+	gcfg := util.NewRootConfig("aepctl", Version, cmd)
 	conf := helper.NewConfiguration(gcfg)
 	cmd.AddCommand(create.NewCommand(conf))
 	cmd.AddCommand(get.NewCommand(conf))
@@ -55,6 +57,7 @@ func NewCommand() *cobra.Command {
 	cmd.AddCommand(update.NewCommand(conf))
 	cmd.AddCommand(completion.NewCommand())
 	cmd.AddCommand(configure.NewConfigureCommand(gcfg))
+	cmd.AddCommand(version.NewCommand(Version))
 	return cmd
 }
 
