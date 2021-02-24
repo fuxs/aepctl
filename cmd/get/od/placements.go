@@ -23,44 +23,39 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type placementTransformer struct {
+type placementTransformer struct{}
+
+func (*placementTransformer) Header(wide bool) []string {
+	if wide {
+		return []string{"ID", "NAME", "CHANNEL TYPE", "CONTENT TYPE", "LAST MODIFIED", "DESCRIPTION"}
+	}
+	return []string{"NAME", "CHANNEL TYPE", "CONTENT TYPE", "LAST MODIFIED", "DESCRIPTION"}
 }
 
-func (t *placementTransformer) ToTable(i interface{}) (*util.Table, error) {
-	query := util.NewQuery(i)
-	capacity := query.Int("_embedded", "count")
-	table := util.NewTable([]string{"NAME", "CHANNEL TYPE", "CONTENT TYPE", "LAST MODIFIED", "DESCRIPTION"}, capacity)
-
-	query.Path("_embedded", "results").Range(func(q *util.Query) {
-		s := q.Path("_instance")
-		table.Append(map[string]interface{}{
-			"NAME":          s.Str("xdm:name"),
-			"CHANNEL TYPE":  helper.ChannelLToS.Get(s.Str("xdm:channel")),
-			"CONTENT TYPE":  helper.ContentLToS.Get(s.Str("xdm:componentType")),
-			"LAST MODIFIED": util.LocalTimeStr(q.Str("repo:lastModifiedDate")),
-			"DESCRIPTION":   s.Str("xdm:description"),
-		})
-	})
-	return table, nil
+func (*placementTransformer) Preprocess(i util.JSONResponse) error {
+	if err := i.Path("_embedded", "results"); err != nil {
+		return err
+	}
+	return i.EnterArray()
 }
 
-func (t *placementTransformer) ToWideTable(i interface{}) (*util.Table, error) {
-	query := util.NewQuery(i)
-	capacity := query.Int("_embedded", "count")
-	table := util.NewTable([]string{"ID", "NAME", "CHANNEL TYPE", "CONTENT TYPE", "LAST MODIFIED", "DESCRIPTION"}, capacity)
-
-	query.Path("_embedded", "results").Range(func(q *util.Query) {
-		s := q.Path("_instance")
-		table.Append(map[string]interface{}{
-			"ID":            s.Str("@id"),
-			"NAME":          s.Str("xdm:name"),
-			"CHANNEL TYPE":  helper.ChannelLToS.Get(s.Str("xdm:channel")),
-			"CONTENT TYPE":  helper.ContentLToS.Get(s.Str("xdm:componentType")),
-			"LAST MODIFIED": util.LocalTimeStr(q.Str("repo:lastModifiedDate")),
-			"DESCRIPTION":   s.Str("xdm:description"),
-		})
-	})
-	return table, nil
+func (*placementTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+	s := q.Path("_instance")
+	if wide {
+		return w.Write(
+			s.Str("@id"),
+			s.Str("xdm:name"),
+			helper.ChannelLToS.Get(s.Str("xdm:channel")),
+			helper.ContentLToS.Get(s.Str("xdm:componentType")),
+			util.LocalTimeStr(q.Str("repo:lastModifiedDate")),
+			s.Str("xdm:description"))
+	}
+	return w.Write(
+		s.Str("xdm:name"),
+		helper.ChannelLToS.Get(s.Str("xdm:channel")),
+		helper.ContentLToS.Get(s.Str("xdm:componentType")),
+		util.LocalTimeStr(q.Str("repo:lastModifiedDate")),
+		s.Str("xdm:description"))
 }
 
 // NewPlacementsCommand creates an initialized command object

@@ -17,47 +17,32 @@ specific language governing permissions and limitations under the License.
 package od
 
 import (
-	"strings"
-
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
 )
 
-type fallbackTransformer struct {
+type fallbackTransformer struct{}
+
+func (*fallbackTransformer) Header(wide bool) []string {
+	return []string{"NAME", "STATUS", "LAST MODIFIED"}
 }
 
-func (t *fallbackTransformer) ToTable(i interface{}) (*util.Table, error) {
-	query := util.NewQuery(i)
-	capacity := query.Int("_embedded", "count")
-	table := util.NewTable([]string{"NAME", "STATUS", "LAST MODIFIED"}, capacity)
-
-	query.Path("_embedded", "results").Range(func(q *util.Query) {
-		s := q.Path("_instance")
-		table.Append(map[string]interface{}{
-			"NAME":          strings.Trim(s.Str("xdm:name"), " \t"),
-			"STATUS":        s.Str("xdm:status"),
-			"LAST MODIFIED": util.LocalTimeStrCustom(q.Str("repo:lastModifiedDate"), longDate),
-		})
-	})
-	return table, nil
+func (*fallbackTransformer) Preprocess(i util.JSONResponse) error {
+	if err := i.Path("_embedded", "results"); err != nil {
+		return err
+	}
+	return i.EnterArray()
 }
 
-func (t *fallbackTransformer) ToWideTable(i interface{}) (*util.Table, error) {
-	query := util.NewQuery(i)
-	capacity := query.Int("_embedded", "count")
-	table := util.NewTable([]string{"NAME", "STATUS", "LAST MODIFIED"}, capacity)
-
-	query.Path("_embedded", "results").Range(func(q *util.Query) {
-		s := q.Path("_instance")
-		table.Append(map[string]interface{}{
-			"NAME":          strings.Trim(s.Str("xdm:name"), " \t"),
-			"STATUS":        s.Str("xdm:status"),
-			"LAST MODIFIED": util.LocalTimeStrCustom(q.Str("repo:lastModifiedDate"), longDate),
-		})
-	})
-	return table, nil
+func (*fallbackTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+	s := q.Path("_instance")
+	return w.Write(
+		s.Str("xdm:name"),
+		StatusMapper.Get(s.Str("xdm:status")),
+		util.LocalTimeStrCustom(q.Str("repo:lastModifiedDate"), longDate),
+	)
 }
 
 // NewFallbacksCommand creates an initialized command object

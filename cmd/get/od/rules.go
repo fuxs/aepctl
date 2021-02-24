@@ -23,39 +23,26 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type ruleTransformer struct {
+type ruleTransformer struct{}
+
+func (*ruleTransformer) Header(wide bool) []string {
+	return []string{"NAME", "LAST MODIFIED", "DESCRIPTION"}
 }
 
-func (t *ruleTransformer) ToTable(i interface{}) (*util.Table, error) {
-	query := util.NewQuery(i)
-	capacity := query.Int("_embedded", "count")
-	table := util.NewTable([]string{"NAME", "LAST MODIFIED", "DESCRIPTION"}, capacity)
-
-	query.Path("_embedded", "results").Range(func(q *util.Query) {
-		s := q.Path("_instance")
-		table.Append(map[string]interface{}{
-			"NAME":          s.Str("xdm:name"),
-			"LAST MODIFIED": util.LocalTimeStr(q.Str("repo:lastModifiedDate")),
-			"DESCRIPTION":   s.Str("xdm:description"),
-		})
-	})
-	return table, nil
+func (*ruleTransformer) Preprocess(i util.JSONResponse) error {
+	if err := i.Path("_embedded", "results"); err != nil {
+		return err
+	}
+	return i.EnterArray()
 }
 
-func (t *ruleTransformer) ToWideTable(i interface{}) (*util.Table, error) {
-	query := util.NewQuery(i)
-	capacity := query.Int("_embedded", "count")
-	table := util.NewTable([]string{"NAME", "LAST MODIFIED", "DESCRIPTION"}, capacity)
-
-	query.Path("_embedded", "results").Range(func(q *util.Query) {
-		s := q.Path("_instance")
-		table.Append(map[string]interface{}{
-			"NAME":          s.Str("xdm:name"),
-			"LAST MODIFIED": util.LocalTimeStr(q.Str("repo:lastModifiedDate")),
-			"DESCRIPTION":   s.Str("xdm:description"),
-		})
-	})
-	return table, nil
+func (*ruleTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+	s := q.Path("_instance")
+	return w.Write(
+		s.Str("xdm:name"),
+		util.LocalTimeStr(q.Str("repo:lastModifiedDate")),
+		s.Str("xdm:description"),
+	)
 }
 
 // NewRulesCommand creates an initialized command object

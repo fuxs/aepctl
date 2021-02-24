@@ -17,7 +17,9 @@ specific language governing permissions and limitations under the License.
 package get
 
 import (
-	"github.com/fuxs/aepctl/api"
+	"time"
+
+	"github.com/fuxs/aepctl/api/token"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
@@ -25,25 +27,23 @@ import (
 
 type tokenTransformer struct{}
 
-func (t *tokenTransformer) ToTable(i interface{}) (*util.Table, error) {
-	table := util.NewTable([]string{"TOKEN"}, 2)
-	table.HideHeader = true
-	if token, ok := i.(*api.BearerToken); ok {
-		table.Append(map[string]interface{}{"TOKEN": token.Token})
+func (*tokenTransformer) Header(wide bool) []string {
+	if wide {
+		return []string{"TOKEN", "EXPIRES IN"}
 	}
-	return table, nil
+	return []string{"TOKEN"}
 }
 
-func (t *tokenTransformer) ToWideTable(i interface{}) (*util.Table, error) {
-	table := util.NewTable([]string{"TOKEN", "EXPIRES"}, 2)
-	table.HideHeader = true
-	if token, ok := i.(*api.BearerToken); ok {
-		table.Append(map[string]interface{}{
-			"TOKEN":   token.Token,
-			"EXPIRES": token.LocalTime(),
-		})
+func (*tokenTransformer) Preprocess(i util.JSONResponse) error {
+	return nil
+}
+
+func (*tokenTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+	if wide {
+		expires := q.Int("expires_in")
+		return w.Write(q.Str("access_token"), time.Duration(expires*int(time.Millisecond)).String())
 	}
-	return table, nil
+	return w.Write(q.Str("access_token"))
 }
 
 // NewTokenCommand creates an initialized command object
@@ -57,7 +57,7 @@ func NewTokenCommand(conf *helper.Configuration) *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			output.PrintResult(conf.Authentication.GetToken())
+			output.StreamResult(token.GetRaw(conf.Authentication))
 		},
 	}
 	output.AddOutputFlags(cmd)

@@ -17,8 +17,6 @@ specific language governing permissions and limitations under the License.
 package od
 
 import (
-	"strings"
-
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
@@ -37,56 +35,33 @@ func newActivityTransformer(conf *helper.Configuration) *activityTransformer {
 	}
 }
 
-func (t *activityTransformer) ToTable(i interface{}) (*util.Table, error) {
-	query := util.NewQuery(i)
-	capacity := query.Int("_embedded", "count")
-	table := util.NewTable([]string{"NAME", "STATUS", "START DATE", "END DATE", "CHANNEL TYPE", "LAST MODIFIED"}, capacity)
-
-	query.Path("_embedded", "results").Range(func(q *util.Query) {
-		s := q.Path("_instance")
-		// load store and transform to short names
-		t.idStore.MapValues(func(s string) string {
-			return helper.ChannelLToS.Get(s)
-		})
-		table.Append(map[string]interface{}{
-			"NAME":       strings.Trim(s.Str("xdm:name"), " \t"),
-			"STATUS":     StatusMapper.Get(s.Str("xdm:status")),
-			"START DATE": util.LocalTimeStrCustom(s.Str("xdm:startDate"), shortDate),
-			"END DATE":   util.LocalTimeStrCustom(s.Str("xdm:endDate"), shortDate),
-			"CHANNEL TYPE": s.Path("xdm:criteria").Concat(",", func(q *util.Query) string {
-				id := q.Path("xdm:placements").Get(0).String()
-				return t.idStore.GetValue(id)
-			}),
-			"LAST MODIFIED": util.LocalTimeStrCustom(q.Str("repo:lastModifiedDate"), longDate),
-		})
-	})
-	return table, nil
+func (*activityTransformer) Header(wide bool) []string {
+	return []string{"NAME", "STATUS", "START DATE", "END DATE", "CHANNEL TYPE", "LAST MODIFIED"}
 }
 
-func (t *activityTransformer) ToWideTable(i interface{}) (*util.Table, error) {
-	query := util.NewQuery(i)
-	capacity := query.Int("_embedded", "count")
-	table := util.NewTable([]string{"NAME", "STATUS", "START DATE", "END DATE", "CHANNEL TYPE", "LAST MODIFIED"}, capacity)
+func (*activityTransformer) Preprocess(i util.JSONResponse) error {
+	if err := i.Path("_embedded", "results"); err != nil {
+		return err
+	}
+	return i.EnterArray()
+}
 
-	query.Path("_embedded", "results").Range(func(q *util.Query) {
-		s := q.Path("_instance")
-		// load store and transform to short names
-		t.idStore.MapValues(func(s string) string {
-			return helper.ChannelLToS.Get(s)
-		})
-		table.Append(map[string]interface{}{
-			"NAME":       strings.Trim(s.Str("xdm:name"), " \t"),
-			"STATUS":     StatusMapper.Get(s.Str("xdm:status")),
-			"START DATE": util.LocalTimeStrCustom(s.Str("xdm:startDate"), shortDate),
-			"END DATE":   util.LocalTimeStrCustom(s.Str("xdm:endDate"), shortDate),
-			"CHANNEL TYPE": s.Path("xdm:criteria").Concat(",", func(q *util.Query) string {
-				id := q.Path("xdm:placements").Get(0).String()
-				return t.idStore.GetValue(id)
-			}),
-			"LAST MODIFIED": util.LocalTimeStrCustom(q.Str("repo:lastModifiedDate"), longDate),
-		})
+func (t *activityTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+	s := q.Path("_instance")
+	t.idStore.MapValues(func(s string) string {
+		return helper.ChannelLToS.Get(s)
 	})
-	return table, nil
+	return w.Write(
+		s.Str("xdm:name"),
+		StatusMapper.Get(s.Str("xdm:status")),
+		util.LocalTimeStrCustom(s.Str("xdm:startDate"), shortDate),
+		util.LocalTimeStrCustom(s.Str("xdm:endDate"), shortDate),
+		s.Path("xdm:criteria").Concat(",", func(q *util.Query) string {
+			id := q.Path("xdm:placements").Get(0).String()
+			return t.idStore.GetValue(id)
+		}),
+		util.LocalTimeStrCustom(q.Str("repo:lastModifiedDate"), longDate),
+	)
 }
 
 // NewActivitiesCommand creates an initialized command object

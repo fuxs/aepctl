@@ -44,65 +44,53 @@ var (
 
 type acTransformer struct{}
 
-func (t *acTransformer) ToTable(i interface{}) (*util.Table, error) {
-	table := util.NewTable([]string{"OPERATION", "OBJECT", "R", "W", "D"}, 64)
-	util.NewQuery(i).Path("permissions").RangeAttributes(func(s string, q *util.Query) {
-		operationName := s
-		q.RangeAttributes(func(object string, q *util.Query) {
-			permissions := q.Strings()
-			read := util.ContainsS("read", permissions)
-			write := util.ContainsS("write", permissions)
-			delete := util.ContainsS("delete", permissions)
-			table.Append(map[string]interface{}{
-				"OPERATION": operationName,
-				"OBJECT":    object,
-				"R":         read,
-				"W":         write,
-				"D":         delete,
-			})
-			operationName = ""
-		})
-	})
-	return table, nil
+func (*acTransformer) Header(wide bool) []string {
+	if wide {
+		return []string{"OPERATION", "OBJECT", "READ", "WRITE", "DELETE"}
+	}
+	return []string{"OPERATION", "OBJECT", "R", "W", "D"}
 }
 
-func (t *acTransformer) ToWideTable(i interface{}) (*util.Table, error) {
-	table := util.NewTable([]string{"OPERATION", "OBJECT", "READ", "WRITE", "DELETE"}, 64)
-	util.NewQuery(i).Path("permissions").RangeAttributes(func(s string, q *util.Query) {
-		operationName := s
-		q.RangeAttributes(func(object string, q *util.Query) {
-			permissions := q.Strings()
-			read := util.ContainsS("read", permissions)
-			write := util.ContainsS("write", permissions)
-			delete := util.ContainsS("delete", permissions)
-			table.Append(map[string]interface{}{
-				"OPERATION": operationName,
-				"OBJECT":    object,
-				"READ":      read,
-				"WRITE":     write,
-				"DELETE":    delete,
-			})
-			operationName = ""
-		})
+func (*acTransformer) Preprocess(i util.JSONResponse) error {
+	if err := i.Path("permissions"); err != nil {
+		return err
+	}
+	return i.EnterObject()
+}
+
+func (*acTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+	operationName := q.Get(0).String()
+	return q.Get(1).RangeAttributesE(func(object string, q *util.Query) error {
+		permissions := q.Strings()
+		read := util.ContainsS("read", permissions)
+		write := util.ContainsS("write", permissions)
+		delete := util.ContainsS("delete", permissions)
+		if err := w.Write(operationName, object, read, write, delete); err != nil {
+			return err
+		}
+		operationName = ""
+		return nil
 	})
-	return table, nil
 }
 
 type effectiveTransformer struct{}
 
-func (t *effectiveTransformer) ToTable(i interface{}) (*util.Table, error) {
-	table := util.NewTable([]string{"OBJECT", "VALUES"}, 64)
-	util.NewQuery(i).Path("policies").RangeAttributes(func(s string, q *util.Query) {
-		table.Append(map[string]interface{}{
-			"OBJECT": s,
-			"VALUES": q.Concat(",", func(q *util.Query) string { return q.String() }),
-		})
-	})
-	return table, nil
+func (*effectiveTransformer) Header(wide bool) []string {
+	return []string{"OBJECT", "VALUES"}
 }
 
-func (t *effectiveTransformer) ToWideTable(i interface{}) (*util.Table, error) {
-	return t.ToTable(i)
+func (*effectiveTransformer) Preprocess(i util.JSONResponse) error {
+	if err := i.Path("policies"); err != nil {
+		return err
+	}
+	return i.EnterObject()
+}
+
+func (*effectiveTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+	return w.Write(
+		q.Get(0).String(),
+		q.Get(1).Concat(",", func(q *util.Query) string { return q.String() }),
+	)
 }
 
 var validArgs = []string{
@@ -192,10 +180,10 @@ func NewACCommand(conf *helper.Configuration) *cobra.Command {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			ctx := context.Background()
 			if len(args) == 0 {
-				output.PrintResult(acl.GetPermissionsAndResources(ctx, conf.Authentication))
+				output.StreamResult(acl.GetPermissionsAndResourcesRaw(ctx, conf.Authentication))
 			} else {
 				output.SetTransformation(&effectiveTransformer{})
-				output.PrintResult(acl.GetEffecticeACLPolicies(ctx, conf.Authentication, args))
+				output.StreamResult(acl.GetEffecticeACLPoliciesRaw(ctx, conf.Authentication, args))
 			}
 		},
 	}

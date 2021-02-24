@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/fuxs/aepctl/api"
+	"github.com/fuxs/aepctl/util"
 )
 
 // Get returns the details of a sandbox with the given name
@@ -28,10 +29,28 @@ func Get(ctx context.Context, p *api.AuthenticationConfig, name string) (interfa
 		"https://platform.adobe.io/data/foundation/sandbox-management/sandboxes/%s", name)
 }
 
+// GetRaw returns the details of a sandbox with the given name
+func GetRaw(ctx context.Context, p *api.AuthenticationConfig, name string) (util.JSONResponse, error) {
+	res, err := p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/sandbox-management/sandboxes/%s", name)
+	if err != nil {
+		return nil, err
+	}
+	return util.NewJSONIterator(res.Body)
+}
+
 // ListAll returns a list of all sandboxes
 func ListAll(ctx context.Context, p *api.AuthenticationConfig) (interface{}, error) {
 	return p.GetRequest(ctx,
 		"https://platform.adobe.io/data/foundation/sandbox-management/sandboxes")
+}
+
+// ListAllRaw returns a list of all sandboxes
+func ListAllRaw(ctx context.Context, p *api.AuthenticationConfig) (util.JSONResponse, error) {
+	res, err := p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/sandbox-management/sandboxes")
+	if err != nil {
+		return nil, err
+	}
+	return util.NewJSONIterator(res.Body)
 }
 
 // List returns a list of usable sandboxes
@@ -40,8 +59,26 @@ func List(ctx context.Context, p *api.AuthenticationConfig) (interface{}, error)
 		"https://platform.adobe.io/data/foundation/sandbox-management/")
 }
 
+// ListRaw returns a list of usable sandboxes
+func ListRaw(ctx context.Context, p *api.AuthenticationConfig) (util.JSONResponse, error) {
+	res, err := p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/sandbox-management/")
+	if err != nil {
+		return nil, err
+	}
+	return util.NewJSONIterator(res.Body)
+}
+
 // ListTypes lists the available sandbox types
 func ListTypes(ctx context.Context, p *api.AuthenticationConfig) (interface{}, error) {
 	return p.GetRequest(ctx,
 		"https://platform.adobe.io/data/foundation/sandbox-management/sandboxTypes")
+}
+
+// ListTypesRaw lists the available sandbox types
+func ListTypesRaw(ctx context.Context, p *api.AuthenticationConfig) (util.JSONResponse, error) {
+	res, err := p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/sandbox-management/sandboxTypes")
+	if err != nil {
+		return nil, err
+	}
+	return util.NewJSONIterator(res.Body)
 }

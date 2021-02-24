@@ -43,5 +43,6 @@ func LoadPrivateKeyPEM(path string) (*rsa.PrivateKey, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to parse private key in file %v: %v", path, err)
 	}
+	// TODO: better error handling
 	return key.(*rsa.PrivateKey), nil
 }

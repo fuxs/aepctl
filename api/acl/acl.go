@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/fuxs/aepctl/api"
+	"github.com/fuxs/aepctl/util"
 )
 
 // GetPermissionsAndResources returns the access control policies.
@@ -27,7 +28,25 @@ func GetPermissionsAndResources(ctx context.Context, p *api.AuthenticationConfig
 	return p.GetRequest(ctx, "https://platform.adobe.io/data/foundation/access-control/acl/reference")
 }
 
+// GetPermissionsAndResourcesRaw returns the access control policies.
+func GetPermissionsAndResourcesRaw(ctx context.Context, p *api.AuthenticationConfig) (util.JSONResponse, error) {
+	res, err := p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/access-control/acl/reference")
+	if err != nil {
+		return nil, err
+	}
+	return util.NewJSONMapIterator(res.Body)
+}
+
 // GetEffecticeACLPolicies returns the effective acl policies
 func GetEffecticeACLPolicies(ctx context.Context, p *api.AuthenticationConfig, urls []string) (interface{}, error) {
 	return p.PostJSONRequest(ctx, urls, "https://platform.adobe.io/data/foundation/access-control/acl/effective-policies")
+}
+
+// GetEffecticeACLPoliciesRaw returns the effective acl policies
+func GetEffecticeACLPoliciesRaw(ctx context.Context, p *api.AuthenticationConfig, urls []string) (util.JSONResponse, error) {
+	res, err := p.PostJSONRequestRaw(ctx, urls, "https://platform.adobe.io/data/foundation/access-control/acl/effective-policies")
+	if err != nil {
+		return nil, err
+	}
+	return util.NewJSONMapIterator(res.Body)
 }

@@ -17,55 +17,36 @@ specific language governing permissions and limitations under the License.
 package od
 
 import (
-	"strings"
-
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
 )
 
-type offerTransformer struct {
+type offerTransformer struct{}
+
+func (*offerTransformer) Header(wide bool) []string {
+	return []string{"NAME", "STATUS", "PRIORITY", "START DATE", "END DATE", "LAST MODIFIED"}
 }
 
-func (t *offerTransformer) ToTable(i interface{}) (*util.Table, error) {
-	query := util.NewQuery(i)
-	capacity := query.Int("_embedded", "count")
-	table := util.NewTable([]string{"NAME", "STATUS", "PRIORITY", "START DATE", "END DATE", "LAST MODIFIED"}, capacity)
-
-	query.Path("_embedded", "results").Range(func(q *util.Query) {
-		s := q.Path("_instance")
-		d := s.Path("xdm:selectionConstraint")
-		table.Append(map[string]interface{}{
-			"NAME":          strings.Trim(s.Str("xdm:name"), " \t"),
-			"STATUS":        StatusMapper.Get(s.Str("xdm:status")),
-			"PRIORITY":      s.Str("xdm:rank", "xdm:priority"),
-			"START DATE":    util.LocalTimeStrCustom(d.Str("xdm:startDate"), shortDate),
-			"END DATE":      util.LocalTimeStrCustom(d.Str("xdm:endDate"), shortDate),
-			"LAST MODIFIED": util.LocalTimeStrCustom(q.Str("repo:lastModifiedDate"), longDate),
-		})
-	})
-	return table, nil
+func (*offerTransformer) Preprocess(i util.JSONResponse) error {
+	if err := i.Path("_embedded", "results"); err != nil {
+		return err
+	}
+	return i.EnterArray()
 }
 
-func (t *offerTransformer) ToWideTable(i interface{}) (*util.Table, error) {
-	query := util.NewQuery(i)
-	capacity := query.Int("_embedded", "count")
-	table := util.NewTable([]string{"NAME", "STATUS", "PRIORITY", "START DATE", "END DATE", "LAST MODIFIED"}, capacity)
-
-	query.Path("_embedded", "results").Range(func(q *util.Query) {
-		s := q.Path("_instance")
-		d := s.Path("xdm:selectionConstraint")
-		table.Append(map[string]interface{}{
-			"NAME":          strings.Trim(s.Str("xdm:name"), " \t"),
-			"STATUS":        StatusMapper.Get(s.Str("xdm:status")),
-			"PRIORITY":      s.Str("xdm:rank", "xdm:priority"),
-			"START DATE":    util.LocalTimeStrCustom(d.Str("xdm:startDate"), shortDate),
-			"END DATE":      util.LocalTimeStrCustom(d.Str("xdm:endDate"), shortDate),
-			"LAST MODIFIED": util.LocalTimeStrCustom(q.Str("repo:lastModifiedDate"), longDate),
-		})
-	})
-	return table, nil
+func (*offerTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+	s := q.Path("_instance")
+	d := s.Path("xdm:selectionConstraint")
+	return w.Write(
+		s.Str("xdm:name"),
+		StatusMapper.Get(s.Str("xdm:status")),
+		s.Str("xdm:rank", "xdm:priority"),
+		util.LocalTimeStrCustom(d.Str("xdm:startDate"), shortDate),
+		util.LocalTimeStrCustom(d.Str("xdm:endDate"), shortDate),
+		util.LocalTimeStrCustom(q.Str("repo:lastModifiedDate"), longDate),
+	)
 }
 
 // NewOffersCommand creates an initialized command object

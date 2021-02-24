@@ -23,37 +23,24 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type tagTransformer struct {
+type tagTransformer struct{}
+
+func (*tagTransformer) Header(wide bool) []string {
+	return []string{"NAME", "LAST MODIFIED"}
 }
 
-func (t *tagTransformer) ToTable(i interface{}) (*util.Table, error) {
-	query := util.NewQuery(i)
-	capacity := query.Int("_embedded", "count")
-	table := util.NewTable([]string{"NAME", "LAST MODIFIED"}, capacity)
-
-	query.Path("_embedded", "results").Range(func(q *util.Query) {
-		s := q.Path("_instance")
-		table.Append(map[string]interface{}{
-			"NAME":          s.Str("xdm:name"),
-			"LAST MODIFIED": util.LocalTimeStr(q.Str("repo:lastModifiedDate")),
-		})
-	})
-	return table, nil
+func (*tagTransformer) Preprocess(i util.JSONResponse) error {
+	if err := i.Path("_embedded", "results"); err != nil {
+		return err
+	}
+	return i.EnterArray()
 }
 
-func (t *tagTransformer) ToWideTable(i interface{}) (*util.Table, error) {
-	query := util.NewQuery(i)
-	capacity := query.Int("_embedded", "count")
-	table := util.NewTable([]string{"NAME", "LAST MODIFIED"}, capacity)
-
-	query.Path("_embedded", "results").Range(func(q *util.Query) {
-		s := q.Path("_instance")
-		table.Append(map[string]interface{}{
-			"NAME":          s.Str("xdm:name"),
-			"LAST MODIFIED": util.LocalTimeStr(q.Str("repo:lastModifiedDate")),
-		})
-	})
-	return table, nil
+func (*tagTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+	return w.Write(
+		q.Str("_instance", "xdm:name"),
+		util.LocalTimeStr(q.Str("repo:lastModifiedDate")),
+	)
 }
 
 // NewTagsCommand creates an initialized command object

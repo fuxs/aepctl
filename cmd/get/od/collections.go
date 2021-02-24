@@ -17,7 +17,7 @@ specific language governing permissions and limitations under the License.
 package od
 
 import (
-	"strings"
+	"strconv"
 
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cmd/helper"
@@ -25,39 +25,26 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type collectionTransformer struct {
+type collectionTransformer struct{}
+
+func (*collectionTransformer) Header(wide bool) []string {
+	return []string{"NAME", "# OFFERS", "LAST MODIFIED"}
 }
 
-func (t *collectionTransformer) ToTable(i interface{}) (*util.Table, error) {
-	query := util.NewQuery(i)
-	capacity := query.Int("_embedded", "count")
-	table := util.NewTable([]string{"NAME", "# OFFERS", "LAST MODIFIED"}, capacity)
-
-	query.Path("_embedded", "results").Range(func(q *util.Query) {
-		s := q.Path("_instance")
-		table.Append(map[string]interface{}{
-			"NAME":          strings.Trim(s.Str("xdm:name"), " \t"),
-			"# OFFERS":      s.Len("xdm:ids"),
-			"LAST MODIFIED": util.LocalTimeStrCustom(q.Str("repo:lastModifiedDate"), longDate),
-		})
-	})
-	return table, nil
+func (*collectionTransformer) Preprocess(i util.JSONResponse) error {
+	if err := i.Path("_embedded", "results"); err != nil {
+		return err
+	}
+	return i.EnterArray()
 }
 
-func (t *collectionTransformer) ToWideTable(i interface{}) (*util.Table, error) {
-	query := util.NewQuery(i)
-	capacity := query.Int("_embedded", "count")
-	table := util.NewTable([]string{"NAME", "# OFFERS", "LAST MODIFIED"}, capacity)
-
-	query.Path("_embedded", "results").Range(func(q *util.Query) {
-		s := q.Path("_instance")
-		table.Append(map[string]interface{}{
-			"NAME":          strings.Trim(s.Str("xdm:name"), " \t"),
-			"# OFFERS":      s.Len("xdm:ids"),
-			"LAST MODIFIED": util.LocalTimeStrCustom(q.Str("repo:lastModifiedDate"), longDate),
-		})
-	})
-	return table, nil
+func (*collectionTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+	s := q.Path("_instance")
+	return w.Write(
+		s.Str("xdm:name"),
+		strconv.Itoa(s.Len("xdm:ids")),
+		util.LocalTimeStrCustom(q.Str("repo:lastModifiedDate"), longDate),
+	)
 }
 
 // NewCollectionsCommand creates an initialized command object

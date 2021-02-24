@@ -68,6 +68,11 @@ func (q *Query) Int(path ...string) int {
 	return GetInt(q.Path(path...).obj)
 }
 
+// Integer returns the current object as integer
+func (q *Query) Integer() int {
+	return GetInt(q.obj)
+}
+
 // Str returns the string of the referenced path
 func (q *Query) Str(path ...string) string {
 	return q.Path(path...).String()
@@ -157,4 +162,16 @@ func (q *Query) RangeAttributes(rf func(string, *Query)) {
 			rf(k, &Query{obj: v})
 		}
 	}
+}
+
+// RangeAttributesE executes the passed function on all children of the current object
+func (q *Query) RangeAttributesE(rf func(string, *Query) error) error {
+	if ar, ok := q.obj.(map[string]interface{}); ok {
+		for k, v := range ar {
+			if err := rf(k, &Query{obj: v}); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

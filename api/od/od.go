@@ -76,6 +76,25 @@ func Get(ctx context.Context, p *api.AuthenticationConfig, containerID, schema, 
 	)
 }
 
+// Get returns a collection by name (wild cards are supported) or id (exact match)
+func GetRaw(ctx context.Context, p *api.AuthenticationConfig, containerID, schema, id string) (util.JSONResponse, error) {
+	if containerID == "" {
+		return nil, errors.New("container-id is empty")
+	}
+	if schema == "" {
+		return nil, errors.New("schema is empty")
+	}
+	res, err := p.GetRequestRaw(ctx,
+		"https://platform.adobe.io/data/core/xcore/%s/instances%s",
+		containerID,
+		util.Par("schema", schema, "id", id),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return util.NewJSONIterator(res.Body)
+}
+
 // Query queries all objects
 func Query(ctx context.Context, p *api.AuthenticationConfig, containerID, schema, q, qop, field, orderBy, limit string) (interface{}, error) {
 	if containerID == "" {
@@ -89,6 +108,24 @@ func Query(ctx context.Context, p *api.AuthenticationConfig, containerID, schema
 		containerID,
 		util.Par("schema", schema, "q", q, "qop", qop, "field", field, "orderBy", orderBy, "limit", limit),
 	)
+}
+
+func QueryRaw(ctx context.Context, p *api.AuthenticationConfig, containerID, schema, q, qop, field, orderBy, limit string) (util.JSONResponse, error) {
+	if containerID == "" {
+		return nil, errors.New("container-id is empty")
+	}
+	if schema == "" {
+		return nil, errors.New("schema is empty")
+	}
+	res, err := p.GetRequestRaw(ctx,
+		"https://platform.adobe.io/data/core/xcore/%s/queries/core/search%s",
+		containerID,
+		util.Par("schema", schema, "q", q, "qop", qop, "field", field, "orderBy", orderBy, "limit", limit),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return util.NewJSONIterator(res.Body)
 }
 
 // List lists all objects

@@ -27,74 +27,63 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type sandboxTransformer struct {
+type sandboxTransformer struct{}
+
+func (*sandboxTransformer) Header(wide bool) []string {
+	return []string{"NAME", "TITLE", "TYPE", "LAST MODIFIED"}
 }
 
-func (t *sandboxTransformer) ToTable(i interface{}) (*util.Table, error) {
-	query := util.NewQuery(i)
-	capacity := query.Int("_page", "count")
-	table := util.NewTable([]string{"NAME", "TITLE", "TYPE", "LAST MODIFIED"}, capacity)
-	query.Path("sandboxes").Range(func(q *util.Query) {
-		table.Append(map[string]interface{}{
-			"NAME":          q.Str("name"),
-			"TITLE":         q.Str("title"),
-			"TYPE":          q.Str("type"),
-			"LAST MODIFIED": util.LocalTimeStr(q.Str("lastModifiedDate")),
-		})
-	})
-	return table, nil
+func (*sandboxTransformer) Preprocess(i util.JSONResponse) error {
+	if err := i.Path("sandboxes"); err != nil {
+		return err
+	}
+	return i.EnterArray()
 }
 
-func (t *sandboxTransformer) ToWideTable(i interface{}) (*util.Table, error) {
-	query := util.NewQuery(i)
-	capacity := query.Int("_page", "count")
-	table := util.NewTable([]string{"NAME", "TITLE", "TYPE", "LAST MODIFIED"}, capacity)
-	query.Path("sandboxes").Range(func(q *util.Query) {
-		table.Append(map[string]interface{}{
-			"NAME":          q.Str("name"),
-			"TITLE":         q.Str("title"),
-			"TYPE":          q.Str("type"),
-			"LAST MODIFIED": util.LocalTimeStr(q.Str("lastModifiedDate")),
-		})
-	})
-	return table, nil
+func (*sandboxTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+	return w.Write(
+		q.Str("name"),
+		q.Str("title"),
+		q.Str("type"),
+		util.LocalTimeStr(q.Str("lastModifiedDate")),
+	)
 }
 
 type sandboxTypeTransformer struct{}
 
-func (t *sandboxTypeTransformer) ToTable(i interface{}) (*util.Table, error) {
-	query := util.NewQuery(i)
-	table := util.NewTable([]string{"NAME"}, 2)
-	query.Path("sandboxTypes").Range(func(q *util.Query) {
-		table.Append(map[string]interface{}{
-			"NAME": q.String(),
-		})
-	})
-	return table, nil
+func (*sandboxTypeTransformer) Header(wide bool) []string {
+	return []string{"NAME"}
 }
 
-func (t *sandboxTypeTransformer) ToWideTable(i interface{}) (*util.Table, error) {
-	return t.ToTable(i)
+func (*sandboxTypeTransformer) Preprocess(i util.JSONResponse) error {
+	if err := i.Path("sandboxTypes"); err != nil {
+		return err
+	}
+	return i.EnterArray()
+}
+
+func (*sandboxTypeTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+	return w.Write(q.String())
 }
 
 type sandboxDetailTransformer struct{}
 
-func (t *sandboxDetailTransformer) ToTable(i interface{}) (*util.Table, error) {
-	q := util.NewQuery(i)
-	table := util.NewTable([]string{"NAME", "TITLE", "TYPE", "STATE", "REGION"}, 2)
-
-	table.Append(map[string]interface{}{
-		"NAME":   q.Str("name"),
-		"TITLE":  q.Str("title"),
-		"TYPE":   q.Str("type"),
-		"STATE":  q.Str("state"),
-		"REGION": q.Str("region"),
-	})
-	return table, nil
+func (*sandboxDetailTransformer) Header(wide bool) []string {
+	return []string{"NAME", "TITLE", "TYPE", "STATE", "REGION"}
 }
 
-func (t *sandboxDetailTransformer) ToWideTable(i interface{}) (*util.Table, error) {
-	return t.ToTable(i)
+func (*sandboxDetailTransformer) Preprocess(i util.JSONResponse) error {
+	return nil
+}
+
+func (*sandboxDetailTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+	return w.Write(
+		q.Str("name"),
+		q.Str("title"),
+		q.Str("type"),
+		q.Str("state"),
+		q.Str("region"),
+	)
 }
 
 // NewSandboxCommand creates an initialized command object
@@ -113,10 +102,10 @@ func NewSandboxCommand(conf *helper.Configuration) *cobra.Command {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			switch len(args) {
 			case 0:
-				output.PrintResult(sandbox.List(context.Background(), conf.Authentication))
+				output.StreamResult(sandbox.ListRaw(context.Background(), conf.Authentication))
 			case 1:
 				output.SetTransformation(&sandboxDetailTransformer{})
-				output.PrintResult(sandbox.Get(context.Background(), conf.Authentication, args[0]))
+				output.StreamResult(sandbox.GetRaw(context.Background(), conf.Authentication, args[0]))
 			default:
 				return errors.New("Too many arguments")
 			}
@@ -137,14 +126,14 @@ func NewSandboxesCommand(conf *helper.Configuration) *cobra.Command {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			switch len(args) {
 			case 0:
-				output.PrintResult(sandbox.List(context.Background(), conf.Authentication))
+				output.StreamResult(sandbox.ListRaw(context.Background(), conf.Authentication))
 			case 1:
 				switch args[0] {
 				case "all":
-					output.PrintResult(sandbox.ListAll(context.Background(), conf.Authentication))
+					output.StreamResult(sandbox.ListAllRaw(context.Background(), conf.Authentication))
 				case "types":
 					output.SetTransformation(&sandboxTypeTransformer{})
-					output.PrintResult(sandbox.ListTypes(context.Background(), conf.Authentication))
+					output.StreamResult(sandbox.ListTypesRaw(context.Background(), conf.Authentication))
 				default:
 					return fmt.Errorf("Unknown argument %s", args[0])
 				}

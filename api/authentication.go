@@ -102,15 +102,8 @@ func handleErrorResponse(res *http.Response) error {
 	return errors.New(sb.String())
 }
 
-// GetToken uses JWT to get a bearer token
-func (o *AuthenticationConfig) GetToken() (*BearerToken, error) {
-	if o.Cache && o.LoadToken != nil {
-		if token, _ := o.LoadToken(); token != nil {
-			if token.ValidIn(time.Minute) {
-				return token, nil
-			}
-		}
-	}
+// GetTokenRaw uses JWT to get a bearer token
+func (o *AuthenticationConfig) GetTokenRaw() (*http.Response, error) {
 	//
 	// build audience string
 	audience := o.Audience
@@ -145,7 +138,19 @@ func (o *AuthenticationConfig) GetToken() (*BearerToken, error) {
 	if server == "" {
 		server = "https://ims-na1.adobelogin.com/ims/exchange/jwt/"
 	}
-	res, err := http.PostForm(server, values)
+	return http.PostForm(server, values)
+}
+
+// GetToken uses JWT to get a bearer token
+func (o *AuthenticationConfig) GetToken() (*BearerToken, error) {
+	if o.Cache && o.LoadToken != nil {
+		if token, _ := o.LoadToken(); token != nil {
+			if token.ValidIn(time.Minute) {
+				return token, nil
+			}
+		}
+	}
+	res, err := o.GetTokenRaw()
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +188,7 @@ func (o *AuthenticationConfig) GetToken() (*BearerToken, error) {
 	return result, nil
 }
 
-// PostJSONRequest serializes the passed object to JSON and sends a httep post
+// PostJSONRequest serializes the passed object to JSON and sends a http post
 // request to the passed url
 func (o *AuthenticationConfig) PostJSONRequest(ctx context.Context, obj interface{}, url string, a ...interface{}) (interface{}, error) {
 	body, err := json.Marshal(obj)
@@ -191,6 +196,16 @@ func (o *AuthenticationConfig) PostJSONRequest(ctx context.Context, obj interfac
 		return nil, err
 	}
 	return o.FullRequest(ctx, "POST", map[string]string{"Content-Type": "application/json"}, bytes.NewBuffer(body), url, a...)
+}
+
+// PostJSONRequestRaw serializes the passed object to JSON and sends a http post
+// request to the passed url
+func (o *AuthenticationConfig) PostJSONRequestRaw(ctx context.Context, obj interface{}, url string, a ...interface{}) (*http.Response, error) {
+	body, err := json.Marshal(obj)
+	if err != nil {
+		return nil, err
+	}
+	return o.FullRequestRaw(ctx, "POST", map[string]string{"Content-Type": "application/json"}, bytes.NewBuffer(body), url, a...)
 }
 
 // PostRequest sends a http post request to the passed url
@@ -201,6 +216,11 @@ func (o *AuthenticationConfig) PostRequest(ctx context.Context, header map[strin
 // GetRequest sends a http get request to the passed url
 func (o *AuthenticationConfig) GetRequest(ctx context.Context, url string, a ...interface{}) (interface{}, error) {
 	return o.Request(ctx, "GET", url, a...)
+}
+
+// GetRequestRaw sends a http get request to the passed url
+func (o *AuthenticationConfig) GetRequestRaw(ctx context.Context, url string, a ...interface{}) (*http.Response, error) {
+	return o.FullRequestRaw(ctx, "GET", nil, nil, url, a...)
 }
 
 // DeleteRequest sends a http delete request to the passed url
@@ -218,8 +238,8 @@ func (o *AuthenticationConfig) Request(ctx context.Context, verb, url string, a 
 	return o.FullRequest(ctx, verb, nil, nil, url, a...)
 }
 
-// FullRequest sends a http request with the passed verb to the passed url
-func (o *AuthenticationConfig) FullRequest(ctx context.Context, verb string, header map[string]string, body io.Reader, url string, a ...interface{}) (interface{}, error) {
+// FullRequestRaw sends a http request with the passed verb to the passed url
+func (o *AuthenticationConfig) FullRequestRaw(ctx context.Context, verb string, header map[string]string, body io.Reader, url string, a ...interface{}) (*http.Response, error) {
 	req, err := http.NewRequest(verb, fmt.Sprintf(url, a...), body)
 	if err != nil {
 		return nil, err
@@ -232,10 +252,6 @@ func (o *AuthenticationConfig) FullRequest(ctx context.Context, verb string, hea
 	for k, v := range header {
 		req.Header.Add(k, v)
 	}
-
-	/*if verb == "POST" || verb == "PUT" || verb == "PATCH" {
-		req.Header.Add("Content-Type", "application/json")
-	}*/
 
 	req = req.WithContext(ctx)
 
@@ -255,7 +271,12 @@ func (o *AuthenticationConfig) FullRequest(ctx context.Context, verb string, hea
 	c := http.Client{
 		Timeout: time.Minute,
 	}
-	res, err := c.Do(req)
+	return c.Do(req)
+}
+
+// FullRequest sends a http request with the passed verb to the passed url
+func (o *AuthenticationConfig) FullRequest(ctx context.Context, verb string, header map[string]string, body io.Reader, url string, a ...interface{}) (interface{}, error) {
+	res, err := o.FullRequestRaw(ctx, verb, header, body, url, a...)
 	if err != nil {
 		return nil, err
 	}
@@ -280,5 +301,4 @@ func (o *AuthenticationConfig) FullRequest(ctx context.Context, verb string, hea
 		return nil, err
 	}
 	return obj, nil
-
 }

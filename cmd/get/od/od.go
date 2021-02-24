@@ -77,7 +77,8 @@ func NewGetCommand(conf *helper.Configuration, os *util.KVCache, schema, use str
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErr(ac.AutoFillContainer())
 			for _, name := range args {
-				output.PrintResult(od.Get(context.Background(), conf.Authentication, ac.ContainerID, schema, os.GetValue(name)))
+				output.StreamResult(od.GetRaw(context.Background(), conf.Authentication, ac.ContainerID, schema, os.GetValue(name)))
+
 			}
 		},
 	}
@@ -97,7 +98,8 @@ func NewQueryCommand(conf *helper.Configuration, schema, use string, t helper.Tr
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErr(ac.AutoFillContainer())
-			output.PrintResult(od.Query(context.Background(), conf.Authentication, ac.ContainerID, schema, qc.Query, qc.QOP, qc.Field, qc.OrderBy, qc.Limit))
+			output.StreamResult(od.QueryRaw(context.Background(), conf.Authentication, ac.ContainerID, schema, qc.Query, qc.QOP, qc.Field, qc.OrderBy, qc.Limit))
+			//output.PrintResult(od.Query(context.Background(), conf.Authentication, ac.ContainerID, schema, qc.Query, qc.QOP, qc.Field, qc.OrderBy, qc.Limit))
 		},
 	}
 	output.AddOutputFlags(cmd)
