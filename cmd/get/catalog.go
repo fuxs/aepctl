@@ -28,5 +28,6 @@ func NewCatalogCommand(conf *helper.Configuration) *cobra.Command {
 		Use: "cat",
 	}
 	cmd.AddCommand(catalog.NewBatchesCommand(conf))
+	cmd.AddCommand(catalog.NewDatasetsCommand(conf))
 	return cmd
 }

@@ -36,7 +36,7 @@ func (*ruleTransformer) Preprocess(i util.JSONResponse) error {
 	return i.EnterArray()
 }
 
-func (*ruleTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+func (*ruleTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wide bool) error {
 	s := q.Path("_instance")
 	return w.Write(
 		s.Str("xdm:name"),

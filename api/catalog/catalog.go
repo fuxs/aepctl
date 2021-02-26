@@ -27,11 +27,12 @@ import (
 type BatchesOptions struct {
 	Limit        string
 	CreatedAfter string
+	Name         string
 }
 
 // ToURLPar converts the options to a URL parameter query
 func (b *BatchesOptions) ToURLPar() string {
-	return util.Par("limit", b.Limit, "createdAfter", b.CreatedAfter)
+	return util.Par("limit", b.Limit, "createdAfter", b.CreatedAfter, "name", b.Name)
 }
 
 // GetBatches returns a list of batches
@@ -41,26 +42,13 @@ func GetBatches(ctx context.Context, p *api.AuthenticationConfig, o *BatchesOpti
 		return nil, err
 	}
 	return util.NewJSONMapIterator(res.Body)
+}
 
-	/*if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-	i, err := util.NewJSONMapIterator(res.Body)
+// GetDatasets returns a list of batches
+func GetDatasets(ctx context.Context, p *api.AuthenticationConfig, o *BatchesOptions) (util.JSONResponse, error) {
+	res, err := p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/catalog/datasets%s", o.ToURLPar())
 	if err != nil {
 		return nil, err
 	}
-	for i.More() {
-		n, err := i.Next()
-		if err != nil {
-			return nil, err
-		}
-		q := util.NewQuery(n)
-		q.RangeAttributes(func(s string, q *util.Query) {
-			fmt.Print(s)
-			fmt.Println(" " + q.Str("createdUser"))
-		})
-
-	}
-	return p.GetRequest(ctx, "https://platform.adobe.io/data/foundation/catalog/batches%s", o.ToURLPar())*/
+	return util.NewJSONMapIterator(res.Body)
 }

@@ -36,7 +36,7 @@ func (*tagTransformer) Preprocess(i util.JSONResponse) error {
 	return i.EnterArray()
 }
 
-func (*tagTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+func (*tagTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wide bool) error {
 	return w.Write(
 		q.Str("_instance", "xdm:name"),
 		util.LocalTimeStr(q.Str("repo:lastModifiedDate")),

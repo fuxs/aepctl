@@ -28,10 +28,11 @@ import (
 type JSONResponse interface {
 	Close() error
 	Delim() (json.Delim, error)
+	Enter() error
 	EnterArray() error
 	EnterObject() error
 	More() bool
-	Next() (interface{}, error)
+	Next() (string, interface{}, error)
 	Obj() (map[string]interface{}, error)
 	Path(...string) error
 	//	Stream() io.ReadCloser
@@ -68,7 +69,8 @@ func (j *JSONIterator) Skip() error {
 	}
 	counter := 1
 	if d == '{' {
-		for t, err = j.dec.Token(); err != nil; t, err = j.dec.Token() {
+		t, err = j.dec.Token()
+		for err == nil {
 			d, ok = t.(json.Delim)
 			if ok {
 				switch d {
@@ -81,6 +83,7 @@ func (j *JSONIterator) Skip() error {
 					}
 				}
 			}
+			t, err = j.dec.Token()
 		}
 		return err
 	}
@@ -100,6 +103,18 @@ func (j *JSONIterator) Skip() error {
 		}
 	}
 	return err
+}
+
+// Enter moves forward to the first element
+func (j *JSONIterator) Enter() error {
+	d, err := j.Delim()
+	if err != nil {
+		return err
+	}
+	if d != '[' && d != '{' {
+		return fmt.Errorf("Expecting [ found %v at offset %v", d, j.dec.InputOffset())
+	}
+	return nil
 }
 
 // EnterArray moves forward to the first element in the array
@@ -239,8 +254,9 @@ func (j *JSONIterator) String() (string, error) {
 }
 
 // Next returns the next element
-func (j *JSONIterator) Next() (interface{}, error) {
-	return j.Interface()
+func (j *JSONIterator) Next() (string, interface{}, error) {
+	i, err := j.Interface()
+	return "", i, err
 }
 
 // Close closes the underlying ReaderCloser stream
@@ -279,14 +295,14 @@ func NewJSONMapIterator(stream io.ReadCloser) (*JSONMapIterator, error) {
 }
 
 // Next returns the name and the content of the current attribute.
-func (j *JSONMapIterator) Next() (interface{}, error) {
+func (j *JSONMapIterator) Next() (string, interface{}, error) {
 	id, err := j.String()
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 	obj, err := j.Interface()
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
-	return []interface{}{id, obj}, nil
+	return id, obj, nil
 }

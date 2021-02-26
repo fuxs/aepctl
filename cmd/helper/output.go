@@ -50,7 +50,7 @@ const (
 type Transformer interface {
 	Header(wide bool) []string
 	Preprocess(util.JSONResponse) error
-	WriteRow(*util.Query, *util.RowWriter, bool) error
+	WriteRow(string, *util.Query, *util.RowWriter, bool) error
 }
 
 // OutputConf contains all options for the output
@@ -71,6 +71,16 @@ func NewOutputConf(tf Transformer) *OutputConf {
 // SetTransformation changes the Transformer object
 func (o *OutputConf) SetTransformation(tf Transformer) {
 	o.tf = tf
+}
+
+// SetTransformationDesc changes the Transformer object
+func (o *OutputConf) SetTransformationDesc(yaml string) error {
+	tf, err := util.NewTableDescriptor(yaml)
+	if err != nil {
+		return err
+	}
+	o.tf = tf
+	return nil
 }
 
 // AddOutputFlags extends the passed command with flags for output
@@ -145,11 +155,11 @@ func (o *OutputConf) streamResult(i util.JSONResponse) error {
 			return err
 		}
 		for i.More() {
-			obj, err := i.Next()
+			name, obj, err := i.Next()
 			if err != nil {
 				return err
 			}
-			if err = o.tf.WriteRow(util.NewQuery(obj), w, wide); err != nil {
+			if err = o.tf.WriteRow(name, util.NewQuery(obj), w, wide); err != nil {
 				return err
 			}
 		}

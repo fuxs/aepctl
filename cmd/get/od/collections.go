@@ -38,7 +38,7 @@ func (*collectionTransformer) Preprocess(i util.JSONResponse) error {
 	return i.EnterArray()
 }
 
-func (*collectionTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+func (*collectionTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wide bool) error {
 	s := q.Path("_instance")
 	return w.Write(
 		s.Str("xdm:name"),

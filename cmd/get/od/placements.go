@@ -39,7 +39,7 @@ func (*placementTransformer) Preprocess(i util.JSONResponse) error {
 	return i.EnterArray()
 }
 
-func (*placementTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+func (*placementTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wide bool) error {
 	s := q.Path("_instance")
 	if wide {
 		return w.Write(

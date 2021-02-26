@@ -58,9 +58,9 @@ func (*acTransformer) Preprocess(i util.JSONResponse) error {
 	return i.EnterObject()
 }
 
-func (*acTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
-	operationName := q.Get(0).String()
-	return q.Get(1).RangeAttributesE(func(object string, q *util.Query) error {
+func (*acTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wide bool) error {
+	operationName := name
+	return q.RangeAttributesE(func(object string, q *util.Query) error {
 		permissions := q.Strings()
 		read := util.ContainsS("read", permissions)
 		write := util.ContainsS("write", permissions)
@@ -86,10 +86,10 @@ func (*effectiveTransformer) Preprocess(i util.JSONResponse) error {
 	return i.EnterObject()
 }
 
-func (*effectiveTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+func (*effectiveTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wide bool) error {
 	return w.Write(
-		q.Get(0).String(),
-		q.Get(1).Concat(",", func(q *util.Query) string { return q.String() }),
+		name,
+		q.Concat(",", func(q *util.Query) string { return q.String() }),
 	)
 }
 

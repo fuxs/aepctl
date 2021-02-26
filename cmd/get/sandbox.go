@@ -40,7 +40,7 @@ func (*sandboxTransformer) Preprocess(i util.JSONResponse) error {
 	return i.EnterArray()
 }
 
-func (*sandboxTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+func (*sandboxTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wide bool) error {
 	return w.Write(
 		q.Str("name"),
 		q.Str("title"),
@@ -62,7 +62,7 @@ func (*sandboxTypeTransformer) Preprocess(i util.JSONResponse) error {
 	return i.EnterArray()
 }
 
-func (*sandboxTypeTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+func (*sandboxTypeTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wide bool) error {
 	return w.Write(q.String())
 }
 
@@ -76,7 +76,7 @@ func (*sandboxDetailTransformer) Preprocess(i util.JSONResponse) error {
 	return nil
 }
 
-func (*sandboxDetailTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+func (*sandboxDetailTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wide bool) error {
 	return w.Write(
 		q.Str("name"),
 		q.Str("title"),

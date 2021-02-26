@@ -38,7 +38,7 @@ func (*tokenTransformer) Preprocess(i util.JSONResponse) error {
 	return nil
 }
 
-func (*tokenTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
+func (*tokenTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wide bool) error {
 	if wide {
 		expires := q.Int("expires_in")
 		return w.Write(q.Str("access_token"), time.Duration(expires*int(time.Millisecond)).String())
