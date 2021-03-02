@@ -17,6 +17,7 @@ specific language governing permissions and limitations under the License.
 package util
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -25,8 +26,11 @@ import (
 )
 
 type TableDescriptor struct {
-	Columns []*TableColumnDescriptor `json:"columns,omitempty" yaml:"columns,omitempty"`
+	Columns []*TableColumnDescriptor `json:"columns" yaml:"columns"`
+	Wide    []*TableColumnDescriptor `json:"wide,omitempty" yaml:"wide,omitempty"`
 	Path    []string                 `json:"path,omitempty" yaml:"path,omitempty"`
+	Iter    string                   `json:"iterator,omitempty" yaml:"iterator,omitempty"`
+	Filter  []string                 `json:"filter,omitempty" yaml:"filter,omitempty"`
 }
 
 func NewTableDescriptor(def string) (*TableDescriptor, error) {
@@ -34,7 +38,33 @@ func NewTableDescriptor(def string) (*TableDescriptor, error) {
 	if err := yaml.Unmarshal([]byte(def), &result); err != nil {
 		return nil, err
 	}
+	if result.Iter == "" {
+		result.Iter = "array"
+	}
+	switch result.Iter {
+	case "filter":
+		if len(result.Filter) == 0 {
+			return nil, errors.New("Iterator type filter requires filter attribute")
+		}
+	case "object", "array":
+		if len(result.Filter) > 0 {
+			return nil, fmt.Errorf("Iterator type %v does not support filter attribute", result.Iter)
+		}
+	}
 	for i, c := range result.Columns {
+		if c.Name == "" {
+			return nil, fmt.Errorf("Name is empty in column %v", i)
+		}
+		if !c.ID {
+			if c.Type == "" {
+				return nil, fmt.Errorf("Type is empty in column %v", i)
+			}
+			if len(c.Path) == 0 {
+				return nil, fmt.Errorf("Path is empty in column %v", i)
+			}
+		}
+	}
+	for i, c := range result.Wide {
 		if c.Name == "" {
 			return nil, fmt.Errorf("Name is empty in column %v", i)
 		}
@@ -60,8 +90,12 @@ func ReadTableDescritorYAML(r io.Reader) (*TableDescriptor, error) {
 }
 
 func (t *TableDescriptor) Header(wide bool) []string {
-	result := make([]string, len(t.Columns))
-	for i, c := range t.Columns {
+	cols := t.Columns
+	if wide && len(t.Wide) > 0 {
+		cols = t.Wide
+	}
+	result := make([]string, len(cols))
+	for i, c := range cols {
 		result[i] = c.Name
 	}
 	return result
@@ -77,8 +111,12 @@ func (t *TableDescriptor) Preprocess(i JSONResponse) error {
 }
 
 func (t *TableDescriptor) WriteRow(name string, q *Query, w *RowWriter, wide bool) error {
-	out := make([]string, len(t.Columns))
-	for i, c := range t.Columns {
+	cols := t.Columns
+	if wide && len(t.Wide) > 0 {
+		cols = t.Wide
+	}
+	out := make([]string, len(cols))
+	for i, c := range cols {
 		if c.ID {
 			out[i] = name
 			continue
@@ -86,6 +124,19 @@ func (t *TableDescriptor) WriteRow(name string, q *Query, w *RowWriter, wide boo
 		out[i] = c.Extract(q)
 	}
 	return w.Write(out...)
+}
+
+func (t *TableDescriptor) Iterator(stream io.ReadCloser) (JSONResponse, error) {
+	switch t.Iter {
+	case "array":
+		return NewJSONIterator(stream)
+	case "filter":
+		return NewJSONFilterIterator(t.Filter, stream)
+	case "object":
+		return NewJSONMapIterator(stream)
+	default:
+		return nil, fmt.Errorf("Unknown iterator %v", t.Iter)
+	}
 }
 
 type TableColumnDescriptor struct {
@@ -124,6 +175,7 @@ func (t *TableColumnDescriptor) Extract(q *Query) string {
 }*/
 
 func (t *TableColumnDescriptor) assignFunc() {
+	t.o = simpleString
 	switch t.Type {
 	case "str":
 		switch t.Format {
@@ -133,6 +185,10 @@ func (t *TableColumnDescriptor) assignFunc() {
 		}
 	case "num":
 		switch t.Format {
+		case "":
+			t.o = func(q *Query) string {
+				return q.String()
+			}
 		case "utime":
 			t.o = func(q *Query) string {
 				v := q.Integer()
@@ -141,8 +197,10 @@ func (t *TableColumnDescriptor) assignFunc() {
 				}
 				return time.Unix(int64(v)/1000, 0).Local().Format(time.RFC822)
 			}
-			return
+		case "duration":
+			t.o = func(q *Query) string {
+				return time.Duration(q.Integer() * int(time.Millisecond)).String()
+			}
 		}
 	}
-	t.o = simpleString
 }

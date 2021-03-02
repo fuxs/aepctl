@@ -1,5 +1,5 @@
 /*
-Package token contains all token related functions.
+Package create is the base for all create commands.
 
 Copyright 2021 Michael Bungenstock
 
@@ -14,15 +14,20 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 */
-package token
+package create
 
 import (
-	"net/http"
-
-	"github.com/fuxs/aepctl/api"
+	"github.com/fuxs/aepctl/cmd/create/od"
+	"github.com/fuxs/aepctl/cmd/helper"
+	"github.com/spf13/cobra"
 )
 
-// GetRaw gets a new bearer token
-func GetRaw(p *api.AuthenticationConfig) (*http.Response, error) {
-	return p.GetTokenRaw()
+// NewODCommand creates an initialized command object
+func NewCatalogCommand(conf *helper.Configuration) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "cat",
+		Aliases: []string{"catalog"},
+	}
+	cmd.AddCommand(od.NewCreateActivityCommand(conf))
+	return cmd
 }

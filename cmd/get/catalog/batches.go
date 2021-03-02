@@ -18,6 +18,7 @@ type batchesConf struct {
 }
 
 var yamlBatches = `
+iterator: object
 columns:
   - name: ID
     id: true
@@ -53,7 +54,7 @@ func NewBatchesCommand(conf *helper.Configuration) *cobra.Command {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			options, err := bc.ToOptions()
 			helper.CheckErrs(err, output.SetTransformationDesc(yamlBatches))
-			output.StreamResult(catalog.GetBatches(context.Background(), conf.Authentication, options))
+			output.StreamResultRaw(catalog.GetBatches(context.Background(), conf.Authentication, options))
 
 		},
 	}

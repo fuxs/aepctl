@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var yamlStats = `
+var yamlStatsRecCre = `
 path: [recentlyCreatedResources]
 columns:
   - name: NAME
@@ -22,6 +22,33 @@ columns:
     path: [meta:created]
 `
 
+var yamlStats = `
+iterator: filter
+filter: [imsOrg, tenantId, counts]
+columns:
+  - name: ORG
+    type: str
+    path: [imsOrg]
+  - name: TENANT
+    type: str
+    path: [tenantId]
+  - name: "# SCHEMAS"
+    type: num
+    path: [counts, schemas]
+  - name: "# MIXINS"
+    type: num
+    path: [counts, mixins]
+  - name: "# DATATYPES"
+    type: num
+    path: [counts, datatypes]
+  - name: "# CLASSES"
+    type: num
+    path: [counts, classes]
+  - name: "# UNIONS"
+    type: num
+    path: [counts, unions]
+`
+
 // NewStatsCommand creates an initialized command object
 func NewStatsCommand(conf *helper.Configuration) *cobra.Command {
 	output := helper.NewOutputConf(nil)
@@ -31,11 +58,20 @@ func NewStatsCommand(conf *helper.Configuration) *cobra.Command {
 		Long:                  "long",
 		Example:               "example",
 		DisableFlagsInUseLine: true,
-		Args:                  cobra.NoArgs,
+		Args:                  cobra.MaximumNArgs(1),
+		ValidArgs:             []string{"created"},
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			helper.CheckErr(output.SetTransformationDesc(yamlStats))
-			output.StreamResult(sr.GetStats(context.Background(), conf.Authentication))
+			desc := yamlStats
+			if len(args) == 1 {
+				switch args[0] {
+				case "created":
+					desc = yamlStatsRecCre
+				}
+			}
+			helper.CheckErr(output.SetTransformationDesc(desc))
+			output.StreamResultRaw(sr.GetStatsRaw(context.Background(), conf.Authentication))
+			return
 		},
 	}
 	output.AddOutputFlags(cmd)

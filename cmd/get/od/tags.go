@@ -17,6 +17,8 @@ specific language governing permissions and limitations under the License.
 package od
 
 import (
+	"io"
+
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
@@ -41,6 +43,10 @@ func (*tagTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, w
 		q.Str("_instance", "xdm:name"),
 		util.LocalTimeStr(q.Str("repo:lastModifiedDate")),
 	)
+}
+
+func (*tagTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
+	return nil, nil
 }
 
 // NewTagsCommand creates an initialized command object

@@ -18,6 +18,7 @@ package get
 
 import (
 	"context"
+	"io"
 
 	"github.com/fuxs/aepctl/api/acl"
 	"github.com/fuxs/aepctl/cmd/helper"
@@ -73,6 +74,10 @@ func (*acTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wi
 	})
 }
 
+func (*acTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
+	return nil, nil
+}
+
 type effectiveTransformer struct{}
 
 func (*effectiveTransformer) Header(wide bool) []string {
@@ -91,6 +96,10 @@ func (*effectiveTransformer) WriteRow(name string, q *util.Query, w *util.RowWri
 		name,
 		q.Concat(",", func(q *util.Query) string { return q.String() }),
 	)
+}
+
+func (*effectiveTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
+	return nil, nil
 }
 
 var validArgs = []string{

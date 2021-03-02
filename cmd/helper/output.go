@@ -20,6 +20,8 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"strings"
 
@@ -51,6 +53,7 @@ type Transformer interface {
 	Header(wide bool) []string
 	Preprocess(util.JSONResponse) error
 	WriteRow(string, *util.Query, *util.RowWriter, bool) error
+	Iterator(io.ReadCloser) (util.JSONResponse, error)
 }
 
 // OutputConf contains all options for the output
@@ -112,6 +115,13 @@ func (o *OutputConf) ValidateFlags() error {
 		}
 	}
 	return nil
+}
+
+func (o *OutputConf) StreamResultRaw(res *http.Response, err error) {
+	CheckErr(err)
+	i, err := o.tf.Iterator(res.Body)
+	CheckErr(err)
+	CheckErr(o.streamResult(i))
 }
 
 // StreamResult prints the object in the desired output format

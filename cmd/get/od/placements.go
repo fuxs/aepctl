@@ -17,6 +17,8 @@ specific language governing permissions and limitations under the License.
 package od
 
 import (
+	"io"
+
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
@@ -56,6 +58,10 @@ func (*placementTransformer) WriteRow(name string, q *util.Query, w *util.RowWri
 		helper.ContentLToS.Get(s.Str("xdm:componentType")),
 		util.LocalTimeStr(q.Str("repo:lastModifiedDate")),
 		s.Str("xdm:description"))
+}
+
+func (*placementTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
+	return nil, nil
 }
 
 // NewPlacementsCommand creates an initialized command object

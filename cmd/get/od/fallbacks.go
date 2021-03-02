@@ -17,6 +17,8 @@ specific language governing permissions and limitations under the License.
 package od
 
 import (
+	"io"
+
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
@@ -43,6 +45,10 @@ func (*fallbackTransformer) WriteRow(name string, q *util.Query, w *util.RowWrit
 		StatusMapper.Get(s.Str("xdm:status")),
 		util.LocalTimeStrCustom(q.Str("repo:lastModifiedDate"), longDate),
 	)
+}
+
+func (*fallbackTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
+	return nil, nil
 }
 
 // NewFallbacksCommand creates an initialized command object

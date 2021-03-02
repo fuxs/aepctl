@@ -17,6 +17,8 @@ specific language governing permissions and limitations under the License.
 package od
 
 import (
+	"io"
+
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
@@ -47,6 +49,10 @@ func (*offerTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter,
 		util.LocalTimeStrCustom(d.Str("xdm:endDate"), shortDate),
 		util.LocalTimeStrCustom(q.Str("repo:lastModifiedDate"), longDate),
 	)
+}
+
+func (*offerTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
+	return nil, nil
 }
 
 // NewOffersCommand creates an initialized command object

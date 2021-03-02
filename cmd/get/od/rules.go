@@ -17,6 +17,8 @@ specific language governing permissions and limitations under the License.
 package od
 
 import (
+	"io"
+
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
@@ -43,6 +45,10 @@ func (*ruleTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, 
 		util.LocalTimeStr(q.Str("repo:lastModifiedDate")),
 		s.Str("xdm:description"),
 	)
+}
+
+func (*ruleTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
+	return nil, nil
 }
 
 // NewRulesCommand creates an initialized command object

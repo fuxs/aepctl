@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 
 	"github.com/fuxs/aepctl/api/sandbox"
 	"github.com/fuxs/aepctl/cmd/helper"
@@ -49,6 +50,10 @@ func (*sandboxTransformer) WriteRow(name string, q *util.Query, w *util.RowWrite
 	)
 }
 
+func (*sandboxTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
+	return nil, nil
+}
+
 type sandboxTypeTransformer struct{}
 
 func (*sandboxTypeTransformer) Header(wide bool) []string {
@@ -64,6 +69,10 @@ func (*sandboxTypeTransformer) Preprocess(i util.JSONResponse) error {
 
 func (*sandboxTypeTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wide bool) error {
 	return w.Write(q.String())
+}
+
+func (*sandboxTypeTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
+	return nil, nil
 }
 
 type sandboxDetailTransformer struct{}
@@ -84,6 +93,10 @@ func (*sandboxDetailTransformer) WriteRow(name string, q *util.Query, w *util.Ro
 		q.Str("state"),
 		q.Str("region"),
 	)
+}
+
+func (*sandboxDetailTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
+	return nil, nil
 }
 
 // NewSandboxCommand creates an initialized command object

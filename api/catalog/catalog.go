@@ -18,6 +18,7 @@ package catalog
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/util"
@@ -36,19 +37,11 @@ func (b *BatchesOptions) ToURLPar() string {
 }
 
 // GetBatches returns a list of batches
-func GetBatches(ctx context.Context, p *api.AuthenticationConfig, o *BatchesOptions) (util.JSONResponse, error) {
-	res, err := p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/catalog/batches%s", o.ToURLPar())
-	if err != nil {
-		return nil, err
-	}
-	return util.NewJSONMapIterator(res.Body)
+func GetBatches(ctx context.Context, p *api.AuthenticationConfig, o *BatchesOptions) (*http.Response, error) {
+	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/catalog/batches%s", o.ToURLPar())
 }
 
 // GetDatasets returns a list of batches
-func GetDatasets(ctx context.Context, p *api.AuthenticationConfig, o *BatchesOptions) (util.JSONResponse, error) {
-	res, err := p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/catalog/datasets%s", o.ToURLPar())
-	if err != nil {
-		return nil, err
-	}
-	return util.NewJSONMapIterator(res.Body)
+func GetDatasets(ctx context.Context, p *api.AuthenticationConfig, o *BatchesOptions) (*http.Response, error) {
+	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/catalog/datasets%s", o.ToURLPar())
 }

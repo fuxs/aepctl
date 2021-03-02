@@ -25,6 +25,7 @@ import (
 )
 
 var yamlDatasets = `
+iterator: object
 columns:
   - name: NAME
     type: str
@@ -57,7 +58,7 @@ func NewDatasetsCommand(conf *helper.Configuration) *cobra.Command {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			options, err := bc.ToOptions()
 			helper.CheckErrs(err, output.SetTransformationDesc(yamlDatasets))
-			output.StreamResult(catalog.GetDatasets(context.Background(), conf.Authentication, options))
+			output.StreamResultRaw(catalog.GetDatasets(context.Background(), conf.Authentication, options))
 		},
 	}
 	output.AddOutputFlags(cmd)

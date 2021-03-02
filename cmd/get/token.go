@@ -17,38 +17,31 @@ specific language governing permissions and limitations under the License.
 package get
 
 import (
-	"time"
-
 	"github.com/fuxs/aepctl/api/token"
 	"github.com/fuxs/aepctl/cmd/helper"
-	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
 )
 
-type tokenTransformer struct{}
-
-func (*tokenTransformer) Header(wide bool) []string {
-	if wide {
-		return []string{"TOKEN", "EXPIRES IN"}
-	}
-	return []string{"TOKEN"}
-}
-
-func (*tokenTransformer) Preprocess(i util.JSONResponse) error {
-	return nil
-}
-
-func (*tokenTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wide bool) error {
-	if wide {
-		expires := q.Int("expires_in")
-		return w.Write(q.Str("access_token"), time.Duration(expires*int(time.Millisecond)).String())
-	}
-	return w.Write(q.Str("access_token"))
-}
+var yamlToken = `
+iterator: filter
+filter: [access_token, expires_in]
+columns:
+  - name: TOKEN
+    type: str
+    path: [access_token]
+wide:
+  - name: TOKEN
+    type: str
+    path: [access_token]
+  - name: EXPIRES IN
+    type: num
+    path: [expires_in]
+    format: duration
+`
 
 // NewTokenCommand creates an initialized command object
 func NewTokenCommand(conf *helper.Configuration) *cobra.Command {
-	output := helper.NewOutputConf(&tokenTransformer{})
+	output := helper.NewOutputConf(nil)
 	cmd := &cobra.Command{
 		Use:  "token",
 		Args: cobra.NoArgs,
@@ -57,7 +50,8 @@ func NewTokenCommand(conf *helper.Configuration) *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			output.StreamResult(token.GetRaw(conf.Authentication))
+			helper.CheckErr(output.SetTransformationDesc(yamlToken))
+			output.StreamResultRaw(token.GetRaw(conf.Authentication))
 		},
 	}
 	output.AddOutputFlags(cmd)

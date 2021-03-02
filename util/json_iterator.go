@@ -35,7 +35,6 @@ type JSONResponse interface {
 	Next() (string, interface{}, error)
 	Obj() (map[string]interface{}, error)
 	Path(...string) error
-	//	Stream() io.ReadCloser
 	PrintRaw() error
 	PrintPretty() error
 }
@@ -305,4 +304,46 @@ func (j *JSONMapIterator) Next() (string, interface{}, error) {
 		return "", nil, err
 	}
 	return id, obj, nil
+}
+
+type JSONFilterIterator struct {
+	*JSONIterator
+	Filter map[string]bool
+}
+
+func NewJSONFilterIterator(filter []string, stream io.ReadCloser) (*JSONFilterIterator, error) {
+	base, err := NewJSONIterator(stream)
+	if err != nil {
+		return nil, err
+	}
+	fm := make(map[string]bool, len(filter))
+	for _, f := range filter {
+		fm[f] = true
+	}
+	return &JSONFilterIterator{
+		JSONIterator: base,
+		Filter:       fm,
+	}, nil
+}
+
+func (j *JSONFilterIterator) Next() (string, interface{}, error) {
+	result := make(map[string]interface{}, len(j.Filter))
+	for j.More() {
+		id, err := j.String()
+		if err != nil {
+			return "", nil, err
+		}
+		if j.Filter[id] {
+			obj, err := j.Interface()
+			if err != nil {
+				return "", nil, err
+			}
+			result[id] = obj
+			continue
+		}
+		if err = j.Skip(); err != nil {
+			return "", nil, err
+		}
+	}
+	return "", result, nil
 }

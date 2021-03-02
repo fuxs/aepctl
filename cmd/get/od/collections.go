@@ -17,6 +17,7 @@ specific language governing permissions and limitations under the License.
 package od
 
 import (
+	"io"
 	"strconv"
 
 	"github.com/fuxs/aepctl/api/od"
@@ -45,6 +46,10 @@ func (*collectionTransformer) WriteRow(name string, q *util.Query, w *util.RowWr
 		strconv.Itoa(s.Len("xdm:ids")),
 		util.LocalTimeStrCustom(q.Str("repo:lastModifiedDate"), longDate),
 	)
+}
+
+func (*collectionTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
+	return nil, nil
 }
 
 // NewCollectionsCommand creates an initialized command object
