@@ -5,49 +5,9 @@ import (
 
 	"github.com/fuxs/aepctl/api/sr"
 	"github.com/fuxs/aepctl/cmd/helper"
+	"github.com/markbates/pkger"
 	"github.com/spf13/cobra"
 )
-
-var yamlStatsRecCre = `
-path: [recentlyCreatedResources]
-columns:
-  - name: NAME
-    type: str
-    path: [title]
-  - name: TYPE
-    type: str
-    path: [meta:resourceType]
-  - name: CREATED
-    type: str
-    path: [meta:created]
-`
-
-var yamlStats = `
-iterator: filter
-filter: [imsOrg, tenantId, counts]
-columns:
-  - name: ORG
-    type: str
-    path: [imsOrg]
-  - name: TENANT
-    type: str
-    path: [tenantId]
-  - name: "# SCHEMAS"
-    type: num
-    path: [counts, schemas]
-  - name: "# MIXINS"
-    type: num
-    path: [counts, mixins]
-  - name: "# DATATYPES"
-    type: num
-    path: [counts, datatypes]
-  - name: "# CLASSES"
-    type: num
-    path: [counts, classes]
-  - name: "# UNIONS"
-    type: num
-    path: [counts, unions]
-`
 
 // NewStatsCommand creates an initialized command object
 func NewStatsCommand(conf *helper.Configuration) *cobra.Command {
@@ -62,14 +22,14 @@ func NewStatsCommand(conf *helper.Configuration) *cobra.Command {
 		ValidArgs:             []string{"created"},
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			desc := yamlStats
+			desc := pkger.Include("/trans/get/sr/stats.yaml")
 			if len(args) == 1 {
 				switch args[0] {
 				case "created":
-					desc = yamlStatsRecCre
+					desc = pkger.Include("/trans/get/sr/created.yaml")
 				}
 			}
-			helper.CheckErr(output.SetTransformationDesc(desc))
+			helper.CheckErr(output.SetTransformationFile(desc))
 			output.StreamResultRaw(sr.GetStatsRaw(context.Background(), conf.Authentication))
 			return
 		},

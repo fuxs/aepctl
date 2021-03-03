@@ -1,6 +1,7 @@
 .vscode/
 bin/
 dist/
+gen/
 .DS_Store
 *.pem
 config.yaml

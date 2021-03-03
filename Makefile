@@ -1,6 +1,9 @@
 PLATFORM?=local
 BIN=$(CURDIR)/bin
+GEN=$(CURDIR)/gen
+GEN_FILE=$(GEN)/pkged.go
 DIST=$(CURDIR)/dist
+CMD_FILES=$(vpath %.go cmd)
 ifeq ($(OS),Windows_NT)     # is Windows_NT on XP, 2000, 7, Vista, 10...
 	AEPCTL=$(BIN)/aepctl.exe
 	AEPCTLDBG=$(BIN)/aepctldbg.exe
@@ -19,8 +22,12 @@ LDFLAGS+=-X 'github.com/fuxs/aepctl/cmd.Version=${VERSION}'
 .PHONY: build build-dbg build-dist build-win-386 build-win-amd64 debug dependencies lint vet build-in-container lint-in-container
 
 $(BIN):
-	@echo -e "\033[1;32mCreating new bin directory\033[0m"
-	mkdir -m 755 $(BIN)
+	@echo "\033[1;32mCreating new bin directory\033[0m"
+	@mkdir -m 755 $(BIN)
+
+$(GEN_FILE): $(CMD_FILES)
+	@mkdir -pm 755 $(GEN)
+	@pkger -o gen
 
 build-in-container: $(BIN)
 	DOCKER_BUILDKIT=1 docker build . --target bin \
@@ -55,7 +62,7 @@ build-win-amd64: dependencies
 	@shasum -a 256 $(DIST)/aepctl-windows-amd64.tgz | head -c 64 > $(DIST)/aepctl-windows-amd64.tgz.sha256
 	@shasum -a 256 $(DIST)/windows/amd64/bin/aepctl.exe | head -c 64 > $(DIST)/windows/amd64/bin/aepctl.exe.sha256
 
-dependencies:
+dependencies: $(GEN_FILE)
 	go get ./...
 
 vet:

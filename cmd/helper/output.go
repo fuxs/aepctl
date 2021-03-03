@@ -27,6 +27,7 @@ import (
 
 	"github.com/PaesslerAG/jsonpath"
 	"github.com/fuxs/aepctl/util"
+	"github.com/markbates/pkger"
 	"github.com/spf13/cobra"
 )
 
@@ -58,10 +59,11 @@ type Transformer interface {
 
 // OutputConf contains all options for the output
 type OutputConf struct {
-	Output   string
-	Type     OutputType
-	jsonPath string
-	tf       Transformer
+	Output    string
+	Type      OutputType
+	jsonPath  string
+	transPath string
+	tf        Transformer
 }
 
 // NewOutputConf creates an initialized OutputConf object
@@ -86,6 +88,29 @@ func (o *OutputConf) SetTransformationDesc(yaml string) error {
 	return nil
 }
 
+// SetTransformationFile changes the Transformer object
+func (o *OutputConf) SetTransformationFile(path string) error {
+	var (
+		f   io.ReadCloser
+		err error
+		d   []byte
+	)
+	if o.transPath == "" {
+		f, err = pkger.Open(path)
+	} else {
+		f, err = os.Open(o.transPath)
+	}
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	if d, err = io.ReadAll(f); err != nil {
+		return err
+	}
+	o.tf, err = util.NewTableDescriptor(string(d))
+	return err
+}
+
 // AddOutputFlags extends the passed command with flags for output
 func (o *OutputConf) AddOutputFlags(cmd *cobra.Command) {
 	flags := cmd.PersistentFlags()
@@ -95,7 +120,7 @@ func (o *OutputConf) AddOutputFlags(cmd *cobra.Command) {
 // ValidateFlags checks the passed flags
 func (o *OutputConf) ValidateFlags() error {
 	switch o.Output {
-	case "":
+	case "", "table":
 		o.Type = TableOut
 	case "json":
 		o.Type = JSONOut
@@ -104,13 +129,23 @@ func (o *OutputConf) ValidateFlags() error {
 	case "wide":
 		o.Type = Wide
 	default:
-		if strings.HasPrefix(o.Output, "jsonpath=") {
+		switch {
+		case strings.HasPrefix(o.Output, "table="):
+			l := len(o.Output)
+			tp := o.Output[6:l]
+			o.transPath = util.RemoveQuotes(tp)
+			o.Type = TableOut
+		case strings.HasPrefix(o.Output, "wide="):
+			l := len(o.Output)
+			tp := o.Output[5:l]
+			o.transPath = util.RemoveQuotes(tp)
+			o.Type = TableOut
+		case strings.HasPrefix(o.Output, "jsonpath="):
 			l := len(o.Output)
 			jp := o.Output[9:l]
 			o.jsonPath = util.AddDollar(util.RemoveQuotes(jp))
 			o.Type = JSONPathOut
-		} else {
-			// exit prog
+		default:
 			return fmt.Errorf("Unknown output format %s", o.Output)
 		}
 	}

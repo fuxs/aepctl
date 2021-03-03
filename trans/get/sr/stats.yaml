@@ -1,0 +1,26 @@
+#
+# aepctl get sr stats
+iterator: filter
+filter: [imsOrg, tenantId, counts]
+columns:
+  - name: ORG
+    type: str
+    path: [imsOrg]
+  - name: TENANT
+    type: str
+    path: [tenantId]
+  - name: "# SCHEMAS"
+    type: num
+    path: [counts, schemas]
+  - name: "# MIXINS"
+    type: num
+    path: [counts, mixins]
+  - name: "# DATATYPES"
+    type: num
+    path: [counts, datatypes]
+  - name: "# CLASSES"
+    type: num
+    path: [counts, classes]
+  - name: "# UNIONS"
+    type: num
+    path: [counts, unions]
