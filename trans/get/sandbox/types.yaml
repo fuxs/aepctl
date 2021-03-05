@@ -1,0 +1,5 @@
+#
+# aepctl get sandboxes types
+path: [sandboxTypes]
+columns:
+  - name: NAME

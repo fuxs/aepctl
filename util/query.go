@@ -85,6 +85,9 @@ func (q *Query) String() string {
 
 // Strings returns the current object as array of strings
 func (q *Query) Strings() []string {
+	if ar, ok := q.obj.([]string); ok {
+		return ar
+	}
 	if ar, ok := q.obj.([]interface{}); ok {
 		result := make([]string, len(ar))
 		for i, obj := range ar {

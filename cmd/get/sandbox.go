@@ -18,92 +18,19 @@ package get
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"io"
 
 	"github.com/fuxs/aepctl/api/sandbox"
 	"github.com/fuxs/aepctl/cmd/helper"
-	"github.com/fuxs/aepctl/util"
+	"github.com/markbates/pkger"
 	"github.com/spf13/cobra"
 )
 
-type sandboxTransformer struct{}
-
-func (*sandboxTransformer) Header(wide bool) []string {
-	return []string{"NAME", "TITLE", "TYPE", "LAST MODIFIED"}
-}
-
-func (*sandboxTransformer) Preprocess(i util.JSONResponse) error {
-	if err := i.Path("sandboxes"); err != nil {
-		return err
-	}
-	return i.EnterArray()
-}
-
-func (*sandboxTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wide bool) error {
-	return w.Write(
-		q.Str("name"),
-		q.Str("title"),
-		q.Str("type"),
-		util.LocalTimeStr(q.Str("lastModifiedDate")),
-	)
-}
-
-func (*sandboxTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
-	return nil, nil
-}
-
-type sandboxTypeTransformer struct{}
-
-func (*sandboxTypeTransformer) Header(wide bool) []string {
-	return []string{"NAME"}
-}
-
-func (*sandboxTypeTransformer) Preprocess(i util.JSONResponse) error {
-	if err := i.Path("sandboxTypes"); err != nil {
-		return err
-	}
-	return i.EnterArray()
-}
-
-func (*sandboxTypeTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wide bool) error {
-	return w.Write(q.String())
-}
-
-func (*sandboxTypeTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
-	return nil, nil
-}
-
-type sandboxDetailTransformer struct{}
-
-func (*sandboxDetailTransformer) Header(wide bool) []string {
-	return []string{"NAME", "TITLE", "TYPE", "STATE", "REGION"}
-}
-
-func (*sandboxDetailTransformer) Preprocess(i util.JSONResponse) error {
-	return nil
-}
-
-func (*sandboxDetailTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wide bool) error {
-	return w.Write(
-		q.Str("name"),
-		q.Str("title"),
-		q.Str("type"),
-		q.Str("state"),
-		q.Str("region"),
-	)
-}
-
-func (*sandboxDetailTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
-	return nil, nil
-}
-
 // NewSandboxCommand creates an initialized command object
 func NewSandboxCommand(conf *helper.Configuration) *cobra.Command {
-	output := helper.NewOutputConf(&sandboxTransformer{})
+	output := helper.NewOutputConf(nil)
 	cmd := &cobra.Command{
-		Use: "sandbox",
+		Use:  "sandbox",
+		Args: cobra.MaximumNArgs(1),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			if err := conf.Update(cmd); err != nil {
 				return []string{}, cobra.ShellCompDirectiveNoFileComp
@@ -111,18 +38,16 @@ func NewSandboxCommand(conf *helper.Configuration) *cobra.Command {
 			sandboxes, _ := helper.NewSandboxCache(conf).GetList()
 			return sandboxes, cobra.ShellCompDirectiveNoFileComp
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			switch len(args) {
 			case 0:
-				output.StreamResult(sandbox.ListRaw(context.Background(), conf.Authentication))
+				helper.CheckErr(output.SetTransformationFile(pkger.Include("/trans/get/sandbox/sandboxes.yaml")))
+				output.StreamResultRaw(sandbox.ListRaw(context.Background(), conf.Authentication))
 			case 1:
-				output.SetTransformation(&sandboxDetailTransformer{})
-				output.StreamResult(sandbox.GetRaw(context.Background(), conf.Authentication, args[0]))
-			default:
-				return errors.New("Too many arguments")
+				helper.CheckErr(output.SetTransformationFile(pkger.Include("/trans/get/sandbox/details.yaml")))
+				output.StreamResultRaw(sandbox.GetRaw(context.Background(), conf.Authentication, args[0]))
 			}
-			return nil
 		},
 	}
 	output.AddOutputFlags(cmd)
@@ -131,29 +56,27 @@ func NewSandboxCommand(conf *helper.Configuration) *cobra.Command {
 
 // NewSandboxesCommand creates an initialized command object
 func NewSandboxesCommand(conf *helper.Configuration) *cobra.Command {
-	output := helper.NewOutputConf(&sandboxTransformer{})
+	output := helper.NewOutputConf(nil)
 	cmd := &cobra.Command{
 		Use:       "sandboxes",
+		Args:      cobra.MaximumNArgs(1),
 		ValidArgs: []string{"all", "types"},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			switch len(args) {
 			case 0:
-				output.StreamResult(sandbox.ListRaw(context.Background(), conf.Authentication))
+				helper.CheckErr(output.SetTransformationFile(pkger.Include("/trans/get/sandbox/sandboxes.yaml")))
+				output.StreamResultRaw(sandbox.ListRaw(context.Background(), conf.Authentication))
 			case 1:
 				switch args[0] {
 				case "all":
-					output.StreamResult(sandbox.ListAllRaw(context.Background(), conf.Authentication))
+					helper.CheckErr(output.SetTransformationFile(pkger.Include("/trans/get/sandbox/sandboxes.yaml")))
+					output.StreamResultRaw(sandbox.ListAllRaw(context.Background(), conf.Authentication))
 				case "types":
-					output.SetTransformation(&sandboxTypeTransformer{})
-					output.StreamResult(sandbox.ListTypesRaw(context.Background(), conf.Authentication))
-				default:
-					return fmt.Errorf("Unknown argument %s", args[0])
+					helper.CheckErr(output.SetTransformationFile(pkger.Include("/trans/get/sandbox/types.yaml")))
+					output.StreamResultRaw(sandbox.ListTypesRaw(context.Background(), conf.Authentication))
 				}
-			default:
-				return errors.New("Too many arguments")
 			}
-			return nil
 		},
 	}
 	output.AddOutputFlags(cmd)

@@ -18,6 +18,7 @@ package acl
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/util"
@@ -43,10 +44,6 @@ func GetEffecticeACLPolicies(ctx context.Context, p *api.AuthenticationConfig, u
 }
 
 // GetEffecticeACLPoliciesRaw returns the effective acl policies
-func GetEffecticeACLPoliciesRaw(ctx context.Context, p *api.AuthenticationConfig, urls []string) (util.JSONResponse, error) {
-	res, err := p.PostJSONRequestRaw(ctx, urls, "https://platform.adobe.io/data/foundation/access-control/acl/effective-policies")
-	if err != nil {
-		return nil, err
-	}
-	return util.NewJSONMapIterator(res.Body)
+func GetEffecticeACLPoliciesRaw(ctx context.Context, p *api.AuthenticationConfig, urls []string) (*http.Response, error) {
+	return p.PostJSONRequestRaw(ctx, urls, "https://platform.adobe.io/data/foundation/access-control/acl/effective-policies")
 }

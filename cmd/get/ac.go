@@ -18,11 +18,11 @@ package get
 
 import (
 	"context"
-	"io"
 
 	"github.com/fuxs/aepctl/api/acl"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
+	"github.com/markbates/pkger"
 	"github.com/spf13/cobra"
 )
 
@@ -43,7 +43,7 @@ var (
 	`)
 )
 
-type acTransformer struct{}
+/*type acTransformer struct{}
 
 func (*acTransformer) Header(wide bool) []string {
 	if wide {
@@ -76,31 +76,7 @@ func (*acTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wi
 
 func (*acTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
 	return nil, nil
-}
-
-type effectiveTransformer struct{}
-
-func (*effectiveTransformer) Header(wide bool) []string {
-	return []string{"OBJECT", "VALUES"}
-}
-
-func (*effectiveTransformer) Preprocess(i util.JSONResponse) error {
-	if err := i.Path("policies"); err != nil {
-		return err
-	}
-	return i.EnterObject()
-}
-
-func (*effectiveTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wide bool) error {
-	return w.Write(
-		name,
-		q.Concat(",", func(q *util.Query) string { return q.String() }),
-	)
-}
-
-func (*effectiveTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
-	return nil, nil
-}
+}*/
 
 var validArgs = []string{
 	"/permissions/activate-destinations",
@@ -175,7 +151,7 @@ var validArgs = []string{
 
 // NewACCommand creates an initialized command object
 func NewACCommand(conf *helper.Configuration) *cobra.Command {
-	output := helper.NewOutputConf(&acTransformer{})
+	output := helper.NewOutputConf(nil)
 	cmd := &cobra.Command{
 		Use:                   "ac [(RESOURCE | PERMISSION)*]",
 		Short:                 "Display all or effictive permissions",
@@ -189,10 +165,11 @@ func NewACCommand(conf *helper.Configuration) *cobra.Command {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			ctx := context.Background()
 			if len(args) == 0 {
+				helper.CheckErr(output.SetTransformationFile(pkger.Include("/trans/get/ac/permissions.yaml")))
 				output.StreamResult(acl.GetPermissionsAndResourcesRaw(ctx, conf.Authentication))
 			} else {
-				output.SetTransformation(&effectiveTransformer{})
-				output.StreamResult(acl.GetEffecticeACLPoliciesRaw(ctx, conf.Authentication, args))
+				helper.CheckErr(output.SetTransformationFile(pkger.Include("/trans/get/ac/effective.yaml")))
+				output.StreamResultRaw(acl.GetEffecticeACLPoliciesRaw(ctx, conf.Authentication, args))
 			}
 		},
 	}

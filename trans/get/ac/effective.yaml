@@ -1,0 +1,7 @@
+iterator: object
+path: [policies]
+columns:
+  - name: OBJECT
+    id: true
+  - name: VALUES
+    type: list

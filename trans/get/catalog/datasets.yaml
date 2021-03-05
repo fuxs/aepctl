@@ -1,0 +1,16 @@
+#
+# aepctl get cat datasets
+iterator: object
+columns:
+  - name: NAME
+    path: [name]
+  - name: CREATED
+    type: num
+    path: [created]
+    format: utime
+  - name: LAST BATCH STATUS
+    path: [lastBatchStatus]
+  - name: LAST UPDATED
+    type: num
+    path: [updated]
+    format: utime

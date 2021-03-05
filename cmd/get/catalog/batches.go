@@ -7,6 +7,7 @@ import (
 
 	"github.com/fuxs/aepctl/api/catalog"
 	"github.com/fuxs/aepctl/cmd/helper"
+	"github.com/markbates/pkger"
 	"github.com/spf13/cobra"
 )
 
@@ -16,28 +17,6 @@ type batchesConf struct {
 	timeFormat   string
 	createdAfter string
 }
-
-var yamlBatches = `
-iterator: object
-columns:
-  - name: ID
-    id: true
-  - name: STATUS
-    type: str
-    path: [status]
-  - name: CREATED
-    type: num
-    path: [created]
-    format: utime	
-  - name: STARTED
-    type: num 
-    path: [started]
-    format: utime
-  - name: COMPLETED
-    type: num
-    path: [completed]
-    format: utime
-`
 
 // NewBatchesCommand creates an initialized command object
 func NewBatchesCommand(conf *helper.Configuration) *cobra.Command {
@@ -53,9 +32,8 @@ func NewBatchesCommand(conf *helper.Configuration) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			options, err := bc.ToOptions()
-			helper.CheckErrs(err, output.SetTransformationDesc(yamlBatches))
+			helper.CheckErrs(err, output.SetTransformationFile(pkger.Include("/trans/get/catalog/batches.yaml")))
 			output.StreamResultRaw(catalog.GetBatches(context.Background(), conf.Authentication, options))
-
 		},
 	}
 	output.AddOutputFlags(cmd)

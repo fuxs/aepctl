@@ -19,6 +19,7 @@ package helper
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -154,6 +155,10 @@ func (o *OutputConf) ValidateFlags() error {
 
 func (o *OutputConf) StreamResultRaw(res *http.Response, err error) {
 	CheckErr(err)
+	if res.StatusCode >= 300 {
+		data, err := io.ReadAll(res.Body)
+		CheckErrs(err, errors.New(string(data)))
+	}
 	i, err := o.tf.Iterator(res.Body)
 	CheckErr(err)
 	CheckErr(o.streamResult(i))

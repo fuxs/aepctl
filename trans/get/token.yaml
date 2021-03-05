@@ -1,0 +1,12 @@
+#
+# aepctl get token
+iterator: filter
+filter: [access_token, expires_in]
+columns:
+  - name: TOKEN
+    path: [access_token]
+  - name: EXPIRES IN
+    type: num
+    mode: wide
+    path: [expires_in]
+    format: duration

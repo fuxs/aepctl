@@ -21,27 +21,9 @@ import (
 
 	"github.com/fuxs/aepctl/api/catalog"
 	"github.com/fuxs/aepctl/cmd/helper"
+	"github.com/markbates/pkger"
 	"github.com/spf13/cobra"
 )
-
-var yamlDatasets = `
-iterator: object
-columns:
-  - name: NAME
-    type: str
-    path: [name]
-  - name: CREATED
-    type: num
-    path: [created]
-    format: utime
-  - name: LAST BATCH STATUS
-    type: str
-    path: [lastBatchStatus]
-  - name: LAST UPDATED
-    type: num
-    path: [updated]
-    format: utime
-`
 
 // NewDatasetsCommand creates an initialized command object
 func NewDatasetsCommand(conf *helper.Configuration) *cobra.Command {
@@ -57,7 +39,7 @@ func NewDatasetsCommand(conf *helper.Configuration) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			options, err := bc.ToOptions()
-			helper.CheckErrs(err, output.SetTransformationDesc(yamlDatasets))
+			helper.CheckErrs(err, output.SetTransformationFile(pkger.Include("/trans/get/catalog/datasets.yaml")))
 			output.StreamResultRaw(catalog.GetDatasets(context.Background(), conf.Authentication, options))
 		},
 	}

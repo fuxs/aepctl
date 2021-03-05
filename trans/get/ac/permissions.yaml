@@ -1,0 +1,34 @@
+iterator: object
+path: [permissions]
+vars:
+  - name: operationName
+    id: true
+range:
+  vars:
+    - name: permissions
+      type: list
+      cast: strings
+  columns:
+    - name: OPERATION
+      var: operationName
+    - name: OBJECT
+      id: true
+    - name: R
+      long: READ
+      var: permissions
+      format: contains
+      parameters: [read]
+    - name: W
+      long: WRITE
+      var: permissions
+      format: contains
+      parameters: [write]
+    - name: D
+      long: DELETE
+      var: permissions
+      format: contains
+      parameters: [delete]
+  post:
+    vars:
+      - name: operationName
+        value:

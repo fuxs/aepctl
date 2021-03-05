@@ -18,9 +18,9 @@ package sandbox
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/fuxs/aepctl/api"
-	"github.com/fuxs/aepctl/util"
 )
 
 // Get returns the details of a sandbox with the given name
@@ -30,12 +30,8 @@ func Get(ctx context.Context, p *api.AuthenticationConfig, name string) (interfa
 }
 
 // GetRaw returns the details of a sandbox with the given name
-func GetRaw(ctx context.Context, p *api.AuthenticationConfig, name string) (util.JSONResponse, error) {
-	res, err := p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/sandbox-management/sandboxes/%s", name)
-	if err != nil {
-		return nil, err
-	}
-	return util.NewJSONIterator(res.Body)
+func GetRaw(ctx context.Context, p *api.AuthenticationConfig, name string) (*http.Response, error) {
+	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/sandbox-management/sandboxes/%s", name)
 }
 
 // ListAll returns a list of all sandboxes
@@ -45,12 +41,8 @@ func ListAll(ctx context.Context, p *api.AuthenticationConfig) (interface{}, err
 }
 
 // ListAllRaw returns a list of all sandboxes
-func ListAllRaw(ctx context.Context, p *api.AuthenticationConfig) (util.JSONResponse, error) {
-	res, err := p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/sandbox-management/sandboxes")
-	if err != nil {
-		return nil, err
-	}
-	return util.NewJSONIterator(res.Body)
+func ListAllRaw(ctx context.Context, p *api.AuthenticationConfig) (*http.Response, error) {
+	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/sandbox-management/sandboxes")
 }
 
 // List returns a list of usable sandboxes
@@ -60,12 +52,8 @@ func List(ctx context.Context, p *api.AuthenticationConfig) (interface{}, error)
 }
 
 // ListRaw returns a list of usable sandboxes
-func ListRaw(ctx context.Context, p *api.AuthenticationConfig) (util.JSONResponse, error) {
-	res, err := p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/sandbox-management/")
-	if err != nil {
-		return nil, err
-	}
-	return util.NewJSONIterator(res.Body)
+func ListRaw(ctx context.Context, p *api.AuthenticationConfig) (*http.Response, error) {
+	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/sandbox-management/")
 }
 
 // ListTypes lists the available sandbox types
@@ -75,10 +63,6 @@ func ListTypes(ctx context.Context, p *api.AuthenticationConfig) (interface{}, e
 }
 
 // ListTypesRaw lists the available sandbox types
-func ListTypesRaw(ctx context.Context, p *api.AuthenticationConfig) (util.JSONResponse, error) {
-	res, err := p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/sandbox-management/sandboxTypes")
-	if err != nil {
-		return nil, err
-	}
-	return util.NewJSONIterator(res.Body)
+func ListTypesRaw(ctx context.Context, p *api.AuthenticationConfig) (*http.Response, error) {
+	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/sandbox-management/sandboxTypes")
 }

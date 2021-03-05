@@ -1,0 +1,20 @@
+#
+# aepctl get cat datasets
+iterator: object
+columns:
+  - name: ID
+    id: true
+  - name: STATUS
+    path: [status]
+  - name: CREATED
+    type: num
+    path: [created]
+    format: utime
+  - name: STARTED
+    type: num 
+    path: [started]
+    format: utime
+  - name: COMPLETED
+    type: num
+    path: [completed]
+    format: utime

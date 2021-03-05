@@ -1,0 +1,15 @@
+#
+# aepctl get sandbox
+# aepctl get sandboxes
+# aepctl get sandboxes all
+path: [sandboxes]
+columns:
+  - name: NAME
+    path: [name]
+  - name: TITLE
+    path: [title]
+  - name: TYPE
+    path: [type]
+  - name: LAST MODIFIED
+    path: [lastModifiedDate]
+    format: localTime

@@ -19,25 +19,9 @@ package get
 import (
 	"github.com/fuxs/aepctl/api/token"
 	"github.com/fuxs/aepctl/cmd/helper"
+	"github.com/markbates/pkger"
 	"github.com/spf13/cobra"
 )
-
-var yamlToken = `
-iterator: filter
-filter: [access_token, expires_in]
-columns:
-  - name: TOKEN
-    type: str
-    path: [access_token]
-wide:
-  - name: TOKEN
-    type: str
-    path: [access_token]
-  - name: EXPIRES IN
-    type: num
-    path: [expires_in]
-    format: duration
-`
 
 // NewTokenCommand creates an initialized command object
 func NewTokenCommand(conf *helper.Configuration) *cobra.Command {
@@ -50,7 +34,7 @@ func NewTokenCommand(conf *helper.Configuration) *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			helper.CheckErr(output.SetTransformationDesc(yamlToken))
+			helper.CheckErr(output.SetTransformationFile(pkger.Include("/trans/get/token.yaml")))
 			output.StreamResultRaw(token.GetRaw(conf.Authentication))
 		},
 	}
