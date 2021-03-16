@@ -18,11 +18,12 @@ package od
 
 import (
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
 // NewUpdateRuleCommand creates an initialized command object
-func NewUpdateRuleCommand(conf *helper.Configuration) *cobra.Command {
-	return NewUpdateCommand(conf, "rule", od.RuleSchema)
+func NewUpdateRuleCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
+	return NewUpdateCommand(conf, ac, "rule", od.RuleSchema)
 }

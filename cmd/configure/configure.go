@@ -18,6 +18,7 @@ package configure
 
 import (
 	"github.com/fuxs/aepctl/api"
+	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/ui"
 	"github.com/fuxs/aepctl/util"
 	"github.com/gdamore/tcell/v2"
@@ -280,7 +281,8 @@ func NewConfigureCommand(gcfg *util.RootConfig) *cobra.Command {
 		Example:               configureExample,
 		DisableFlagsInUseLine: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := util.LoadConfigFile(gcfg.Config)
+			helper.CheckErr(gcfg.Configure(cmd))
+			cfg, err := util.LoadConfigFile(gcfg)
 			if err != nil {
 				return err
 			}

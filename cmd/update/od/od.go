@@ -20,21 +20,21 @@ import (
 	"context"
 
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
 )
 
-func prepareUpdate(conf *helper.Configuration, update *od.Update, schema string) {
-	store := helper.NewNameToInstanceID(conf, schema)
+func prepareUpdate(ac *cache.AutoContainer, update *od.Update, schema string) {
+	idc := cache.NewODNameToInstanceIDMem(ac, schema)
 	for i, name := range update.IDs {
-		update.IDs[i] = store.GetValue(name)
+		update.IDs[i] = idc.Lookup(name)
 	}
 }
 
 // NewUpdateCommand creates an initialized update command object
-func NewUpdateCommand(conf *helper.Configuration, use, schema string) *cobra.Command {
-	ac := conf.AC
+func NewUpdateCommand(conf *helper.Configuration, ac *cache.AutoContainer, use, schema string) *cobra.Command {
 	fc := &helper.FileConfig{}
 	cmd := &cobra.Command{
 		Use:     use,
@@ -42,7 +42,8 @@ func NewUpdateCommand(conf *helper.Configuration, use, schema string) *cobra.Com
 		Args:    cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErr(conf.Validate(cmd))
-			helper.CheckErr(ac.AutoFillContainer())
+			cid, err := ac.Get()
+			helper.CheckErr(err)
 			i, err := fc.Open()
 			helper.CheckErr(err)
 			if i != nil {
@@ -50,11 +51,11 @@ func NewUpdateCommand(conf *helper.Configuration, use, schema string) *cobra.Com
 					update := &od.Update{}
 					if err := i.Load(update); err == nil {
 						if fc.IsYAML() {
-							prepareUpdate(conf, update, schema)
+							prepareUpdate(ac, update, schema)
 						}
 						for _, name := range update.IDs {
 							for _, apply := range update.Apply {
-								_, err = od.Patch(context.Background(), conf.Authentication, ac.ContainerID, name, schema, apply)
+								_, err = od.Patch(context.Background(), conf.Authentication, cid, name, schema, apply)
 								helper.CheckErr(err)
 							}
 						}
@@ -67,7 +68,7 @@ func NewUpdateCommand(conf *helper.Configuration, use, schema string) *cobra.Com
 			}
 		},
 	}
-	ac.AddContainerFlag(cmd)
+	helper.CheckErr(ac.AddContainerFlag(cmd))
 	fc.AddMandatoryFileFlag(cmd)
 	return cmd
 }

@@ -20,20 +20,23 @@ import (
 	"io"
 
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
 )
 
 type activityTransformer struct {
-	idStore *util.KVCache
+	idc *cache.MapMemCache
 }
 
-func newActivityTransformer(conf *helper.Configuration) *activityTransformer {
+func newActivityTransformer(ac *cache.AutoContainer) *activityTransformer {
 	// get list of placements and store map[@id]channel
-	store := helper.NewTemporaryCache(conf.AC, od.PlacementSchema, []string{"_instance", "@id"}, []string{"_instance", "xdm:channel"})
+	t := cache.NewODTrans().K("_instance", "@id").V("_instance", "xdm:channel")
+	c := cache.NewODCall(ac, od.PlacementSchema)
+	idc := cache.NewMapMemCache(c, t)
 	return &activityTransformer{
-		idStore: store,
+		idc: idc,
 	}
 }
 
@@ -50,17 +53,14 @@ func (*activityTransformer) Preprocess(i util.JSONResponse) error {
 
 func (t *activityTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wide bool) error {
 	s := q.Path("_instance")
-	t.idStore.MapValues(func(s string) string {
-		return helper.ChannelLToS.Get(s)
-	})
 	return w.Write(
 		s.Str("xdm:name"),
-		StatusMapper.Get(s.Str("xdm:status")),
+		StatusMapper.Lookup(s.Str("xdm:status")),
 		util.LocalTimeStrCustom(s.Str("xdm:startDate"), shortDate),
 		util.LocalTimeStrCustom(s.Str("xdm:endDate"), shortDate),
 		s.Path("xdm:criteria").Concat(",", func(q *util.Query) string {
 			id := q.Path("xdm:placements").Get(0).String()
-			return t.idStore.GetValue(id)
+			return helper.ChannelLToS.Lookup(t.idc.Lookup(id))
 		}),
 		util.LocalTimeStrCustom(q.Str("repo:lastModifiedDate"), longDate),
 	)
@@ -71,21 +71,22 @@ func (*activityTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
 }
 
 // NewActivitiesCommand creates an initialized command object
-func NewActivitiesCommand(conf *helper.Configuration) *cobra.Command {
-	at := newActivityTransformer(conf)
+func NewActivitiesCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
+	at := newActivityTransformer(ac)
 	return NewQueryCommand(
 		conf,
+		ac,
 		od.ActivitySchema,
 		"activities",
 		at)
 }
 
 // NewActivityCommand creates an initialized command object
-func NewActivityCommand(conf *helper.Configuration) *cobra.Command {
-	at := newActivityTransformer(conf)
+func NewActivityCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
+	at := newActivityTransformer(ac)
 	return NewGetCommand(
 		conf,
-		helper.NewActivityIDCache(conf.AC),
+		ac,
 		od.ActivitySchema,
 		"activity",
 		at)

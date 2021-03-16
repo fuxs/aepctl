@@ -20,6 +20,7 @@ import (
 	"io"
 
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
@@ -42,7 +43,7 @@ func (*fallbackTransformer) WriteRow(name string, q *util.Query, w *util.RowWrit
 	s := q.Path("_instance")
 	return w.Write(
 		s.Str("xdm:name"),
-		StatusMapper.Get(s.Str("xdm:status")),
+		StatusMapper.Lookup(s.Str("xdm:status")),
 		util.LocalTimeStrCustom(q.Str("repo:lastModifiedDate"), longDate),
 	)
 }
@@ -52,21 +53,22 @@ func (*fallbackTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
 }
 
 // NewFallbacksCommand creates an initialized command object
-func NewFallbacksCommand(conf *helper.Configuration) *cobra.Command {
+func NewFallbacksCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
 	ft := &fallbackTransformer{}
 	return NewQueryCommand(
 		conf,
+		ac,
 		od.FallbackSchema,
 		"fallbacks",
 		ft)
 }
 
 // NewFallbackCommand creates an initialized command object
-func NewFallbackCommand(conf *helper.Configuration) *cobra.Command {
+func NewFallbackCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
 	ft := &fallbackTransformer{}
 	return NewGetCommand(
 		conf,
-		helper.NewFallbackIDCache(conf.AC),
+		ac,
 		od.FallbackSchema,
 		"fallback",
 		ft)

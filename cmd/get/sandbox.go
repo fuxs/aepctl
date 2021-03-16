@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/fuxs/aepctl/api/sandbox"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/markbates/pkger"
 	"github.com/spf13/cobra"
@@ -35,7 +36,7 @@ func NewSandboxCommand(conf *helper.Configuration) *cobra.Command {
 			if err := conf.Update(cmd); err != nil {
 				return []string{}, cobra.ShellCompDirectiveNoFileComp
 			}
-			sandboxes, _ := helper.NewSandboxCache(conf).GetList()
+			sandboxes := cache.NewSandboxCache(conf.Authentication, conf).Values()
 			return sandboxes, cobra.ShellCompDirectiveNoFileComp
 		},
 		Run: func(cmd *cobra.Command, args []string) {

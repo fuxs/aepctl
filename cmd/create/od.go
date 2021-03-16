@@ -17,6 +17,7 @@ specific language governing permissions and limitations under the License.
 package create
 
 import (
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/create/od"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
@@ -27,12 +28,13 @@ func NewODCommand(conf *helper.Configuration) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "od",
 	}
-	cmd.AddCommand(od.NewCreateActivityCommand(conf))
-	cmd.AddCommand(od.NewCreateCollectionCommand(conf))
-	cmd.AddCommand(od.NewCreateFallbackCommand(conf))
-	cmd.AddCommand(od.NewCreateOfferCommand(conf))
-	cmd.AddCommand(od.NewCreateTagCommand(conf))
-	cmd.AddCommand(od.NewCreatePlacementCommand(conf))
-	cmd.AddCommand(od.NewCreateRuleCommand(conf))
+	ac := cache.NewAutoContainer(conf.Authentication, conf)
+	cmd.AddCommand(od.NewCreateActivityCommand(conf, ac))
+	cmd.AddCommand(od.NewCreateCollectionCommand(conf, ac))
+	cmd.AddCommand(od.NewCreateFallbackCommand(conf, ac))
+	cmd.AddCommand(od.NewCreateOfferCommand(conf, ac))
+	cmd.AddCommand(od.NewCreateTagCommand(conf, ac))
+	cmd.AddCommand(od.NewCreatePlacementCommand(conf, ac))
+	cmd.AddCommand(od.NewCreateRuleCommand(conf, ac))
 	return cmd
 }

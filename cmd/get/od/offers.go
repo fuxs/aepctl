@@ -20,6 +20,7 @@ import (
 	"io"
 
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
@@ -43,7 +44,7 @@ func (*offerTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter,
 	d := s.Path("xdm:selectionConstraint")
 	return w.Write(
 		s.Str("xdm:name"),
-		StatusMapper.Get(s.Str("xdm:status")),
+		StatusMapper.Lookup(s.Str("xdm:status")),
 		s.Str("xdm:rank", "xdm:priority"),
 		util.LocalTimeStrCustom(d.Str("xdm:startDate"), shortDate),
 		util.LocalTimeStrCustom(d.Str("xdm:endDate"), shortDate),
@@ -56,21 +57,22 @@ func (*offerTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
 }
 
 // NewOffersCommand creates an initialized command object
-func NewOffersCommand(conf *helper.Configuration) *cobra.Command {
+func NewOffersCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
 	ot := &offerTransformer{}
 	return NewQueryCommand(
 		conf,
+		ac,
 		od.OfferSchema,
 		"offers",
 		ot)
 }
 
 // NewOfferCommand creates an initialized command object
-func NewOfferCommand(conf *helper.Configuration) *cobra.Command {
+func NewOfferCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
 	ot := &offerTransformer{}
 	return NewGetCommand(
 		conf,
-		helper.NewOfferIDCache(conf.AC),
+		ac,
 		od.OfferSchema,
 		"offer",
 		ot)

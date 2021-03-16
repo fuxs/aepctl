@@ -21,13 +21,13 @@ import (
 	"fmt"
 
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
 // NewCreatePlacementCommand creates an initialized command object
-func NewCreatePlacementCommand(conf *helper.Configuration) *cobra.Command {
-	ac := conf.AC
+func NewCreatePlacementCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
 	fc := &helper.FileConfig{}
 	cmd := &cobra.Command{
 		Use:     "placement",
@@ -50,13 +50,12 @@ func NewCreatePlacementCommand(conf *helper.Configuration) *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErr(conf.Validate(cmd))
-			helper.CheckErr(ac.AutoFillContainer())
+
 			l := len(args)
 			if l == 1 || l == 2 || l > 4 {
 				helper.CheckErr(fmt.Errorf("Invalid number of arguments (0, 3 or 4): %v", l))
 			}
 			if l > 2 {
-				helper.CheckErr(ac.AutoFillContainer())
 				placement := &od.Placement{
 					Name:    args[0],
 					Content: args[1],
@@ -69,7 +68,9 @@ func NewCreatePlacementCommand(conf *helper.Configuration) *cobra.Command {
 					placement.Channel = helper.ChannelSToL.GetL(placement.Channel)
 					placement.Content = helper.ContentSToL.GetL(placement.Content)
 				}
-				_, err := od.Create(context.Background(), conf.Authentication, ac.ContainerID, od.PlacementSchema, placement)
+				cid, err := ac.Get()
+				helper.CheckErr(err)
+				_, err = od.Create(context.Background(), conf.Authentication, cid, od.PlacementSchema, placement)
 				helper.CheckErr(err)
 			}
 			//
@@ -94,7 +95,7 @@ func NewCreatePlacementCommand(conf *helper.Configuration) *cobra.Command {
 			}
 		},
 	}
-	ac.AddContainerFlag(cmd)
+	helper.CheckErr(ac.AddContainerFlag(cmd))
 	fc.AddFileFlag(cmd)
 	return cmd
 }

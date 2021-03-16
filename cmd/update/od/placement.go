@@ -18,11 +18,12 @@ package od
 
 import (
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
 // NewUpdatePlacementCommand creates an initialized command object
-func NewUpdatePlacementCommand(conf *helper.Configuration) *cobra.Command {
-	return NewUpdateCommand(conf, "placement", od.PlacementSchema)
+func NewUpdatePlacementCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
+	return NewUpdateCommand(conf, ac, "placement", od.PlacementSchema)
 }

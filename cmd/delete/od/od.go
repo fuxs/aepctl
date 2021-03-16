@@ -20,14 +20,14 @@ import (
 	"context"
 
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
 )
 
 // NewDeleteCommand creates an initialized command object
-func NewDeleteCommand(conf *helper.Configuration, os *util.KVCache, name string) *cobra.Command {
-	ac := conf.AC //helper.NewAutoContainer(auth)
+func NewDeleteCommand(conf *helper.Configuration, ac *cache.AutoContainer, name, schema string) *cobra.Command {
 	use := util.Plural(name)
 	cmd := &cobra.Command{
 		Use:     use,
@@ -36,21 +36,20 @@ func NewDeleteCommand(conf *helper.Configuration, os *util.KVCache, name string)
 			if err := conf.Update(cmd); err != nil {
 				return []string{}, cobra.ShellCompDirectiveNoFileComp
 			}
-			valid, err := os.Keys()
-			if err != nil {
-				return []string{}, cobra.ShellCompDirectiveNoFileComp
-			}
-			return util.Difference(valid, args), cobra.ShellCompDirectiveNoFileComp
+			idc := cache.NewODNameToInstanceID(ac, name, schema, conf.Sandboxed())
+			return util.Difference(idc.Keys(), args), cobra.ShellCompDirectiveNoFileComp
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+			idc := cache.NewODNameToInstanceID(ac, name, schema, conf.Sandboxed())
+			defer idc.Delete()
 			helper.CheckErr(conf.Validate(cmd))
-			helper.CheckErr(ac.AutoFillContainer())
+			cid, err := ac.Get()
+			helper.CheckErr(err)
 			for _, name := range args {
-				helper.CheckErr(od.Delete(context.Background(), conf.Authentication, ac.ContainerID, os.GetValue(name)))
-				os.Remove(name)
+				helper.CheckErr(od.Delete(context.Background(), conf.Authentication, cid, idc.Lookup(name)))
 			}
 		},
 	}
-	ac.AddContainerFlag(cmd)
+	helper.CheckErr(ac.AddContainerFlag(cmd))
 	return cmd
 }

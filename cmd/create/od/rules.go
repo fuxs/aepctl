@@ -20,13 +20,13 @@ import (
 	"context"
 
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
 // NewCreateRuleCommand creates an initialized command object
-func NewCreateRuleCommand(conf *helper.Configuration) *cobra.Command {
-	ac := conf.AC
+func NewCreateRuleCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
 	fc := &helper.FileConfig{}
 	cmd := &cobra.Command{
 		Use:     "rule",
@@ -34,14 +34,15 @@ func NewCreateRuleCommand(conf *helper.Configuration) *cobra.Command {
 		Args:    cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErr(conf.Validate(cmd))
-			helper.CheckErr(ac.AutoFillContainer())
+			cid, err := ac.Get()
+			helper.CheckErr(err)
 			i, err := fc.Open()
 			helper.CheckErr(err)
 			if i != nil {
 				for {
 					rule := &od.Rule{}
 					if err := i.Load(rule); err == nil {
-						_, err = od.Create(context.Background(), conf.Authentication, ac.ContainerID, od.RuleSchema, rule)
+						_, err = od.Create(context.Background(), conf.Authentication, cid, od.RuleSchema, rule)
 						helper.CheckErr(err)
 					} else {
 						helper.CheckErrEOF(err)
@@ -51,7 +52,7 @@ func NewCreateRuleCommand(conf *helper.Configuration) *cobra.Command {
 			}
 		},
 	}
-	ac.AddContainerFlag(cmd)
+	helper.CheckErr(ac.AddContainerFlag(cmd))
 	fc.AddMandatoryFileFlag(cmd)
 	return cmd
 }

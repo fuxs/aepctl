@@ -20,22 +20,23 @@ import (
 	"context"
 
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
 )
 
-func prepareActivity(conf *helper.Configuration, activity *od.Activity) {
-	ps := helper.NewNameToID(conf, od.PlacementSchema)
-	cs := helper.NewNameToID(conf, od.CollectionSchema)
-	fs := helper.NewNameToID(conf, od.FallbackSchema)
+func prepareActivity(ac *cache.AutoContainer, activity *od.Activity) {
+	ps := cache.NewODNameToIDMem(ac, od.PlacementSchema)
+	cs := cache.NewODNameToIDMem(ac, od.CollectionSchema)
+	fs := cache.NewODNameToIDMem(ac, od.FallbackSchema)
 	for _, c := range activity.Criteria {
 		for i, p := range c.Placements {
-			c.Placements[i] = ps.GetValue(p)
+			c.Placements[i] = ps.Lookup(p)
 		}
-		c.Selection.Filter = cs.GetValue(c.Selection.Filter)
+		c.Selection.Filter = cs.Lookup(c.Selection.Filter)
 	}
-	activity.Fallback = fs.GetValue(activity.Fallback)
+	activity.Fallback = fs.Lookup(activity.Fallback)
 }
 
 var (
@@ -78,8 +79,7 @@ var (
 )
 
 // NewCreateActivityCommand creates an initialized command object
-func NewCreateActivityCommand(conf *helper.Configuration) *cobra.Command {
-	ac := conf.AC
+func NewCreateActivityCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
 	fc := &helper.FileConfig{}
 	cmd := &cobra.Command{
 		Use:                   "activity",
@@ -91,7 +91,8 @@ func NewCreateActivityCommand(conf *helper.Configuration) *cobra.Command {
 		Args:                  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErr(conf.Validate(cmd))
-			helper.CheckErr(ac.AutoFillContainer())
+			cid, err := ac.Get()
+			helper.CheckErr(err)
 			i, err := fc.Open()
 			helper.CheckErr(err)
 			if i != nil {
@@ -99,9 +100,9 @@ func NewCreateActivityCommand(conf *helper.Configuration) *cobra.Command {
 					activity := &od.Activity{}
 					if err := i.Load(activity); err == nil {
 						if fc.IsYAML() {
-							prepareActivity(conf, activity)
+							prepareActivity(ac, activity)
 						}
-						_, err = od.Create(context.Background(), conf.Authentication, ac.ContainerID, od.ActivitySchema, activity)
+						_, err = od.Create(context.Background(), conf.Authentication, cid, od.ActivitySchema, activity)
 						helper.CheckErr(err)
 					} else {
 						helper.CheckErrEOF(err)
@@ -111,7 +112,7 @@ func NewCreateActivityCommand(conf *helper.Configuration) *cobra.Command {
 			}
 		},
 	}
-	ac.AddContainerFlag(cmd)
+	helper.CheckErr(ac.AddContainerFlag(cmd))
 	fc.AddMandatoryFileFlag(cmd)
 	return cmd
 }

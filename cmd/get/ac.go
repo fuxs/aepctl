@@ -43,41 +43,6 @@ var (
 	`)
 )
 
-/*type acTransformer struct{}
-
-func (*acTransformer) Header(wide bool) []string {
-	if wide {
-		return []string{"OPERATION", "OBJECT", "READ", "WRITE", "DELETE"}
-	}
-	return []string{"OPERATION", "OBJECT", "R", "W", "D"}
-}
-
-func (*acTransformer) Preprocess(i util.JSONResponse) error {
-	if err := i.Path("permissions"); err != nil {
-		return err
-	}
-	return i.EnterObject()
-}
-
-func (*acTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wide bool) error {
-	operationName := name
-	return q.RangeAttributesE(func(object string, q *util.Query) error {
-		permissions := q.Strings()
-		read := util.ContainsS("read", permissions)
-		write := util.ContainsS("write", permissions)
-		delete := util.ContainsS("delete", permissions)
-		if err := w.Write(operationName, object, read, write, delete); err != nil {
-			return err
-		}
-		operationName = ""
-		return nil
-	})
-}
-
-func (*acTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
-	return nil, nil
-}*/
-
 var validArgs = []string{
 	"/permissions/activate-destinations",
 	"/permissions/evaluate-segments",

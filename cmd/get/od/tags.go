@@ -20,6 +20,7 @@ import (
 	"io"
 
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
@@ -50,21 +51,22 @@ func (*tagTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
 }
 
 // NewTagsCommand creates an initialized command object
-func NewTagsCommand(auth *helper.Configuration) *cobra.Command {
+func NewTagsCommand(auth *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
 	tt := &tagTransformer{}
 	return NewQueryCommand(
 		auth,
+		ac,
 		od.TagSchema,
 		"tags",
 		tt)
 }
 
 // NewTagCommand creates an initialized command object
-func NewTagCommand(auth *helper.Configuration) *cobra.Command {
+func NewTagCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
 	tt := &tagTransformer{}
 	return NewGetCommand(
-		auth,
-		helper.NewTagIDCache(auth.AC),
+		conf,
+		ac,
 		od.TagSchema,
 		"tag",
 		tt)

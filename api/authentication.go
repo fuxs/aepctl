@@ -302,3 +302,9 @@ func (o *AuthenticationConfig) FullRequest(ctx context.Context, verb string, hea
 	}
 	return obj, nil
 }
+
+func (o *AuthenticationConfig) NoDryRun() *AuthenticationConfig {
+	cfg := *o
+	cfg.DryRun = false
+	return &cfg
+}

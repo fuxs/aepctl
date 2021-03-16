@@ -21,6 +21,7 @@ import (
 	"strconv"
 
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
@@ -53,21 +54,22 @@ func (*collectionTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error)
 }
 
 // NewCollectionsCommand creates an initialized command object
-func NewCollectionsCommand(conf *helper.Configuration) *cobra.Command {
+func NewCollectionsCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
 	ct := &collectionTransformer{}
 	return NewQueryCommand(
 		conf,
+		ac,
 		od.CollectionSchema,
 		"collections",
 		ct)
 }
 
 // NewCollectionCommand creates an initialized command object
-func NewCollectionCommand(conf *helper.Configuration) *cobra.Command {
+func NewCollectionCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
 	ct := &collectionTransformer{}
 	return NewGetCommand(
 		conf,
-		helper.NewCollectionIDCache(conf.AC),
+		ac,
 		od.CollectionSchema,
 		"collection",
 		ct)

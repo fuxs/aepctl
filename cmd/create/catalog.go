@@ -17,7 +17,6 @@ specific language governing permissions and limitations under the License.
 package create
 
 import (
-	"github.com/fuxs/aepctl/cmd/create/od"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
@@ -28,6 +27,5 @@ func NewCatalogCommand(conf *helper.Configuration) *cobra.Command {
 		Use:     "cat",
 		Aliases: []string{"catalog"},
 	}
-	cmd.AddCommand(od.NewCreateActivityCommand(conf))
 	return cmd
 }

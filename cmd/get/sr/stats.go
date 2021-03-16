@@ -31,7 +31,6 @@ func NewStatsCommand(conf *helper.Configuration) *cobra.Command {
 			}
 			helper.CheckErr(output.SetTransformationFile(desc))
 			output.StreamResultRaw(sr.GetStatsRaw(context.Background(), conf.Authentication))
-			return
 		},
 	}
 	output.AddOutputFlags(cmd)

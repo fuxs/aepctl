@@ -17,11 +17,13 @@ specific language governing permissions and limitations under the License.
 package od
 
 import (
+	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
 // NewDeletePlacementsCommand creates an initialized command object
-func NewDeletePlacementsCommand(conf *helper.Configuration) *cobra.Command {
-	return NewDeleteCommand(conf, conf.PS, "placement")
+func NewDeletePlacementsCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
+	return NewDeleteCommand(conf, ac, "placement", od.PlacementSchema)
 }

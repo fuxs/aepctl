@@ -34,6 +34,7 @@ type RootConfig struct {
 	Name    string
 	Version string
 	Config  string
+	Home    string
 	Debug   bool
 	Human   bool
 }
@@ -63,8 +64,13 @@ func (o *RootConfig) Configure(cmd *cobra.Command) error {
 	if o.Human {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+	o.Home = home
 	if log.Debug().Enabled() {
-		log.Debug().Str("Service", o.Name).Str("Version", o.Version).Msg("Starting")
+		log.Debug().Str("Service", o.Name).Str("Version", o.Version).Str("Home dir", o.Home).Msg("Starting")
 	}
 	if o.Config != "" {
 		viper.SetConfigFile(o.Config)
@@ -74,13 +80,9 @@ func (o *RootConfig) Configure(cmd *cobra.Command) error {
 	} else {
 		viper.SetConfigName("config")
 		viper.SetConfigType("yaml")
-		viper.AddConfigPath(filepath.Join(string(filepath.Separator), "etc", o.Name))
-		if home, err := os.UserHomeDir(); err == nil {
-			viper.AddConfigPath(filepath.Join(home, "."+o.Name))
-		} else {
-			log.Debug().Str("Service", o.Name).Err(err).Msg("Could not add config path ~/.aepctl")
-		}
 		viper.AddConfigPath(".")
+		viper.AddConfigPath(o.JoinPath())
+		viper.AddConfigPath(filepath.Join(string(filepath.Separator), "etc", o.Name))
 		if err := viper.ReadInConfig(); err != nil {
 			if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 				// Config file not found; ignore error
@@ -102,6 +104,10 @@ func (o *RootConfig) Configure(cmd *cobra.Command) error {
 		})
 	}
 	return nil
+}
+
+func (o *RootConfig) JoinPath(path ...string) string {
+	return filepath.Join(append([]string{o.Home, "." + o.Name}, path...)...)
 }
 
 // ConfigFile represents a configuration file in YAML format
@@ -175,20 +181,12 @@ func (f *ConfigFile) SetSandbox(sandbox string) {
 	f.Query().SetMap("sandbox", sandbox)
 }
 
-func configPath() (string, error) {
-	home, err := os.UserHomeDir()
-	return filepath.Join(home, ".aepctl", "config.yaml"), err
-}
-
 // LoadConfigFile loads the configuration file in YAML format for the passed
 // path
-func LoadConfigFile(path string) (*ConfigFile, error) {
+func LoadConfigFile(cfg *RootConfig) (*ConfigFile, error) {
+	path := cfg.Config
 	if path == "" {
-		cp, err := configPath()
-		if err != nil {
-			return nil, err
-		}
-		path = cp
+		path = cfg.JoinPath("config.yaml")
 	}
 	_, err := os.Stat(path)
 	if err == nil {

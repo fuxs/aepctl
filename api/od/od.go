@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/util"
@@ -61,6 +62,11 @@ func ListContainer(ctx context.Context, p *api.AuthenticationConfig) (interface{
 	return p.GetRequest(ctx, "https://platform.adobe.io/data/core/xcore/?product=acp&property=_instance.containerType==decisioning")
 }
 
+// ListContainerRaw returns a list of container
+func ListContainerRaw(ctx context.Context, p *api.AuthenticationConfig) (*http.Response, error) {
+	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/core/xcore/?product=acp&property=_instance.containerType==decisioning")
+}
+
 // Get returns a collection by name (wild cards are supported) or id (exact match)
 func Get(ctx context.Context, p *api.AuthenticationConfig, containerID, schema, id string) (interface{}, error) {
 	if containerID == "" {
@@ -76,7 +82,7 @@ func Get(ctx context.Context, p *api.AuthenticationConfig, containerID, schema, 
 	)
 }
 
-// Get returns a collection by name (wild cards are supported) or id (exact match)
+// GetRaw returns a collection by name (wild cards are supported) or id (exact match)
 func GetRaw(ctx context.Context, p *api.AuthenticationConfig, containerID, schema, id string) (util.JSONResponse, error) {
 	if containerID == "" {
 		return nil, errors.New("container-id is empty")
@@ -137,6 +143,21 @@ func List(ctx context.Context, p *api.AuthenticationConfig, containerID, schema 
 		return nil, errors.New("schema is empty")
 	}
 	return p.GetRequest(ctx,
+		"https://platform.adobe.io/data/core/xcore/%s/queries/core/search%s",
+		containerID,
+		util.Par("schema", schema),
+	)
+}
+
+// ListRaw lists all objects
+func ListRaw(ctx context.Context, p *api.AuthenticationConfig, containerID, schema string) (*http.Response, error) {
+	if containerID == "" {
+		return nil, errors.New("container-id is empty")
+	}
+	if schema == "" {
+		return nil, errors.New("schema is empty")
+	}
+	return p.GetRequestRaw(ctx,
 		"https://platform.adobe.io/data/core/xcore/%s/queries/core/search%s",
 		containerID,
 		util.Par("schema", schema),

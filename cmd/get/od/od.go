@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
@@ -57,53 +58,52 @@ func (q *QueryConf) AddQueryFlags(cmd *cobra.Command) {
 }
 
 // NewGetCommand creates an initialized command object
-func NewGetCommand(conf *helper.Configuration, os *util.KVCache, schema, use string, t helper.Transformer) *cobra.Command {
+func NewGetCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema, use string, t helper.Transformer) *cobra.Command {
 	output := helper.NewOutputConf(t)
-	ac := conf.AC //helper.NewAutoContainer(auth)
 	cmd := &cobra.Command{
 		Use:  use,
 		Args: cobra.MinimumNArgs(1),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			// TODO check Update function
 			if err := conf.Update(cmd); err != nil {
 				return []string{}, cobra.ShellCompDirectiveNoFileComp
 			}
-			valid, err := os.Keys()
-			if err != nil {
-				return []string{}, cobra.ShellCompDirectiveNoFileComp
-			}
-			return util.Difference(valid, args), cobra.ShellCompDirectiveNoFileComp
+			idc := cache.NewODNameToID(ac, use, schema, conf.Sandboxed())
+			return util.Difference(idc.Keys(), args), cobra.ShellCompDirectiveNoFileComp
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+			idc := cache.NewODNameToID(ac, use, schema, conf.Sandboxed())
+			idc.Delete()
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			helper.CheckErr(ac.AutoFillContainer())
+			cid, err := ac.Get()
+			helper.CheckErr(err)
 			for _, name := range args {
-				output.StreamResult(od.GetRaw(context.Background(), conf.Authentication, ac.ContainerID, schema, os.GetValue(name)))
+				output.StreamResult(od.GetRaw(context.Background(), conf.Authentication, cid, schema, idc.Lookup(name)))
 
 			}
 		},
 	}
 	output.AddOutputFlags(cmd)
-	ac.AddContainerFlag(cmd)
+	helper.CheckErr(ac.AddContainerFlag(cmd))
 	return cmd
 }
 
 // NewQueryCommand creates an initialized command object
-func NewQueryCommand(conf *helper.Configuration, schema, use string, t helper.Transformer) *cobra.Command {
+func NewQueryCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema, use string, t helper.Transformer) *cobra.Command {
 	output := helper.NewOutputConf(t)
 	qc := &QueryConf{}
-	ac := conf.AC
 	cmd := &cobra.Command{
 		Use:  use,
 		Args: cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			helper.CheckErr(ac.AutoFillContainer())
-			output.StreamResult(od.QueryRaw(context.Background(), conf.Authentication, ac.ContainerID, schema, qc.Query, qc.QOP, qc.Field, qc.OrderBy, qc.Limit))
-			//output.PrintResult(od.Query(context.Background(), conf.Authentication, ac.ContainerID, schema, qc.Query, qc.QOP, qc.Field, qc.OrderBy, qc.Limit))
+			cid, err := ac.Get()
+			helper.CheckErr(err)
+			output.StreamResult(od.QueryRaw(context.Background(), conf.Authentication, cid, schema, qc.Query, qc.QOP, qc.Field, qc.OrderBy, qc.Limit))
 		},
 	}
 	output.AddOutputFlags(cmd)
 	qc.AddQueryFlags(cmd)
-	ac.AddContainerFlag(cmd)
+	helper.CheckErr(ac.AddContainerFlag(cmd))
 	return cmd
 }

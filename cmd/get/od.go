@@ -17,6 +17,7 @@ specific language governing permissions and limitations under the License.
 package get
 
 import (
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/get/od"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
@@ -27,19 +28,20 @@ func NewODCommand(conf *helper.Configuration) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "od",
 	}
-	cmd.AddCommand(od.NewActivitiesCommand(conf))
-	cmd.AddCommand(od.NewActivityCommand(conf))
-	cmd.AddCommand(od.NewCollectionsCommand(conf))
-	cmd.AddCommand(od.NewCollectionCommand(conf))
-	cmd.AddCommand(od.NewFallbacksCommand(conf))
-	cmd.AddCommand(od.NewFallbackCommand(conf))
-	cmd.AddCommand(od.NewOffersCommand(conf))
-	cmd.AddCommand(od.NewOfferCommand(conf))
-	cmd.AddCommand(od.NewPlacementsCommand(conf))
-	cmd.AddCommand(od.NewPlacementCommand(conf))
-	cmd.AddCommand(od.NewRulesCommand(conf))
-	cmd.AddCommand(od.NewRuleCommand(conf))
-	cmd.AddCommand(od.NewTagsCommand(conf))
-	cmd.AddCommand(od.NewTagCommand(conf))
+	ac := cache.NewAutoContainer(conf.Authentication, conf)
+	cmd.AddCommand(od.NewActivitiesCommand(conf, ac))
+	cmd.AddCommand(od.NewActivityCommand(conf, ac))
+	cmd.AddCommand(od.NewCollectionsCommand(conf, ac))
+	cmd.AddCommand(od.NewCollectionCommand(conf, ac))
+	cmd.AddCommand(od.NewFallbacksCommand(conf, ac))
+	cmd.AddCommand(od.NewFallbackCommand(conf, ac))
+	cmd.AddCommand(od.NewOffersCommand(conf, ac))
+	cmd.AddCommand(od.NewOfferCommand(conf, ac))
+	cmd.AddCommand(od.NewPlacementsCommand(conf, ac))
+	cmd.AddCommand(od.NewPlacementCommand(conf, ac))
+	cmd.AddCommand(od.NewRulesCommand(conf, ac))
+	cmd.AddCommand(od.NewRuleCommand(conf, ac))
+	cmd.AddCommand(od.NewTagsCommand(conf, ac))
+	cmd.AddCommand(od.NewTagCommand(conf, ac))
 	return cmd
 }

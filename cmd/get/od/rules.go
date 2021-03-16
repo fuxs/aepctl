@@ -20,6 +20,7 @@ import (
 	"io"
 
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
@@ -52,21 +53,22 @@ func (*ruleTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
 }
 
 // NewRulesCommand creates an initialized command object
-func NewRulesCommand(conf *helper.Configuration) *cobra.Command {
+func NewRulesCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
 	rt := &ruleTransformer{}
 	return NewQueryCommand(
 		conf,
+		ac,
 		od.RuleSchema,
 		"rules",
 		rt)
 }
 
 // NewRuleCommand creates an initialized command object
-func NewRuleCommand(conf *helper.Configuration) *cobra.Command {
+func NewRuleCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
 	rt := &ruleTransformer{}
 	return NewGetCommand(
 		conf,
-		helper.NewRuleIDCache(conf.AC),
+		ac,
 		od.RuleSchema,
 		"rule",
 		rt)

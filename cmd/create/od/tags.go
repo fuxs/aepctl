@@ -20,14 +20,13 @@ import (
 	"context"
 
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
 // NewCreateTagCommand creates an initialized command object
-func NewCreateTagCommand(conf *helper.Configuration) *cobra.Command {
-	ac := conf.AC
-	ts := conf.TS
+func NewCreateTagCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
 	fc := &helper.FileConfig{}
 	cmd := &cobra.Command{
 		Use:     "tags",
@@ -37,14 +36,12 @@ func NewCreateTagCommand(conf *helper.Configuration) *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErr(conf.Validate(cmd))
-			helper.CheckErr(ac.AutoFillContainer())
-			for i, name := range args {
+			cid, err := ac.Get()
+			helper.CheckErr(err)
+			for _, name := range args {
 				tag := &od.Tag{Name: name}
-				_, err := od.Create(context.Background(), conf.Authentication, ac.ContainerID, od.TagSchema, tag)
+				_, err := od.Create(context.Background(), conf.Authentication, cid, od.TagSchema, tag)
 				helper.CheckErr(err)
-				if i == 0 {
-					ts.Invalidate()
-				}
 			}
 
 			if fc.IsSet() {
@@ -58,14 +55,13 @@ func NewCreateTagCommand(conf *helper.Configuration) *cobra.Command {
 						helper.CheckErr(err)
 					} else {
 						helper.CheckErrEOF(err)
-						ts.Invalidate()
 						break
 					}
 				}
 			}
 		},
 	}
-	ac.AddContainerFlag(cmd)
+	helper.CheckErr(ac.AddContainerFlag(cmd))
 	fc.AddFileFlag(cmd)
 	return cmd
 }

@@ -20,34 +20,35 @@ import (
 	"context"
 
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
-func prepareFallback(conf *helper.Configuration, fallback *od.Fallback) {
-	oc := helper.NewPlacementsCache(conf.AC)
-	ps := helper.NameToID(oc)
-	cs := oc.Mapper([]string{"_instance", "@id"}, []string{"_instance", "xdm:channel"})
-	ts := helper.NewNameToID(conf, od.TagSchema)
+func prepareFallback(ac *cache.AutoContainer, fallback *od.Fallback) {
+	call := cache.NewODCall(ac, od.PlacementSchema)
+	ps := cache.NewMapMemCache(call, cache.ODNameToID())
+	cs := cache.NewMapMemCache(call, cache.NewODTrans().K("_instance", "@id").V("_instance", "xdm:channel"))
+
+	ts := cache.NewODNameToIDMem(ac, od.TagSchema)
 	for _, r := range fallback.Representations {
 		for _, c := range r.Components {
 			c.Type = helper.ContentSToL.GetL(c.Type)
 		}
-		r.Placement = ps.Get(r.Placement)
+		r.Placement = ps.Lookup(r.Placement)
 		if r.Channel == "" {
-			r.Channel = cs[r.Placement]
+			r.Channel = cs.Lookup(r.Placement)
 		} else {
 			r.Channel = helper.ChannelSToL.GetL(r.Channel)
 		}
 	}
 	for i, t := range fallback.Tags {
-		fallback.Tags[i] = ts.GetValue(t)
+		fallback.Tags[i] = ts.Lookup(t)
 	}
 }
 
 // NewCreateFallbackCommand creates an initialized command object
-func NewCreateFallbackCommand(conf *helper.Configuration) *cobra.Command {
-	ac := conf.AC
+func NewCreateFallbackCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
 	fc := &helper.FileConfig{}
 	cmd := &cobra.Command{
 		Use:     "fallback",
@@ -55,7 +56,8 @@ func NewCreateFallbackCommand(conf *helper.Configuration) *cobra.Command {
 		Args:    cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErr(conf.Validate(cmd))
-			helper.CheckErr(ac.AutoFillContainer())
+			cid, err := ac.Get()
+			helper.CheckErr(err)
 			i, err := fc.Open()
 			helper.CheckErr(err)
 			if i != nil {
@@ -63,9 +65,9 @@ func NewCreateFallbackCommand(conf *helper.Configuration) *cobra.Command {
 					fallback := &od.Fallback{}
 					if err := i.Load(fallback); err == nil {
 						if fc.IsYAML() {
-							prepareFallback(conf, fallback)
+							prepareFallback(ac, fallback)
 						}
-						_, err = od.Create(context.Background(), conf.Authentication, ac.ContainerID, od.FallbackSchema, fallback)
+						_, err = od.Create(context.Background(), conf.Authentication, cid, od.FallbackSchema, fallback)
 						helper.CheckErr(err)
 					} else {
 						helper.CheckErrEOF(err)
@@ -75,7 +77,7 @@ func NewCreateFallbackCommand(conf *helper.Configuration) *cobra.Command {
 			}
 		},
 	}
-	ac.AddContainerFlag(cmd)
+	helper.CheckErr(ac.AddContainerFlag(cmd))
 	fc.AddMandatoryFileFlag(cmd)
 	return cmd
 }

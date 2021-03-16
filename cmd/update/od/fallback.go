@@ -18,11 +18,12 @@ package od
 
 import (
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
 // NewUpdateFallbackCommand creates an initialized command object
-func NewUpdateFallbackCommand(conf *helper.Configuration) *cobra.Command {
-	return NewUpdateCommand(conf, "fallback", od.FallbackSchema)
+func NewUpdateFallbackCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
+	return NewUpdateCommand(conf, ac, "fallback", od.FallbackSchema)
 }

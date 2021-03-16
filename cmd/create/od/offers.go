@@ -20,12 +20,13 @@ import (
 	"context"
 
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
-func prepareOffer(conf *helper.Configuration, offer *od.Offer) {
-	ps := helper.NewNameToID(conf, od.PlacementSchema)
+func prepareOffer(ac *cache.AutoContainer, offer *od.Offer) {
+	ps := cache.NewODNameToIDMem(ac, od.PlacementSchema)
 	for _, r := range offer.Representations {
 		for _, c := range r.Components {
 			c.Type = helper.ContentSToL.GetL(c.Type)
@@ -33,21 +34,20 @@ func prepareOffer(conf *helper.Configuration, offer *od.Offer) {
 		if r.Channel != "" {
 			r.Channel = helper.ChannelSToL.GetL(r.Channel)
 		}
-		r.Placement = ps.GetValue(r.Placement)
+		r.Placement = ps.Lookup(r.Placement)
 	}
 	//rules
-	rs := helper.NewNameToID(conf, od.RuleSchema)
-	offer.Constraint.Rule = rs.GetValue(offer.Constraint.Rule)
+	rs := cache.NewODNameToIDMem(ac, od.RuleSchema)
+	offer.Constraint.Rule = rs.Lookup(offer.Constraint.Rule)
 	// tags
-	ts := helper.NewNameToID(conf, od.TagSchema)
+	ts := cache.NewODNameToIDMem(ac, od.TagSchema)
 	for i, t := range offer.Tags {
-		offer.Tags[i] = ts.GetValue(t)
+		offer.Tags[i] = ts.Lookup(t)
 	}
 }
 
 // NewCreateOfferCommand creates an initialized command object
-func NewCreateOfferCommand(conf *helper.Configuration) *cobra.Command {
-	ac := conf.AC
+func NewCreateOfferCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
 	fc := &helper.FileConfig{}
 	cmd := &cobra.Command{
 		Use:     "offer",
@@ -55,7 +55,8 @@ func NewCreateOfferCommand(conf *helper.Configuration) *cobra.Command {
 		Args:    cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErr(conf.Validate(cmd))
-			helper.CheckErr(ac.AutoFillContainer())
+			cid, err := ac.Get()
+			helper.CheckErr(err)
 			i, err := fc.Open()
 			helper.CheckErr(err)
 			if i != nil {
@@ -63,9 +64,9 @@ func NewCreateOfferCommand(conf *helper.Configuration) *cobra.Command {
 					offer := &od.Offer{}
 					if err := i.Load(offer); err == nil {
 						if fc.IsYAML() {
-							prepareOffer(conf, offer)
+							prepareOffer(ac, offer)
 						}
-						_, err = od.Create(context.Background(), conf.Authentication, ac.ContainerID, od.OfferSchema, offer)
+						_, err = od.Create(context.Background(), conf.Authentication, cid, od.OfferSchema, offer)
 						helper.CheckErr(err)
 					} else {
 						helper.CheckErrEOF(err)
@@ -75,7 +76,7 @@ func NewCreateOfferCommand(conf *helper.Configuration) *cobra.Command {
 			}
 		},
 	}
-	ac.AddContainerFlag(cmd)
+	helper.CheckErr(ac.AddContainerFlag(cmd))
 	fc.AddMandatoryFileFlag(cmd)
 	return cmd
 }

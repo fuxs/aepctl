@@ -17,6 +17,7 @@ specific language governing permissions and limitations under the License.
 package delete
 
 import (
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/delete/od"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
@@ -27,12 +28,13 @@ func NewODCommand(conf *helper.Configuration) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "od",
 	}
-	cmd.AddCommand(od.NewDeleteActivitiesCommand(conf))
-	cmd.AddCommand(od.NewDeleteTagsCommand(conf))
-	cmd.AddCommand(od.NewDeletePlacementsCommand(conf))
-	cmd.AddCommand(od.NewDeleteOffersCommand(conf))
-	cmd.AddCommand(od.NewDeleteFallbacksCommand(conf))
-	cmd.AddCommand(od.NewDeleteCollectionsCommand(conf))
-	cmd.AddCommand(od.NewDeleteRulesCommand(conf))
+	ac := cache.NewAutoContainer(conf.Authentication, conf)
+	cmd.AddCommand(od.NewDeleteActivitiesCommand(conf, ac))
+	cmd.AddCommand(od.NewDeleteTagsCommand(conf, ac))
+	cmd.AddCommand(od.NewDeletePlacementsCommand(conf, ac))
+	cmd.AddCommand(od.NewDeleteOffersCommand(conf, ac))
+	cmd.AddCommand(od.NewDeleteFallbacksCommand(conf, ac))
+	cmd.AddCommand(od.NewDeleteCollectionsCommand(conf, ac))
+	cmd.AddCommand(od.NewDeleteRulesCommand(conf, ac))
 	return cmd
 }

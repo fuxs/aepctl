@@ -25,6 +25,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// TableDescriptor contains all information to transform a JSON object to a table
 type TableDescriptor struct {
 	Columns []*TableColumnDescriptor `json:"columns,omitempty" yaml:"columns,omitempty"`
 	//	Wide    []*TableColumnDescriptor `json:"wide,omitempty" yaml:"wide,omitempty"`
@@ -37,6 +38,8 @@ type TableDescriptor struct {
 	wide   []*TableColumnDescriptor
 }
 
+// NewTableDescriptor creates an initialzed TableDescriptor. It accpets a
+// definition encoded in YAML format.
 func NewTableDescriptor(def string) (*TableDescriptor, error) {
 	result := &TableDescriptor{}
 	if err := yaml.Unmarshal([]byte(def), &result); err != nil {
@@ -59,23 +62,25 @@ func NewTableDescriptor(def string) (*TableDescriptor, error) {
 		return nil, errors.New("Columns and range are defined")
 	}
 	var (
-		l     int
-		types map[string]string
-		cols  []*TableColumnDescriptor
+		l        int
+		varTypes map[string]string
+		cols     []*TableColumnDescriptor
 	)
 	if result.Range != nil {
-		types = make(map[string]string, len(result.Vars)+len(result.Range.Vars))
+		// range rows
+		varTypes = make(map[string]string, len(result.Vars)+len(result.Range.Vars))
 		for _, v := range result.Vars {
-			types[v.Name] = v.Type
+			varTypes[v.Name] = v.Type
 		}
 		for _, v := range result.Range.Vars {
-			types[v.Name] = v.Type
+			varTypes[v.Name] = v.Type
 		}
 		cols = result.Range.Columns
 	} else {
-		types = make(map[string]string, len(result.Vars))
+		// simple column
+		varTypes = make(map[string]string, len(result.Vars))
 		for _, v := range result.Vars {
-			types[v.Name] = v.Type
+			varTypes[v.Name] = v.Type
 		}
 		cols = result.Columns
 	}
@@ -86,11 +91,17 @@ func NewTableDescriptor(def string) (*TableDescriptor, error) {
 		if c.Name == "" {
 			return nil, fmt.Errorf("Name is empty in column %v", i)
 		}
+		// determine column type
 		if !c.ID {
-			if c.Var != "" {
-				c.Type = types[c.Var]
-			} else if c.Type == "" {
+			// c.Type has highest priority
+			if c.Type == "" {
 				c.Type = "str"
+				// if c.Var is set and has a type
+				if c.Var != "" {
+					if t := varTypes[c.Var]; t != "" {
+						c.Type = t
+					}
+				}
 			}
 		}
 		switch c.Mode {
@@ -108,15 +119,7 @@ func NewTableDescriptor(def string) (*TableDescriptor, error) {
 	return result, nil
 }
 
-func ReadTableDescriptorYAML(r io.Reader) (*TableDescriptor, error) {
-	dec := yaml.NewDecoder(r)
-	result := &TableDescriptor{}
-	if err := dec.Decode(&result); err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
+// Header extracts the table header
 func (t *TableDescriptor) Header(wide bool) []string {
 	cols := t.thin
 	if wide {
@@ -134,6 +137,7 @@ func (t *TableDescriptor) Header(wide bool) []string {
 	return result
 }
 
+// Preprocess goes down the path and enters the list or object
 func (t *TableDescriptor) Preprocess(i JSONResponse) error {
 	if len(t.Path) > 0 {
 		if err := i.Path(t.Path...); err != nil {
@@ -155,6 +159,7 @@ func processColumns(scope *Scope, cols []*TableColumnDescriptor, name string, q 
 	return result
 }
 
+// WriteRow writes one or more rows out
 func (t *TableDescriptor) WriteRow(name string, q *Query, w *RowWriter, wide bool) error {
 	cols := t.thin
 	if wide {
@@ -166,7 +171,7 @@ func (t *TableDescriptor) WriteRow(name string, q *Query, w *RowWriter, wide boo
 	}
 	r := t.Range
 	s := NewScope(rootScope, t.Vars, name, q)
-	q.RangeAttributesE(func(name string, q *Query) error {
+	return q.RangeAttributesE(func(name string, q *Query) error {
 		ss := NewScope(s, r.Vars, name, q)
 		out := processColumns(ss, cols, name, q)
 		if r.Post != nil {
@@ -176,9 +181,9 @@ func (t *TableDescriptor) WriteRow(name string, q *Query, w *RowWriter, wide boo
 		}
 		return w.Write(out...)
 	})
-	return nil
 }
 
+// Iterator selects the configured iterator for the passed JSON stream
 func (t *TableDescriptor) Iterator(stream io.ReadCloser) (JSONResponse, error) {
 	switch t.Iter {
 	case "array":
@@ -192,6 +197,14 @@ func (t *TableDescriptor) Iterator(stream io.ReadCloser) (JSONResponse, error) {
 	}
 }
 
+// StatusMapper maps status values to a pretty representation
+var statusMapper = Mapper{
+	"live":     "● Live",
+	"approved": "● Approved",
+	"draft":    "◯ Draft",
+}
+
+// TableColumnDescriptor contains all information to extract a column value
 type TableColumnDescriptor struct {
 	Name       string   `json:"name" yaml:"name"`
 	Long       string   `json:"long" yaml:"long"`
@@ -205,100 +218,70 @@ type TableColumnDescriptor struct {
 	o          func(*Scope, *Query) string
 }
 
+// Extract retrieves the value from the JSON document and returns it as
+// formatted string
 func (t *TableColumnDescriptor) Extract(scope *Scope, q *Query) string {
 	if t.o == nil {
 		t.assignFunc()
 	}
-	return t.o(scope, q.Path(t.Path...))
+	if t.Var == "" {
+		return t.o(scope, q.Path(t.Path...))
+	}
+	return t.o(scope, scope.Get(t.Var).Path(t.Path...))
 }
 
 func (t *TableColumnDescriptor) assignFunc() {
-	vn := t.Var
-	if vn == "" {
-		t.o = func(_ *Scope, q *Query) string {
-			return q.String()
-		}
-	} else {
-		t.o = func(scope *Scope, _ *Query) string {
-			return scope.Get(vn).String()
-		}
-
+	t.o = func(_ *Scope, q *Query) string {
+		return q.String()
 	}
 	switch t.Type {
 	case "str":
 		switch t.Format {
 		case "localTime":
-			if vn == "" {
+			if len(t.Parameters) > 0 {
+				t.o = func(_ *Scope, q *Query) string {
+					return LocalTimeStrCustom(q.String(), t.Parameters[0])
+				}
+			} else {
 				t.o = func(_ *Scope, q *Query) string {
 					return LocalTimeStr(q.String())
 				}
-			} else {
-				t.o = func(scope *Scope, _ *Query) string {
-					q := scope.Get(vn)
-					return LocalTimeStr(q.String())
-				}
+			}
+		case "status":
+			t.o = func(_ *Scope, q *Query) string {
+				return statusMapper.Lookup(q.String())
 			}
 		}
 	case "num":
 		switch t.Format {
 		case "utime":
-			if vn == "" {
-				t.o = func(_ *Scope, q *Query) string {
-					v := q.Integer()
-					if v == 0 {
-						return "-"
-					}
-					return time.Unix(int64(v)/1000, 0).Local().Format(time.RFC822)
+			t.o = func(_ *Scope, q *Query) string {
+				v := q.Integer()
+				if v == 0 {
+					return "-"
 				}
-			} else {
-				t.o = func(scope *Scope, _ *Query) string {
-					v := scope.Get(vn).Integer()
-					if v == 0 {
-						return "-"
-					}
-					return time.Unix(int64(v)/1000, 0).Local().Format(time.RFC822)
-				}
+				return time.Unix(int64(v)/1000, 0).Local().Format(time.RFC822)
 			}
 		case "duration":
-			if vn == "" {
-				t.o = func(_ *Scope, q *Query) string {
-					return time.Duration(q.Integer() * int(time.Millisecond)).String()
-				}
-			} else {
-				t.o = func(scope *Scope, _ *Query) string {
-					q := scope.Get(vn)
-					return time.Duration(q.Integer() * int(time.Millisecond)).String()
-				}
+			t.o = func(_ *Scope, q *Query) string {
+				return time.Duration(q.Integer() * int(time.Millisecond)).String()
 			}
 		}
 	case "list":
 		switch t.Format {
 		case "":
-			if vn == "" {
-				t.o = func(_ *Scope, q *Query) string {
-					return q.Concat(",", func(q *Query) string { return q.String() })
-				}
-			} else {
-				t.o = func(scope *Scope, _ *Query) string {
-					q := scope.Get(vn)
-					return q.Concat(",", func(q *Query) string { return q.String() })
-				}
+			t.o = func(_ *Scope, q *Query) string {
+				return q.Concat(",", func(q *Query) string { return q.String() })
 			}
 		case "contains":
-			if vn == "" {
-				t.o = func(_ *Scope, q *Query) string {
-					return ContainsS(t.Parameters[0], q.Strings())
-				}
-			} else {
-				t.o = func(scope *Scope, _ *Query) string {
-					q := scope.Get(vn)
-					return ContainsS(t.Parameters[0], q.Strings())
-				}
+			t.o = func(_ *Scope, q *Query) string {
+				return ContainsS(t.Parameters[0], q.Strings())
 			}
 		}
 	}
 }
 
+// DescriptorVars represents a variable
 type DescriptorVars struct {
 	Name  string `json:"name,omitempty" yaml:"name,omitempty"`
 	Type  string `json:"type,omitempty" yaml:"type,omitempty"`
@@ -307,23 +290,28 @@ type DescriptorVars struct {
 	Value string `json:"value,omitempty" yaml:"value,omitempty"`
 }
 
+// DescriptorRange represents a range. Usually used to extract sub-values in
+// multiple rows
 type DescriptorRange struct {
 	Vars    []*DescriptorVars        `json:"vars,omitempty" yaml:"vars,omitempty"`
 	Columns []*TableColumnDescriptor `json:"columns,omitempty" yaml:"columns,omitempty"`
 	Post    *RangePost               `json:"post,omitempty" yaml:"post,omitempty"`
 }
 
+// RangePost represents the post phase of a range, usually for variable update
 type RangePost struct {
 	Vars []*DescriptorVars `json:"vars,omitempty" yaml:"vars,omitempty"`
 }
 
 var rootScope = &Scope{vars: make(map[string]*Query)}
 
+// Scope represents the current variable scope
 type Scope struct {
 	parent *Scope
 	vars   map[string]*Query
 }
 
+// Get returns the value of a variable
 func (s *Scope) Get(name string) *Query {
 	if v, found := s.vars[name]; found {
 		return v
@@ -345,6 +333,8 @@ func (s *Scope) set(name, value string) bool {
 	return false
 }
 
+// Set changes an existing variable in this or a parent scope or creates a new
+// one
 func (s *Scope) Set(name, value string) bool {
 	_, found := s.vars[name]
 	if found {
@@ -358,6 +348,7 @@ func (s *Scope) Set(name, value string) bool {
 	return true
 }
 
+// NewScope creates an initialized Scope object
 func NewScope(parent *Scope, vars []*DescriptorVars, name string, q *Query) *Scope {
 	result := make(map[string]*Query, len(vars))
 	for _, v := range vars {

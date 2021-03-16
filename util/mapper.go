@@ -16,17 +16,27 @@ specific language governing permissions and limitations under the License.
 */
 package util
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // Mapper is a map of strings
 type Mapper map[string]string
 
 // Get returns the value for the passed key. If no value can be found the key will be returned.
-func (m Mapper) Get(key string) string {
+func (m Mapper) Lookup(key string) string {
 	if result, ok := m[key]; ok {
 		return result
 	}
 	return key
+}
+
+func (m Mapper) LookupE(key string) (string, error) {
+	if result, ok := m[key]; ok {
+		return result, nil
+	}
+	return "", fmt.Errorf("Could not find key %v", key)
 }
 
 // GetL normalizes the key to lower case before getting the value. If no value can be found the original key will be returned.
@@ -47,6 +57,17 @@ func (m Mapper) Keys() []string {
 		i++
 	}
 	return keys
+}
+
+// Values returns a list of values
+func (m Mapper) Values() []string {
+	values := make([]string, len(m))
+	i := 0
+	for _, v := range m {
+		values[i] = v
+		i++
+	}
+	return values
 }
 
 // Invert creats a new mapper with inverted key value relation. Key -> Value becomes Value -> Key.

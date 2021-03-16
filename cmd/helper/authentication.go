@@ -18,9 +18,12 @@ package helper
 
 import (
 	"errors"
+	"path/filepath"
 	"strings"
 
 	"github.com/fuxs/aepctl/api"
+	"github.com/fuxs/aepctl/cache"
+
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
 )
@@ -31,14 +34,6 @@ type Configuration struct {
 	Authentication *api.AuthenticationConfig
 	Read           bool
 	Write          bool
-	AC             *AutoContainer
-	AS             *util.KVCache
-	TS             *util.KVCache
-	PS             *util.KVCache
-	OS             *util.KVCache
-	FS             *util.KVCache
-	CS             *util.KVCache
-	RS             *util.KVCache
 }
 
 // NewConfiguration creates an initialized Authentication object
@@ -47,7 +42,7 @@ func NewConfiguration(gcfg *util.RootConfig) *Configuration {
 		Root:           gcfg,
 		Authentication: &api.AuthenticationConfig{},
 	}
-	cache := util.NewJSONCache(func() []string { return result.UniquePath("token.json") })
+	cache := util.NewJSONFile(util.NewLazyPath(result, "token.json"))
 	o := result.Authentication
 	o.LoadToken = func() (*api.BearerToken, error) {
 		token := &api.BearerToken{}
@@ -60,7 +55,7 @@ func NewConfiguration(gcfg *util.RootConfig) *Configuration {
 		return cache.Save(token)
 	}
 
-	ac := NewAutoContainer(result)
+	/* ac := NewAutoContainer(result)
 	result.AC = ac
 	result.AS = NewActivityCache(ac)
 	result.TS = NewTagCache(ac)
@@ -69,7 +64,7 @@ func NewConfiguration(gcfg *util.RootConfig) *Configuration {
 	result.OS = NewOfferCache(ac)
 	result.FS = NewFallbackCache(ac)
 	result.CS = NewCollectionCache(ac)
-	result.RS = NewRuleCache(ac)
+	result.RS = NewRuleCache(ac) */
 	return result
 }
 
@@ -97,7 +92,10 @@ func (a *Configuration) AddAuthenticationFlags(cmd *cobra.Command) {
 	flags.StringVar(&o.Key, "key", "private.key", "path to private key file")
 
 	if err := cmd.RegisterFlagCompletionFunc("sandbox", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		sandboxes, _ := NewSandboxCache(a).GetList()
+		if err := a.Update(cmd); err != nil {
+			return []string{}, cobra.ShellCompDirectiveNoFileComp
+		}
+		sandboxes := cache.NewSandboxCache(a.Authentication, a).Values()
 		return sandboxes, cobra.ShellCompDirectiveNoFileComp
 	}); err != nil {
 		fatal("Error in AddAuthenticationFlags", 1)
@@ -197,13 +195,36 @@ func (a *Configuration) NoDryRun() *api.AuthenticationConfig {
 }
 
 // UniquePath generates a unique path based on the client id
-func (a *Configuration) UniquePath(path ...string) []string {
-	return append([]string{a.Authentication.ClientID}, path...)
+func (a *Configuration) Path(path ...string) string {
+	return filepath.Join(append([]string{
+		a.Root.Home,
+		"." + a.Root.Name,
+		"cache",
+		a.Authentication.ClientID},
+		path...)...)
 }
 
 // UniqueSandboxPath generates a unique path based on the client id and sandbox name
-func (a *Configuration) UniqueSandboxPath(path ...string) []string {
-	return append([]string{a.Authentication.ClientID, a.Authentication.Sandbox}, path...)
+func (a *Configuration) UniqueSandboxPath(path ...string) string {
+	return filepath.Join(append([]string{
+		a.Root.Home,
+		"." + a.Root.Name,
+		"cache",
+		a.Authentication.ClientID,
+		a.Authentication.Sandbox},
+		path...)...)
+}
+
+type sandboxedProvider struct {
+	cfg *Configuration
+}
+
+func (p *sandboxedProvider) Path(path ...string) string {
+	return p.cfg.UniqueSandboxPath(path...)
+}
+
+func (a *Configuration) Sandboxed() util.PathProvider {
+	return &sandboxedProvider{cfg: a}
 }
 
 // ReadCache returns the read-cache flag

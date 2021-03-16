@@ -17,6 +17,7 @@ specific language governing permissions and limitations under the License.
 package update
 
 import (
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/cmd/update/od"
 	"github.com/spf13/cobra"
@@ -27,12 +28,13 @@ func NewODCommand(conf *helper.Configuration) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "od",
 	}
-	cmd.AddCommand(od.NewUpdateActivityCommand(conf))
-	cmd.AddCommand(od.NewUpdateCollectionCommand(conf))
-	cmd.AddCommand(od.NewUpdateFallbackCommand(conf))
-	cmd.AddCommand(od.NewUpdateOfferCommand(conf))
-	cmd.AddCommand(od.NewUpdatePlacementCommand(conf))
-	cmd.AddCommand(od.NewUpdateRuleCommand(conf))
-	cmd.AddCommand(od.NewUpdateTagCommand(conf))
+	ac := cache.NewAutoContainer(conf.Authentication, conf)
+	cmd.AddCommand(od.NewUpdateActivityCommand(conf, ac))
+	cmd.AddCommand(od.NewUpdateCollectionCommand(conf, ac))
+	cmd.AddCommand(od.NewUpdateFallbackCommand(conf, ac))
+	cmd.AddCommand(od.NewUpdateOfferCommand(conf, ac))
+	cmd.AddCommand(od.NewUpdatePlacementCommand(conf, ac))
+	cmd.AddCommand(od.NewUpdateRuleCommand(conf, ac))
+	cmd.AddCommand(od.NewUpdateTagCommand(conf, ac))
 	return cmd
 }

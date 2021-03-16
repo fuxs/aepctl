@@ -20,6 +20,7 @@ import (
 	"io"
 
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
@@ -47,15 +48,15 @@ func (*placementTransformer) WriteRow(name string, q *util.Query, w *util.RowWri
 		return w.Write(
 			s.Str("@id"),
 			s.Str("xdm:name"),
-			helper.ChannelLToS.Get(s.Str("xdm:channel")),
-			helper.ContentLToS.Get(s.Str("xdm:componentType")),
+			helper.ChannelLToS.Lookup(s.Str("xdm:channel")),
+			helper.ContentLToS.Lookup(s.Str("xdm:componentType")),
 			util.LocalTimeStr(q.Str("repo:lastModifiedDate")),
 			s.Str("xdm:description"))
 	}
 	return w.Write(
 		s.Str("xdm:name"),
-		helper.ChannelLToS.Get(s.Str("xdm:channel")),
-		helper.ContentLToS.Get(s.Str("xdm:componentType")),
+		helper.ChannelLToS.Lookup(s.Str("xdm:channel")),
+		helper.ContentLToS.Lookup(s.Str("xdm:componentType")),
 		util.LocalTimeStr(q.Str("repo:lastModifiedDate")),
 		s.Str("xdm:description"))
 }
@@ -65,21 +66,22 @@ func (*placementTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) 
 }
 
 // NewPlacementsCommand creates an initialized command object
-func NewPlacementsCommand(conf *helper.Configuration) *cobra.Command {
+func NewPlacementsCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
 	pt := &placementTransformer{}
 	return NewQueryCommand(
 		conf,
+		ac,
 		od.PlacementSchema,
 		"placements",
 		pt)
 }
 
 // NewPlacementCommand creates an initialized command object
-func NewPlacementCommand(conf *helper.Configuration) *cobra.Command {
+func NewPlacementCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
 	pt := &placementTransformer{}
 	return NewGetCommand(
 		conf,
-		helper.NewPlacementIDCache(conf.AC),
+		ac,
 		od.PlacementSchema,
 		"placement",
 		pt)

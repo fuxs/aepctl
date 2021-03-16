@@ -22,11 +22,12 @@ import (
 	"strings"
 
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
-func prepareCollection(conf *helper.Configuration, collection *od.Collection) {
+func prepareCollection(ac *cache.AutoContainer, collection *od.Collection) {
 	schema := od.OfferSchema
 	if collection.Filter == "" {
 		collection.Filter = "offers"
@@ -38,18 +39,16 @@ func prepareCollection(conf *helper.Configuration, collection *od.Collection) {
 		}
 	}
 
-	store := helper.NewNameToID(conf, schema)
+	store := cache.NewODNameToIDMem(ac, schema)
 	for i, o := range collection.IDs {
-		collection.IDs[i] = store.GetValue(o)
+		collection.IDs[i] = store.Lookup(o)
 	}
 }
 
 // NewCreateCollectionCommand creates an initialized command object
-func NewCreateCollectionCommand(conf *helper.Configuration) *cobra.Command {
-	ac := conf.AC
+func NewCreateCollectionCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
 	fc := &helper.FileConfig{}
-	ts := conf.TS
-	os := conf.OS
+
 	cmd := &cobra.Command{
 		Use:     "collection",
 		Aliases: []string{"collections"},
@@ -60,10 +59,13 @@ func NewCreateCollectionCommand(conf *helper.Configuration) *cobra.Command {
 				result = []string{"all", "any", "offers"}
 			} else if l > 1 {
 				filter := strings.ToLower(args[1])
+
 				if filter == "all" || filter == "any" {
-					result, _ = ts.Keys()
+					ts := cache.NewODNameToInstanceID(ac, "tags", od.TagSchema, conf.Sandboxed())
+					result = ts.Keys()
 				} else {
-					result, _ = os.Keys()
+					os := cache.NewODNameToInstanceID(ac, "offers", od.TagSchema, conf.Sandboxed())
+					result = os.Keys()
 				}
 			}
 			if result == nil {
@@ -73,7 +75,8 @@ func NewCreateCollectionCommand(conf *helper.Configuration) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			helper.CheckErr(conf.Validate(cmd))
-			helper.CheckErr(ac.AutoFillContainer())
+			cid, err := ac.Get()
+			helper.CheckErr(err)
 			l := len(args)
 			if l == 1 || l == 2 {
 				return fmt.Errorf("Invalid number of arguments (0, 3 or more): %v", l)
@@ -88,8 +91,8 @@ func NewCreateCollectionCommand(conf *helper.Configuration) *cobra.Command {
 					Filter: filter,
 					IDs:    args[2:],
 				}
-				prepareCollection(conf, collection)
-				_, err := od.Create(context.Background(), conf.Authentication, ac.ContainerID, od.CollectionSchema, collection)
+				prepareCollection(ac, collection)
+				_, err := od.Create(context.Background(), conf.Authentication, cid, od.CollectionSchema, collection)
 				helper.CheckErr(err)
 			}
 			i, err := fc.Open()
@@ -99,9 +102,9 @@ func NewCreateCollectionCommand(conf *helper.Configuration) *cobra.Command {
 					collection := &od.Collection{}
 					if err := i.Load(collection); err == nil {
 						if fc.IsYAML() {
-							prepareCollection(conf, collection)
+							prepareCollection(ac, collection)
 						}
-						_, err = od.Create(context.Background(), conf.Authentication, ac.ContainerID, od.CollectionSchema, collection)
+						_, err = od.Create(context.Background(), conf.Authentication, cid, od.CollectionSchema, collection)
 						helper.CheckErr(err)
 					} else {
 						helper.CheckErrEOF(err)
@@ -112,7 +115,7 @@ func NewCreateCollectionCommand(conf *helper.Configuration) *cobra.Command {
 			return nil
 		},
 	}
-	ac.AddContainerFlag(cmd)
+	helper.CheckErr(ac.AddContainerFlag(cmd))
 	fc.AddFileFlag(cmd)
 	return cmd
 }

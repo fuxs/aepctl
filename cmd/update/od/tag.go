@@ -18,11 +18,12 @@ package od
 
 import (
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
 // NewUpdateTagCommand creates an initialized command object
-func NewUpdateTagCommand(conf *helper.Configuration) *cobra.Command {
-	return NewUpdateCommand(conf, "tag", od.TagSchema)
+func NewUpdateTagCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
+	return NewUpdateCommand(conf, ac, "tag", od.TagSchema)
 }

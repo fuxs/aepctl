@@ -18,11 +18,12 @@ package od
 
 import (
 	"github.com/fuxs/aepctl/api/od"
+	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
 // NewUpdateActivityCommand creates an initialized command object
-func NewUpdateActivityCommand(conf *helper.Configuration) *cobra.Command {
-	return NewUpdateCommand(conf, "activity", od.ActivitySchema)
+func NewUpdateActivityCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
+	return NewUpdateCommand(conf, ac, "activity", od.ActivitySchema)
 }
