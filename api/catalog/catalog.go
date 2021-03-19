@@ -26,14 +26,32 @@ import (
 
 // BatchesOptions contains all options for batch requests
 type BatchesOptions struct {
-	Limit        string
-	CreatedAfter string
-	Name         string
+	Limit         string
+	CreatedAfter  string
+	CreatedBefore string
+	Dataset       string
+	EndAfter      string
+	EndBefore     string
+	Name          string
+	OrderBy       string
+	StartAfter    string
+	StartBefore   string
 }
 
 // ToURLPar converts the options to a URL parameter query
 func (b *BatchesOptions) ToURLPar() string {
-	return util.Par("limit", b.Limit, "createdAfter", b.CreatedAfter, "name", b.Name)
+	return util.Par(
+		"limit", b.Limit,
+		"createdAfter", b.CreatedAfter,
+		"createdBefore", b.CreatedBefore,
+		"dataSet", b.Dataset,
+		"endAfter", b.EndAfter,
+		"endBefore", b.EndBefore,
+		"name", b.Name,
+		"orderBy", b.OrderBy,
+		"startAfter", b.StartAfter,
+		"startBefore", b.StartBefore,
+	)
 }
 
 // GetBatches returns a list of batches

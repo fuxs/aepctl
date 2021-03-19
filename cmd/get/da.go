@@ -17,26 +17,17 @@ specific language governing permissions and limitations under the License.
 package get
 
 import (
+	"github.com/fuxs/aepctl/cmd/get/da"
 	"github.com/fuxs/aepctl/cmd/helper"
-
 	"github.com/spf13/cobra"
 )
 
-// NewCommand creates an initialized command object
-func NewCommand(conf *helper.Configuration) *cobra.Command {
+// NewCatalogCommand creates an initialized command object
+func NewDataAccessCommand(conf *helper.Configuration) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get [acl|token|od|sandbox]",
-		Short: "Display one or many resources",
+		Use: "da",
 	}
-	conf.AddAuthenticationFlags(cmd)
-	cmd.AddCommand(NewACCommand(conf))
-	cmd.AddCommand(NewTokenCommand(conf))
-	cmd.AddCommand(NewODCommand(conf))
-	cmd.AddCommand(NewSandboxCommand(conf))
-	cmd.AddCommand(NewSandboxesCommand(conf))
-	cmd.AddCommand(NewCatalogCommand(conf))
-	cmd.AddCommand(NewSRCommand(conf))
-	cmd.AddCommand(NewDataAccessCommand(conf))
-	cmd.AddCommand(NewFlowCommand(conf))
+	cmd.AddCommand(da.NewFilesCommand(conf))
+	cmd.AddCommand(da.NewFileCommand(conf))
 	return cmd
 }

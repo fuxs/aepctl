@@ -1,0 +1,13 @@
+path: [items]
+columns:
+  - name: ID
+    path: [id]
+    mode: wide
+  - name: NAME
+    path: [name]
+  - name: STATE
+    path: [state]
+    format: state
+page:
+  path: [_links, next, href]
+  url: https://platform.adobe.io/data/foundation/flowservice

@@ -34,6 +34,7 @@ type TableDescriptor struct {
 	Filter []string          `json:"filter,omitempty" yaml:"filter,omitempty"`
 	Vars   []*DescriptorVars `json:"vars,omitempty" yaml:"vars,omitempty"`
 	Range  *DescriptorRange  `json:"range,omitempty" yaml:"range,omitempty"`
+	Page   *PageDescriptor   `json:"page,omitempty" yaml:"page,omitempty"`
 	thin   []*TableColumnDescriptor
 	wide   []*TableColumnDescriptor
 }
@@ -59,7 +60,7 @@ func NewTableDescriptor(def string) (*TableDescriptor, error) {
 		}
 	}
 	if len(result.Columns) > 0 && result.Range != nil {
-		return nil, errors.New("Columns and range are defined")
+		return nil, errors.New("columns and range are defined")
 	}
 	var (
 		l        int
@@ -89,7 +90,7 @@ func NewTableDescriptor(def string) (*TableDescriptor, error) {
 	t := make([]*TableColumnDescriptor, 0, l)
 	for i, c := range cols {
 		if c.Name == "" {
-			return nil, fmt.Errorf("Name is empty in column %v", i)
+			return nil, fmt.Errorf("name is empty in column %v", i)
 		}
 		// determine column type
 		if !c.ID {
@@ -187,13 +188,13 @@ func (t *TableDescriptor) WriteRow(name string, q *Query, w *RowWriter, wide boo
 func (t *TableDescriptor) Iterator(stream io.ReadCloser) (JSONResponse, error) {
 	switch t.Iter {
 	case "array":
-		return NewJSONIterator(stream)
+		return NewJSONIterator(stream), nil
 	case "filter":
-		return NewJSONFilterIterator(t.Filter, stream)
+		return NewJSONFilterIterator(t.Filter, stream), nil
 	case "object":
-		return NewJSONMapIterator(stream)
+		return NewJSONMapIterator(stream), nil
 	default:
-		return nil, fmt.Errorf("Unknown iterator %v", t.Iter)
+		return nil, fmt.Errorf("unknown iterator %v", t.Iter)
 	}
 }
 
@@ -202,6 +203,10 @@ var statusMapper = Mapper{
 	"live":     "● Live",
 	"approved": "● Approved",
 	"draft":    "◯ Draft",
+}
+
+var stateMapper = Mapper{
+	"enabled": "● Enabled",
 }
 
 // TableColumnDescriptor contains all information to extract a column value
@@ -250,6 +255,10 @@ func (t *TableColumnDescriptor) assignFunc() {
 		case "status":
 			t.o = func(_ *Scope, q *Query) string {
 				return statusMapper.Lookup(q.String())
+			}
+		case "state":
+			t.o = func(_ *Scope, q *Query) string {
+				return stateMapper.Lookup(q.String())
 			}
 		}
 	case "num":
@@ -366,4 +375,9 @@ func NewScope(parent *Scope, vars []*DescriptorVars, name string, q *Query) *Sco
 		parent: parent,
 		vars:   result,
 	}
+}
+
+type PageDescriptor struct {
+	Path []string `json:"path,omitempty" yaml:"path,omitempty"`
+	URL  string   `json:"url,omitempty" yaml:"url,omitempty"`
 }

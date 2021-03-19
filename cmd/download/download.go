@@ -1,5 +1,5 @@
 /*
-Package get contains get command related functions.
+Package cmd is the root package for aepctl.
 
 Copyright 2021 Michael Bungenstock
 
@@ -14,29 +14,21 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 */
-package get
+package download
 
 import (
 	"github.com/fuxs/aepctl/cmd/helper"
-
 	"github.com/spf13/cobra"
 )
 
-// NewCommand creates an initialized command object
 func NewCommand(conf *helper.Configuration) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get [acl|token|od|sandbox]",
-		Short: "Display one or many resources",
+		Use:   "download",
+		Short: "Download dataset files",
 	}
 	conf.AddAuthenticationFlags(cmd)
-	cmd.AddCommand(NewACCommand(conf))
-	cmd.AddCommand(NewTokenCommand(conf))
-	cmd.AddCommand(NewODCommand(conf))
-	cmd.AddCommand(NewSandboxCommand(conf))
-	cmd.AddCommand(NewSandboxesCommand(conf))
-	cmd.AddCommand(NewCatalogCommand(conf))
-	cmd.AddCommand(NewSRCommand(conf))
-	cmd.AddCommand(NewDataAccessCommand(conf))
-	cmd.AddCommand(NewFlowCommand(conf))
+	cmd.AddCommand(NewFilesCommand(conf))
+	cmd.AddCommand(NewBatchesCommand(conf))
+	cmd.AddCommand(NewDatasetsCommand(conf))
 	return cmd
 }

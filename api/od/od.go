@@ -98,7 +98,7 @@ func GetRaw(ctx context.Context, p *api.AuthenticationConfig, containerID, schem
 	if err != nil {
 		return nil, err
 	}
-	return util.NewJSONIterator(res.Body)
+	return util.NewJSONIterator(res.Body), nil
 }
 
 // Query queries all objects
@@ -131,7 +131,7 @@ func QueryRaw(ctx context.Context, p *api.AuthenticationConfig, containerID, sch
 	if err != nil {
 		return nil, err
 	}
-	return util.NewJSONIterator(res.Body)
+	return util.NewJSONIterator(res.Body), nil
 }
 
 // List lists all objects

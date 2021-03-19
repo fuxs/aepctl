@@ -18,6 +18,7 @@ package helper
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -27,6 +28,7 @@ import (
 	"strings"
 
 	"github.com/PaesslerAG/jsonpath"
+	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/util"
 	"github.com/markbates/pkger"
 	"github.com/spf13/cobra"
@@ -58,6 +60,11 @@ type Transformer interface {
 	Iterator(io.ReadCloser) (util.JSONResponse, error)
 }
 
+type Pageable interface {
+	InitialCall(context.Context, *api.AuthenticationConfig) (*http.Response, error)
+	NextCall(context.Context, *api.AuthenticationConfig) (*http.Response, error)
+}
+
 // OutputConf contains all options for the output
 type OutputConf struct {
 	Output    string
@@ -65,6 +72,7 @@ type OutputConf struct {
 	jsonPath  string
 	transPath string
 	tf        Transformer
+	PB        Pageable
 }
 
 // NewOutputConf creates an initialized OutputConf object
@@ -147,7 +155,7 @@ func (o *OutputConf) ValidateFlags() error {
 			o.jsonPath = util.AddDollar(util.RemoveQuotes(jp))
 			o.Type = JSONPathOut
 		default:
-			return fmt.Errorf("Unknown output format %s", o.Output)
+			return fmt.Errorf("unknown output format %s", o.Output)
 		}
 	}
 	return nil
@@ -159,7 +167,15 @@ func (o *OutputConf) StreamResultRaw(res *http.Response, err error) {
 		data, err := io.ReadAll(res.Body)
 		CheckErrs(err, errors.New(string(data)))
 	}
-	i, err := o.tf.Iterator(res.Body)
+	var (
+		i util.JSONResponse
+	)
+	if o.tf != nil {
+		i, err = o.tf.Iterator(res.Body)
+
+	} else {
+		i = util.NewJSONIterator(res.Body)
+	}
 	CheckErr(err)
 	CheckErr(o.streamResult(i))
 }
@@ -178,7 +194,7 @@ func (o *OutputConf) streamResult(i util.JSONResponse) error {
 		return i.PrintPretty()
 	case JSONPathOut:
 		// unmarshall complete response
-		v, err := i.Obj()
+		_, v, err := i.Next()
 		if err != nil {
 			return err
 		}
@@ -215,4 +231,66 @@ func (o *OutputConf) streamResult(i util.JSONResponse) error {
 		}
 	}
 	return nil
+}
+
+func (o *OutputConf) Print(auth *api.AuthenticationConfig) error {
+	switch o.Type {
+	case JSONOut:
+		return o.PrintJSON(auth)
+	case Wide, TableOut:
+		return o.PrintTable(auth)
+	}
+	return nil
+}
+
+func (o *OutputConf) PrintJSON(auth *api.AuthenticationConfig) error {
+	ctx := context.Background()
+	res, err := o.PB.InitialCall(ctx, auth)
+	CheckErr(err)
+	if res.StatusCode >= 300 {
+		data, err := io.ReadAll(res.Body)
+		CheckErrs(err, errors.New(string(data)))
+	}
+	i, err := o.tf.Iterator(res.Body)
+	CheckErr(err)
+	return i.PrintPretty()
+}
+
+func (o *OutputConf) PrintTable(auth *api.AuthenticationConfig) error {
+	ctx := context.Background()
+	res, err := o.PB.InitialCall(ctx, auth)
+	CheckErr(err)
+	if res.StatusCode >= 300 {
+		data, err := io.ReadAll(res.Body)
+		CheckErrs(err, errors.New(string(data)))
+	}
+	i, err := o.tf.Iterator(res.Body)
+	CheckErr(err)
+	w := util.NewTableWriter(os.Stdout)
+	defer func() {
+		w.Flush()
+		i.Close()
+	}()
+	/*if err := o.tf.Preprocess(i); err != nil {
+		return err
+	}*/
+	wide := o.Type == Wide
+	if err := w.Write(o.tf.Header(wide)...); err != nil {
+		return err
+	}
+	jf := util.NewJSONFinder(i)
+	jf.Add(func(j util.JSONResponse) error {
+		return j.Range(func(name string, obj interface{}) error {
+			return o.tf.WriteRow(name, util.NewQuery(obj), w, wide)
+		})
+	}, "items")
+	jf.Add(func(j util.JSONResponse) error {
+		q, err := j.Query()
+		if err != nil {
+			return err
+		}
+		fmt.Print("Next Link", q.Str("next", "href"))
+		return nil
+	}, "_links")
+	return jf.Run()
 }

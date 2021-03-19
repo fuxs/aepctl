@@ -19,6 +19,7 @@ package util
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 )
 
 // Query supports queries on raw json objects
@@ -29,6 +30,15 @@ type Query struct {
 // NewQuery creates an initialized query object
 func NewQuery(obj interface{}) *Query {
 	return &Query{obj: obj}
+}
+
+func NewQueryStream(stream io.Reader) (*Query, error) {
+	dec := json.NewDecoder(stream)
+	var obj interface{}
+	if err := dec.Decode(&obj); err != nil {
+		return nil, err
+	}
+	return NewQuery(obj), nil
 }
 
 // UnmarshallQuery unmarshal JSON data and returns a Query object
@@ -109,6 +119,25 @@ func (q *Query) Length() int {
 		return len(ar)
 	}
 	return 0
+}
+
+// Range executes the passed function on all children of the current object
+func (q *Query) QueryArray() []*Query {
+	if ar, ok := q.obj.([]interface{}); ok {
+		response := make([]*Query, len(ar))
+		for i, obj := range ar {
+			response[i] = &Query{obj: obj}
+		}
+		return response
+	}
+	return []*Query{}
+}
+
+func (q *Query) Array() []interface{} {
+	if ar, ok := q.obj.([]interface{}); ok {
+		return ar
+	}
+	return []interface{}{}
 }
 
 // Range executes the passed function on all children of the current object

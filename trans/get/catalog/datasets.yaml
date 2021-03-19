@@ -2,6 +2,9 @@
 # aepctl get cat datasets
 iterator: object
 columns:
+  - name: ID
+    id: true
+    mode: wide
   - name: NAME
     path: [name]
   - name: CREATED

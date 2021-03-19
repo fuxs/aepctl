@@ -1,0 +1,14 @@
+path: [data]
+columns:
+  - name: FILE ID
+    path: [dataSetFileId]
+  - name: VIEW ID
+    path: [dataSetViewId]
+  - name: CREATED
+    type: num
+    path: [created]
+    format: utime
+  - name: UPDATED
+    type: num
+    path: [updated]
+    format: utime

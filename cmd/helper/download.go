@@ -1,5 +1,5 @@
 /*
-Package api is the base for all aep rest functions.
+Package helper consists of helping functions.
 
 Copyright 2021 Michael Bungenstock
 
@@ -14,32 +14,25 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 */
-package api
+package helper
 
 import (
+	"io"
 	"net/http"
-
-	"github.com/fuxs/aepctl/util"
+	"os"
 )
 
-func NewJSONIterator(res *http.Response, err error) (*util.JSONIterator, error) {
-	if err != nil {
-		return nil, err
-	}
-	return util.NewJSONIterator(res.Body), nil
+type DownloadConfig struct {
+	Path string
 }
 
-func NewJSONFilterIterator(filter []string, res *http.Response, err error) (*util.JSONFilterIterator, error) {
+func (d *DownloadConfig) Save(res *http.Response, name string) error {
+	defer res.Body.Close()
+	out, err := os.Create(name)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return util.NewJSONFilterIterator(filter, res.Body), nil
-}
-
-func NewQuery(res *http.Response, err error) (*util.Query, error) {
-	i, err := NewJSONIterator(res, err)
-	if err != nil {
-		return nil, err
-	}
-	return i.Query()
+	defer out.Close()
+	_, err = io.Copy(out, res.Body)
+	return err
 }
