@@ -18,7 +18,6 @@ package helper
 
 import (
 	"bufio"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -60,10 +59,10 @@ type Transformer interface {
 	Iterator(io.ReadCloser) (util.JSONResponse, error)
 }
 
-type Pageable interface {
+/*type Pageable interface {
 	InitialCall(context.Context, *api.AuthenticationConfig) (*http.Response, error)
-	NextCall(context.Context, *api.AuthenticationConfig) (*http.Response, error)
-}
+	NextCall(context.Context, *api.AuthenticationConfig, string) (*http.Response, error)
+}*/
 
 // OutputConf contains all options for the output
 type OutputConf struct {
@@ -72,7 +71,8 @@ type OutputConf struct {
 	jsonPath  string
 	transPath string
 	tf        Transformer
-	PB        Pageable
+	td        *util.TableDescriptor
+	//PB        Pageable
 }
 
 // NewOutputConf creates an initialized OutputConf object
@@ -80,6 +80,11 @@ func NewOutputConf(tf Transformer) *OutputConf {
 	return &OutputConf{
 		tf: tf,
 	}
+}
+
+// SetTableTransformation changes the Transformer object
+func (o *OutputConf) SetTableTransformation(td *util.TableDescriptor) {
+	o.td = td
 }
 
 // SetTransformation changes the Transformer object
@@ -116,7 +121,8 @@ func (o *OutputConf) SetTransformationFile(path string) error {
 	if d, err = io.ReadAll(f); err != nil {
 		return err
 	}
-	o.tf, err = util.NewTableDescriptor(string(d))
+	o.td, err = util.NewTableDescriptor(string(d))
+	o.tf = o.td
 	return err
 }
 
@@ -233,17 +239,19 @@ func (o *OutputConf) streamResult(i util.JSONResponse) error {
 	return nil
 }
 
-func (o *OutputConf) Print(auth *api.AuthenticationConfig) error {
+func (o *OutputConf) Print(paged api.Paged) error {
 	switch o.Type {
 	case JSONOut:
-		return o.PrintJSON(auth)
+		i, err := paged.First()
+		CheckErr(err)
+		return i.PrintPretty()
 	case Wide, TableOut:
-		return o.PrintTable(auth)
+		return o.PrintTable(paged)
 	}
 	return nil
 }
 
-func (o *OutputConf) PrintJSON(auth *api.AuthenticationConfig) error {
+/*func (o *OutputConf) PrintJSON(auth *api.AuthenticationConfig) error {
 	ctx := context.Background()
 	res, err := o.PB.InitialCall(ctx, auth)
 	CheckErr(err)
@@ -254,43 +262,21 @@ func (o *OutputConf) PrintJSON(auth *api.AuthenticationConfig) error {
 	i, err := o.tf.Iterator(res.Body)
 	CheckErr(err)
 	return i.PrintPretty()
-}
+}*/
 
-func (o *OutputConf) PrintTable(auth *api.AuthenticationConfig) error {
-	ctx := context.Background()
-	res, err := o.PB.InitialCall(ctx, auth)
-	CheckErr(err)
-	if res.StatusCode >= 300 {
-		data, err := io.ReadAll(res.Body)
-		CheckErrs(err, errors.New(string(data)))
-	}
-	i, err := o.tf.Iterator(res.Body)
-	CheckErr(err)
+func (o *OutputConf) PrintTable(paged api.Paged) error {
 	w := util.NewTableWriter(os.Stdout)
 	defer func() {
 		w.Flush()
-		i.Close()
 	}()
-	/*if err := o.tf.Preprocess(i); err != nil {
-		return err
-	}*/
 	wide := o.Type == Wide
 	if err := w.Write(o.tf.Header(wide)...); err != nil {
 		return err
 	}
-	jf := util.NewJSONFinder(i)
-	jf.Add(func(j util.JSONResponse) error {
+	w.Flush() // TODO debug only
+	return paged.Execute(o.td.Path, func(j util.JSONResponse) error {
 		return j.Range(func(name string, obj interface{}) error {
 			return o.tf.WriteRow(name, util.NewQuery(obj), w, wide)
 		})
-	}, "items")
-	jf.Add(func(j util.JSONResponse) error {
-		q, err := j.Query()
-		if err != nil {
-			return err
-		}
-		fmt.Print("Next Link", q.Str("next", "href"))
-		return nil
-	}, "_links")
-	return jf.Run()
+	})
 }

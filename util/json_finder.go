@@ -78,7 +78,9 @@ func (p *Prefixes) Matches(pos int, elem string) (bool, func(JSONResponse) error
 }
 
 func (p *Prefixes) Pop() {
-	p.current, _ = p.history.Pop()
+	if current, ok := p.history.Pop(); ok {
+		p.current = current
+	}
 }
 
 type JSONFinder struct {
@@ -87,8 +89,12 @@ type JSONFinder struct {
 	depth    int
 }
 
-func NewJSONFinder(i JSONResponse) *JSONFinder {
-	return &JSONFinder{i: i, prefixes: NewPrefixes()}
+func NewJSONFinder() *JSONFinder {
+	return &JSONFinder{prefixes: NewPrefixes()}
+}
+
+func (j *JSONFinder) SetIterator(i JSONResponse) {
+	j.i = i
 }
 
 func (j *JSONFinder) Add(f func(JSONResponse) error, path ...string) {
@@ -115,8 +121,10 @@ func (j *JSONFinder) Run() error {
 			if d != '}' {
 				return fmt.Errorf("unexpected token %v", d)
 			}
-			j.prefixes.Pop()
 			j.depth--
+			if j.depth > 0 {
+				j.prefixes.Pop()
+			}
 			continue
 		}
 		// it must be a string

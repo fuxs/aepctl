@@ -160,6 +160,28 @@ func processColumns(scope *Scope, cols []*TableColumnDescriptor, name string, q 
 	return result
 }
 
+func (t *TableDescriptor) PathToData() []string {
+	return t.Path
+}
+
+func (t *TableDescriptor) PathToNext() []string {
+	if t.Page == nil {
+		return nil
+	}
+	return t.Page.Path
+}
+
+func (t *TableDescriptor) Paging() bool {
+	return t.Page != nil && len(t.Page.Path) > 0
+}
+
+func (t *TableDescriptor) Next(q *Query) string {
+	if t.Page == nil {
+		return ""
+	}
+	return q.Str(t.Page.Next...)
+}
+
 // WriteRow writes one or more rows out
 func (t *TableDescriptor) WriteRow(name string, q *Query, w *RowWriter, wide bool) error {
 	cols := t.thin
@@ -379,5 +401,5 @@ func NewScope(parent *Scope, vars []*DescriptorVars, name string, q *Query) *Sco
 
 type PageDescriptor struct {
 	Path []string `json:"path,omitempty" yaml:"path,omitempty"`
-	URL  string   `json:"url,omitempty" yaml:"url,omitempty"`
+	Next []string `json:"next,omitempty" yaml:"next,omitempty"`
 }
