@@ -34,7 +34,6 @@ type TableDescriptor struct {
 	Filter []string          `json:"filter,omitempty" yaml:"filter,omitempty"`
 	Vars   []*DescriptorVars `json:"vars,omitempty" yaml:"vars,omitempty"`
 	Range  *DescriptorRange  `json:"range,omitempty" yaml:"range,omitempty"`
-	Page   *PageDescriptor   `json:"page,omitempty" yaml:"page,omitempty"`
 	thin   []*TableColumnDescriptor
 	wide   []*TableColumnDescriptor
 }
@@ -158,28 +157,6 @@ func processColumns(scope *Scope, cols []*TableColumnDescriptor, name string, q 
 		result[i] = c.Extract(scope, q)
 	}
 	return result
-}
-
-func (t *TableDescriptor) PathToData() []string {
-	return t.Path
-}
-
-func (t *TableDescriptor) PathToNext() []string {
-	if t.Page == nil {
-		return nil
-	}
-	return t.Page.Path
-}
-
-func (t *TableDescriptor) Paging() bool {
-	return t.Page != nil && len(t.Page.Path) > 0
-}
-
-func (t *TableDescriptor) Next(q *Query) string {
-	if t.Page == nil {
-		return ""
-	}
-	return q.Str(t.Page.Next...)
 }
 
 // WriteRow writes one or more rows out
@@ -397,9 +374,4 @@ func NewScope(parent *Scope, vars []*DescriptorVars, name string, q *Query) *Sco
 		parent: parent,
 		vars:   result,
 	}
-}
-
-type PageDescriptor struct {
-	Path []string `json:"path,omitempty" yaml:"path,omitempty"`
-	Next []string `json:"next,omitempty" yaml:"next,omitempty"`
 }

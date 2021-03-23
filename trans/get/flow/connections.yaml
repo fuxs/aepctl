@@ -8,6 +8,3 @@ columns:
   - name: STATE
     path: [state]
     format: state
-page: 
-  path: [_links]
-  next: [next, href]
