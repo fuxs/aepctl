@@ -200,10 +200,11 @@ func (o *OutputConf) streamResult(i util.JSONResponse) error {
 		return i.PrintPretty()
 	case JSONPathOut:
 		// unmarshall complete response
-		_, v, err := i.Next()
+		_, q, err := i.Next()
 		if err != nil {
 			return err
 		}
+		v := q.Interface()
 		value, err := jsonpath.Get(o.jsonPath, v)
 		if err != nil {
 			return err
@@ -231,7 +232,7 @@ func (o *OutputConf) streamResult(i util.JSONResponse) error {
 			if err != nil {
 				return err
 			}
-			if err = o.tf.WriteRow(name, util.NewQuery(obj), w, wide); err != nil {
+			if err = o.tf.WriteRow(name, obj, w, wide); err != nil {
 				return err
 			}
 		}
@@ -275,8 +276,8 @@ func (o *OutputConf) PrintTable(paged api.Paged) error {
 	}
 	w.Flush() // TODO debug only
 	return paged.Execute(o.td.Path, func(j util.JSONResponse) error {
-		return j.Range(func(name string, obj interface{}) error {
-			return o.tf.WriteRow(name, util.NewQuery(obj), w, wide)
+		return j.Range(func(name string, q *util.Query) error {
+			return o.tf.WriteRow(name, q, w, wide)
 		})
 	})
 }
