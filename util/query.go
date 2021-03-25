@@ -24,12 +24,18 @@ import (
 
 // Query supports queries on raw json objects
 type Query struct {
-	obj interface{}
+	obj  interface{}
+	name string
+	path string
 }
 
 // NewQuery creates an initialized query object
 func NewQuery(obj interface{}) *Query {
 	return &Query{obj: obj}
+}
+
+func NewQueryM(obj interface{}, name, path string) *Query {
+	return &Query{obj: obj, name: name, path: path}
 }
 
 func NewQueryStream(stream io.Reader) (*Query, error) {
@@ -200,7 +206,7 @@ func (q *Query) RangeAttributes(rf func(string, *Query)) {
 func (q *Query) RangeAttributesE(rf func(string, *Query) error) error {
 	if ar, ok := q.obj.(map[string]interface{}); ok {
 		for k, v := range ar {
-			if err := rf(k, &Query{obj: v}); err != nil {
+			if err := rf(k, &Query{obj: v, name: k}); err != nil {
 				return err
 			}
 		}

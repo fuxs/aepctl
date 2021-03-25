@@ -17,11 +17,9 @@ specific language governing permissions and limitations under the License.
 package util
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 )
 
 // JSONResponse is the interface for streaming JSON objects
@@ -47,31 +45,37 @@ type JSONResponse interface {
 
 // JSONIterator implements the JSONResponse interface
 type JSONIterator struct {
-	dec    *json.Decoder
-	stream io.ReadCloser
+	c *JSONCursor
+	//dec    *json.Decoder
+	//stream io.ReadCloser
 }
 
 // NewJSONIterator creates an initialized JSONIterator object
 func NewJSONIterator(stream io.ReadCloser) *JSONIterator {
-	return &JSONIterator{dec: json.NewDecoder(stream), stream: stream}
+	return &JSONIterator{c: NewJSONCursor(stream)}
 }
 
 // More checks if there is another element in the current object or array
 func (j *JSONIterator) More() bool {
-	return j.dec.More()
+	return j.c.More()
 }
 
 func (j *JSONIterator) Token() (json.Token, error) {
-	return j.dec.Token()
+	result, err := j.c.Token()
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func (j *JSONIterator) Offset() int64 {
-	return j.dec.InputOffset()
+	return j.c.Offset()
 }
 
 // Skip skips the next element like for example a string, object or array
 func (j *JSONIterator) Skip() error {
-	t, err := j.dec.Token()
+	t, err := j.c.Token()
 	if err != nil {
 		return err
 	}
@@ -82,7 +86,7 @@ func (j *JSONIterator) Skip() error {
 	}
 	counter := 1
 	if d == '{' {
-		t, err = j.dec.Token()
+		t, err = j.c.Token()
 		for err == nil {
 			d, ok = t.(json.Delim)
 			if ok {
@@ -96,12 +100,12 @@ func (j *JSONIterator) Skip() error {
 					}
 				}
 			}
-			t, err = j.dec.Token()
+			t, err = j.c.Token()
 		}
 		return err
 	}
 	// must be '['
-	for t, err = j.dec.Token(); err != nil; t, err = j.dec.Token() {
+	for t, err = j.c.Token(); err != nil; t, err = j.c.Token() {
 		d, ok = t.(json.Delim)
 		if ok {
 			switch d {
@@ -125,7 +129,7 @@ func (j *JSONIterator) Enter() error {
 		return err
 	}
 	if d != '[' && d != '{' {
-		return fmt.Errorf("expecting [ or { but found %v at offset %v", d, j.dec.InputOffset())
+		return fmt.Errorf("expecting [ or { but found %v at offset %v", d, j.c.Offset())
 	}
 	return nil
 }
@@ -137,7 +141,7 @@ func (j *JSONIterator) Leave() error {
 		return err
 	}
 	if d != ']' && d != '}' {
-		return fmt.Errorf("expecting ] or } but found %v at offset %v", d, j.dec.InputOffset())
+		return fmt.Errorf("expecting ] or } but found %v at offset %v", d, j.c.Offset())
 	}
 	return nil
 }
@@ -149,7 +153,7 @@ func (j *JSONIterator) EnterArray() error {
 		return err
 	}
 	if d != '[' {
-		return fmt.Errorf("expecting [ found %v at offset %v", d, j.dec.InputOffset())
+		return fmt.Errorf("expecting [ found %v at offset %v", d, j.c.Offset())
 	}
 	return nil
 }
@@ -161,7 +165,7 @@ func (j *JSONIterator) EnterObject() error {
 		return err
 	}
 	if d != '{' {
-		return fmt.Errorf("expected { at %v but found %v", j.dec.InputOffset(), d)
+		return fmt.Errorf("expected { at %v but found %v", j.c.Offset(), d)
 	}
 	return nil
 }
@@ -187,7 +191,7 @@ func (j *JSONIterator) Path(path ...string) error {
 			}
 		}
 		if !found {
-			return fmt.Errorf("could not find id %v but reached end at offset %v", p, j.dec.InputOffset())
+			return fmt.Errorf("could not find id %v but reached end at offset %v", p, j.c.Offset())
 		}
 	}
 	return nil
@@ -195,13 +199,13 @@ func (j *JSONIterator) Path(path ...string) error {
 
 // Delim returns the delimiter like [,],{ or} at the current position
 func (j *JSONIterator) Delim() (json.Delim, error) {
-	t, err := j.dec.Token()
+	t, err := j.c.Token()
 	if err != nil {
 		return 0, err
 	}
 	delim, ok := t.(json.Delim)
 	if !ok {
-		return 0, fmt.Errorf("parse error, expected delimiter at offset %v", j.dec.InputOffset())
+		return 0, fmt.Errorf("parse error, expected delimiter at offset %v", j.c.Offset())
 	}
 	return delim, nil
 }
@@ -209,10 +213,10 @@ func (j *JSONIterator) Delim() (json.Delim, error) {
 // Obj returns the object at the current position
 func (j *JSONIterator) Obj() (map[string]interface{}, error) {
 	if !j.More() {
-		return nil, fmt.Errorf("no more object available in current array or object at offset %v", j.dec.InputOffset())
+		return nil, fmt.Errorf("no more object available in current array or object at offset %v", j.c.Offset())
 	}
 	var obj map[string]interface{}
-	if err := j.dec.Decode(&obj); err != nil {
+	if err := j.c.Decode(&obj); err != nil {
 		return nil, err
 	}
 	return obj, nil
@@ -221,35 +225,36 @@ func (j *JSONIterator) Obj() (map[string]interface{}, error) {
 // Interface returns any element at the current position
 func (j *JSONIterator) Interface() (interface{}, error) {
 	if !j.More() {
-		return nil, fmt.Errorf("no more element available in current array or object at offset %v", j.dec.InputOffset())
+		return nil, fmt.Errorf("no more element available in current array or object at offset %v", j.c.Offset())
 	}
 	var obj interface{}
-	if err := j.dec.Decode(&obj); err != nil {
+	if err := j.c.Decode(&obj); err != nil {
 		return nil, err
 	}
 	return obj, nil
 }
 
 func (j *JSONIterator) Query() (*Query, error) {
+	name, path := j.c.PathInfo()
 	obj, err := j.Interface()
 	if err != nil {
 		return nil, err
 	}
-	return NewQuery(obj), nil
+	return NewQueryM(obj, name, path), nil
 }
 
 // Bool returns the boolean at the current position
 func (j *JSONIterator) Bool() (bool, error) {
 	if !j.More() {
-		return false, fmt.Errorf("no more bool available in current array or object at offset %v", j.dec.InputOffset())
+		return false, fmt.Errorf("no more bool available in current array or object at offset %v", j.c.Offset())
 	}
-	t, err := j.dec.Token()
+	t, err := j.c.Token()
 	if err != nil {
 		return false, err
 	}
 	result, ok := t.(bool)
 	if !ok {
-		return false, fmt.Errorf("parse error, expected bool at offset %v", j.dec.InputOffset())
+		return false, fmt.Errorf("parse error, expected bool at offset %v", j.c.Offset())
 	}
 	return result, nil
 }
@@ -257,15 +262,15 @@ func (j *JSONIterator) Bool() (bool, error) {
 // Float returns the floating point number at the current position
 func (j *JSONIterator) Float() (float64, error) {
 	if !j.More() {
-		return 0, fmt.Errorf("no more float available in current array or object at offset %v", j.dec.InputOffset())
+		return 0, fmt.Errorf("no more float available in current array or object at offset %v", j.c.Offset())
 	}
-	t, err := j.dec.Token()
+	t, err := j.c.Token()
 	if err != nil {
 		return 0, err
 	}
 	result, ok := t.(float64)
 	if !ok {
-		return 0, fmt.Errorf("parse error, expected float at offset %v", j.dec.InputOffset())
+		return 0, fmt.Errorf("parse error, expected float at offset %v", j.c.Offset())
 	}
 	return result, nil
 }
@@ -273,15 +278,15 @@ func (j *JSONIterator) Float() (float64, error) {
 // String returns the string at the current position
 func (j *JSONIterator) String() (string, error) {
 	if !j.More() {
-		return "", fmt.Errorf("no more string available in current array or object at offset %v", j.dec.InputOffset())
+		return "", fmt.Errorf("no more string available in current array or object at offset %v", j.c.Offset())
 	}
-	t, err := j.dec.Token()
+	t, err := j.c.Token()
 	if err != nil {
 		return "", err
 	}
 	result, ok := t.(string)
 	if !ok || result == "" {
-		return "", fmt.Errorf("parse error, expected string at offset %v", j.dec.InputOffset())
+		return "", fmt.Errorf("parse error, expected string at offset %v", j.c.Offset())
 	}
 	return result, nil
 }
@@ -313,22 +318,17 @@ func (j *JSONIterator) Next() (string, interface{}, error) {
 
 // Close closes the underlying ReaderCloser stream
 func (j *JSONIterator) Close() error {
-	return j.stream.Close()
+	return j.c.Close()
 }
 
 // PrintRaw copies the raw data to standard out
 func (j *JSONIterator) PrintRaw() error {
-	bout := bufio.NewWriter(os.Stdout)
-	defer bout.Flush()
-	_, err := io.Copy(bout, j.stream)
-	return err
+	return j.c.PrintRaw()
 }
 
 // PrintPretty prints the raw data with indention to standard out
 func (j *JSONIterator) PrintPretty() error {
-	bout := bufio.NewWriter(os.Stdout)
-	defer bout.Flush()
-	return JSONPrintPretty(j.dec, bout)
+	return j.c.PrintPretty()
 }
 
 // JSONMapIterator is a specialized JSONIterator. It returns the attribute name

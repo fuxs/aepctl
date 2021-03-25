@@ -275,3 +275,12 @@ func Concat(ar []string, sep string) string {
 	}
 	return buffer.String()
 }
+
+func IsNumeric(value string) bool {
+	for _, c := range value {
+		if c <= '0' || c >= '9' {
+			return false
+		}
+	}
+	return true
+}
