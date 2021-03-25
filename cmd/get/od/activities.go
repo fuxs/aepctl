@@ -51,7 +51,7 @@ func (*activityTransformer) Preprocess(i util.JSONResponse) error {
 	return i.EnterArray()
 }
 
-func (t *activityTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wide bool) error {
+func (t *activityTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
 	s := q.Path("_instance")
 	return w.Write(
 		s.Str("xdm:name"),

@@ -55,7 +55,7 @@ const (
 type Transformer interface {
 	Header(wide bool) []string
 	Preprocess(util.JSONResponse) error
-	WriteRow(string, *util.Query, *util.RowWriter, bool) error
+	WriteRow(*util.Query, *util.RowWriter, bool) error
 	Iterator(io.ReadCloser) (util.JSONResponse, error)
 }
 
@@ -200,7 +200,7 @@ func (o *OutputConf) streamResult(i util.JSONResponse) error {
 		return i.PrintPretty()
 	case JSONPathOut:
 		// unmarshall complete response
-		_, q, err := i.Next()
+		q, err := i.Next()
 		if err != nil {
 			return err
 		}
@@ -228,11 +228,11 @@ func (o *OutputConf) streamResult(i util.JSONResponse) error {
 			return err
 		}
 		for i.More() {
-			name, obj, err := i.Next()
+			q, err := i.Next()
 			if err != nil {
 				return err
 			}
-			if err = o.tf.WriteRow(name, obj, w, wide); err != nil {
+			if err = o.tf.WriteRow(q, w, wide); err != nil {
 				return err
 			}
 		}
@@ -276,8 +276,8 @@ func (o *OutputConf) PrintTable(paged api.Paged) error {
 	}
 	w.Flush() // TODO debug only
 	return paged.Execute(o.td.Path, func(j util.JSONResponse) error {
-		return j.Range(func(name string, q *util.Query) error {
-			return o.tf.WriteRow(name, q, w, wide)
+		return j.Range(func(q *util.Query) error {
+			return o.tf.WriteRow(q, w, wide)
 		})
 	})
 }

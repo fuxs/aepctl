@@ -39,7 +39,7 @@ func (*offerTransformer) Preprocess(i util.JSONResponse) error {
 	return i.EnterArray()
 }
 
-func (*offerTransformer) WriteRow(name string, q *util.Query, w *util.RowWriter, wide bool) error {
+func (*offerTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
 	s := q.Path("_instance")
 	d := s.Path("xdm:selectionConstraint")
 	return w.Write(

@@ -160,7 +160,8 @@ func processColumns(scope *Scope, cols []*TableColumnDescriptor, name string, q 
 }
 
 // WriteRow writes one or more rows out
-func (t *TableDescriptor) WriteRow(name string, q *Query, w *RowWriter, wide bool) error {
+func (t *TableDescriptor) WriteRow(q *Query, w *RowWriter, wide bool) error {
+	name := q.JSONName()
 	cols := t.thin
 	if wide {
 		cols = t.wide

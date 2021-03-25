@@ -56,6 +56,14 @@ func UnmarshallQuery(data []byte) (*Query, error) {
 	return NewQuery(obj), nil
 }
 
+func (q *Query) JSONName() string {
+	return q.name
+}
+
+func (q *Query) JSONPath() string {
+	return q.path
+}
+
 // Path queries nested objects, e.g. property a.b.c will be queried with Path("a","b","c")
 func (q *Query) Path(path ...string) *Query {
 	cur := q.obj

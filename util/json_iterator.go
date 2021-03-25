@@ -31,14 +31,14 @@ type JSONResponse interface {
 	EnterObject() error
 	Leave() error
 	More() bool
-	Next() (string, *Query, error)
+	Next() (*Query, error)
 	//Obj() (map[string]interface{}, error)
 	Offset() int64
 	Path(...string) error
 	PrintRaw() error
 	PrintPretty() error
 	Query() (*Query, error)
-	Range(func(string, *Query) error) error
+	Range(func(*Query) error) error
 	Skip() error
 	Token() (json.Token, error)
 }
@@ -291,16 +291,16 @@ func (j *JSONIterator) String() (string, error) {
 	return result, nil
 }
 
-func (j *JSONIterator) Range(f func(string, *Query) error) error {
+func (j *JSONIterator) Range(f func(*Query) error) error {
 	if err := j.Enter(); err != nil {
 		return err
 	}
 	for j.More() {
-		name, obj, err := j.Next()
+		q, err := j.Next()
 		if err != nil {
 			return err
 		}
-		if err = f(name, obj); err != nil {
+		if err = f(q); err != nil {
 			return err
 		}
 	}
@@ -311,9 +311,8 @@ func (j *JSONIterator) Range(f func(string, *Query) error) error {
 }
 
 // Next returns the next element
-func (j *JSONIterator) Next() (string, *Query, error) {
-	i, err := j.Query()
-	return "", i, err
+func (j *JSONIterator) Next() (*Query, error) {
+	return j.Query()
 }
 
 // Close closes the underlying ReaderCloser stream
@@ -344,28 +343,24 @@ func NewJSONMapIterator(stream io.ReadCloser) *JSONMapIterator {
 }
 
 // Next returns the name and the content of the current attribute.
-func (j *JSONMapIterator) Next() (string, *Query, error) {
-	id, err := j.String()
+func (j *JSONMapIterator) Next() (*Query, error) {
+	_, err := j.String()
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
-	obj, err := j.Query()
-	if err != nil {
-		return "", nil, err
-	}
-	return id, obj, nil
+	return j.Query()
 }
 
-func (j *JSONMapIterator) Range(f func(string, *Query) error) error {
+func (j *JSONMapIterator) Range(f func(*Query) error) error {
 	if err := j.Enter(); err != nil {
 		return err
 	}
 	for j.More() {
-		name, obj, err := j.Next()
+		obj, err := j.Next()
 		if err != nil {
 			return err
 		}
-		if err = f(name, obj); err != nil {
+		if err = f(obj); err != nil {
 			return err
 		}
 	}
@@ -392,38 +387,38 @@ func NewJSONFilterIterator(filter []string, stream io.ReadCloser) *JSONFilterIte
 	}
 }
 
-func (j *JSONFilterIterator) Next() (string, *Query, error) {
+func (j *JSONFilterIterator) Next() (*Query, error) {
 	result := make(map[string]interface{}, len(j.Filter))
 	for j.More() {
 		id, err := j.String()
 		if err != nil {
-			return "", nil, err
+			return nil, err
 		}
 		if j.Filter[id] {
 			obj, err := j.Interface()
 			if err != nil {
-				return "", nil, err
+				return nil, err
 			}
 			result[id] = obj
 			continue
 		}
 		if err = j.Skip(); err != nil {
-			return "", nil, err
+			return nil, err
 		}
 	}
-	return "", NewQuery(result), nil
+	return NewQuery(result), nil
 }
 
-func (j *JSONFilterIterator) Range(f func(string, *Query) error) error {
+func (j *JSONFilterIterator) Range(f func(*Query) error) error {
 	if err := j.Enter(); err != nil {
 		return err
 	}
 	for j.More() {
-		name, obj, err := j.Next()
+		obj, err := j.Next()
 		if err != nil {
 			return err
 		}
-		if err = f(name, obj); err != nil {
+		if err = f(obj); err != nil {
 			return err
 		}
 	}
