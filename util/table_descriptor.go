@@ -147,11 +147,11 @@ func (t *TableDescriptor) Preprocess(i JSONResponse) error {
 	return i.Enter()
 }
 
-func processColumns(scope *Scope, cols []*TableColumnDescriptor, name string, q *Query) []string {
+func processColumns(scope *Scope, cols []*TableColumnDescriptor, q *Query) []string {
 	result := make([]string, len(cols))
 	for i, c := range cols {
 		if c.ID {
-			result[i] = name
+			result[i] = q.JSONName()
 			continue
 		}
 		result[i] = c.Extract(scope, q)
@@ -161,20 +161,19 @@ func processColumns(scope *Scope, cols []*TableColumnDescriptor, name string, q 
 
 // WriteRow writes one or more rows out
 func (t *TableDescriptor) WriteRow(q *Query, w *RowWriter, wide bool) error {
-	name := q.JSONName()
 	cols := t.thin
 	if wide {
 		cols = t.wide
 	}
 	if t.Range == nil {
-		out := processColumns(rootScope, cols, name, q)
+		out := processColumns(rootScope, cols, q)
 		return w.Write(out...)
 	}
 	r := t.Range
-	s := NewScope(rootScope, t.Vars, name, q)
+	s := NewScope(rootScope, t.Vars, q)
 	return q.RangeAttributesE(func(name string, q *Query) error {
-		ss := NewScope(s, r.Vars, name, q)
-		out := processColumns(ss, cols, name, q)
+		ss := NewScope(s, r.Vars, q)
+		out := processColumns(ss, cols, q)
 		if r.Post != nil {
 			for _, v := range r.Post.Vars {
 				ss.Set(v.Name, v.Value)
@@ -358,12 +357,12 @@ func (s *Scope) Set(name, value string) bool {
 }
 
 // NewScope creates an initialized Scope object
-func NewScope(parent *Scope, vars []*DescriptorVars, name string, q *Query) *Scope {
+func NewScope(parent *Scope, vars []*DescriptorVars, q *Query) *Scope {
 	result := make(map[string]*Query, len(vars))
 	for _, v := range vars {
 		if v.ID {
 			// store the name as a new query
-			result[v.Name] = NewQuery(name)
+			result[v.Name] = NewQuery(q.JSONName())
 			continue
 		}
 		switch v.Cast {

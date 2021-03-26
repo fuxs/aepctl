@@ -101,7 +101,7 @@ func (ps *jsonPath) Path() string {
 	}
 	var buffer strings.Builder
 	next := false
-	for _, e := range (*ps)[:l-2] {
+	for _, e := range (*ps)[:l-1] {
 		if next {
 			buffer.WriteString(".")
 		} else {
