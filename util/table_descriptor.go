@@ -362,6 +362,7 @@ func NewScope(parent *Scope, vars []*DescriptorVars, name string, q *Query) *Sco
 	result := make(map[string]*Query, len(vars))
 	for _, v := range vars {
 		if v.ID {
+			// store the name as a new query
 			result[v.Name] = NewQuery(name)
 			continue
 		}

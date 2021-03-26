@@ -36,7 +36,7 @@ func (m Mapper) LookupE(key string) (string, error) {
 	if result, ok := m[key]; ok {
 		return result, nil
 	}
-	return "", fmt.Errorf("Could not find key %v", key)
+	return "", fmt.Errorf("could not find key %v", key)
 }
 
 // GetL normalizes the key to lower case before getting the value. If no value can be found the original key will be returned.

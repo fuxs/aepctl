@@ -258,11 +258,11 @@ func LineCount(str string) int {
 	return n
 }
 
-func Comma(ar []string) string {
-	return Concat(ar, ",")
+func Comma(ar ...string) string {
+	return Concat(",", ar...)
 }
 
-func Concat(ar []string, sep string) string {
+func Concat(sep string, ar ...string) string {
 	var buffer strings.Builder
 	next := false
 	for _, str := range ar {

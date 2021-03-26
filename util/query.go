@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"strconv"
 )
 
 // Query supports queries on raw json objects
@@ -64,6 +65,10 @@ func (q *Query) JSONPath() string {
 	return q.path
 }
 
+func (q *Query) JSONFullPath() string {
+	return Concat(".", q.path, q.name)
+}
+
 // Path queries nested objects, e.g. property a.b.c will be queried with Path("a","b","c")
 func (q *Query) Path(path ...string) *Query {
 	cur := q.obj
@@ -71,10 +76,21 @@ func (q *Query) Path(path ...string) *Query {
 		if next, ok := cur.(map[string]interface{}); ok {
 			cur = next[p]
 		} else {
-			return &Query{obj: nil}
+			return &Query{}
 		}
 	}
-	return &Query{obj: cur}
+	l := len(path)
+	var name string
+	if l == 0 {
+		name = q.name
+	} else {
+		name = path[l-1]
+	}
+	var p string
+	if l > 1 {
+		p = Concat(".", path[:l-2]...)
+	}
+	return &Query{obj: cur, name: name, path: Concat(".", p)}
 }
 
 // Interface returns the current object
@@ -139,8 +155,10 @@ func (q *Query) Length() int {
 func (q *Query) QueryArray() []*Query {
 	if ar, ok := q.obj.([]interface{}); ok {
 		response := make([]*Query, len(ar))
-		for i, obj := range ar {
-			response[i] = &Query{obj: obj}
+		path := q.JSONFullPath()
+		for index, obj := range ar {
+			name := strconv.FormatInt(int64(index), 10)
+			response[index] = &Query{obj: obj, name: name, path: path}
 		}
 		return response
 	}
@@ -157,8 +175,10 @@ func (q *Query) Array() []interface{} {
 // Range executes the passed function on all children of the current object
 func (q *Query) Range(rf func(*Query)) {
 	if ar, ok := q.obj.([]interface{}); ok {
-		for _, obj := range ar {
-			rf(&Query{obj: obj})
+		path := q.JSONFullPath()
+		for index, obj := range ar {
+			name := strconv.FormatInt(int64(index), 10)
+			rf(&Query{obj: obj, name: name, path: path})
 		}
 	}
 }
@@ -166,8 +186,10 @@ func (q *Query) Range(rf func(*Query)) {
 // RangeI executes the passed function on all children of the current object. It provides the index of the object.
 func (q *Query) RangeI(rf func(int, *Query)) {
 	if ar, ok := q.obj.([]interface{}); ok {
-		for i, obj := range ar {
-			rf(i, &Query{obj: obj})
+		path := q.JSONFullPath()
+		for index, obj := range ar {
+			name := strconv.FormatInt(int64(index), 10)
+			rf(index, &Query{obj: obj, name: name, path: path})
 		}
 	}
 }
@@ -177,14 +199,15 @@ func (q *Query) Concat(separator string, rf func(*Query) string) string {
 	var buffer bytes.Buffer
 	if ar, ok := q.obj.([]interface{}); ok {
 		next := false
-		for _, obj := range ar {
+		path := q.JSONFullPath()
+		for index, obj := range ar {
 			if next {
 				buffer.WriteString(separator)
 			} else {
 				next = true
 			}
-			buffer.WriteString(rf(&Query{obj: obj}))
-
+			name := strconv.FormatInt(int64(index), 10)
+			buffer.WriteString(rf(&Query{obj: obj, name: name, path: path}))
 		}
 	}
 	return buffer.String()
@@ -195,7 +218,8 @@ func (q *Query) Get(index int) *Query {
 	var result *Query
 	if ar, ok := q.obj.([]interface{}); ok {
 		if index < len(ar) {
-			result = &Query{obj: ar[index]}
+			name := strconv.FormatInt(int64(index), 10)
+			result = &Query{obj: ar[index], name: name, path: q.JSONFullPath()}
 		}
 	}
 	return result
@@ -204,8 +228,9 @@ func (q *Query) Get(index int) *Query {
 // RangeAttributes executes the passed function on all children of the current object
 func (q *Query) RangeAttributes(rf func(string, *Query)) {
 	if ar, ok := q.obj.(map[string]interface{}); ok {
+		path := q.JSONFullPath()
 		for k, v := range ar {
-			rf(k, &Query{obj: v})
+			rf(k, &Query{obj: v, name: k, path: path})
 		}
 	}
 }
@@ -213,8 +238,9 @@ func (q *Query) RangeAttributes(rf func(string, *Query)) {
 // RangeAttributesE executes the passed function on all children of the current object
 func (q *Query) RangeAttributesE(rf func(string, *Query) error) error {
 	if ar, ok := q.obj.(map[string]interface{}); ok {
+		path := q.JSONFullPath()
 		for k, v := range ar {
-			if err := rf(k, &Query{obj: v, name: k}); err != nil {
+			if err := rf(k, &Query{obj: v, name: k, path: path}); err != nil {
 				return err
 			}
 		}

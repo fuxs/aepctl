@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
+	"strings"
 )
 
 type jsonState int
@@ -44,30 +46,90 @@ func (jss *jsonStateStack) Pop() jsonState {
 	return result
 }
 
-type jsonPath []string
+type jsonPathElement struct {
+	array bool
+	name  string
+	index int
+}
 
-func (ps *jsonPath) Push(p string) {
+func NewJSONPathAttribute(name string) *jsonPathElement {
+	return &jsonPathElement{name: name}
+}
+
+func NewJSONPathIndex(index int) *jsonPathElement {
+	return &jsonPathElement{array: true, index: index, name: strconv.FormatInt(int64(index), 10)}
+}
+
+type jsonPath []*jsonPathElement
+
+func (ps *jsonPath) Push(p *jsonPathElement) {
 	*ps = append(*ps, p)
 }
 
-func (ps *jsonPath) Peek() string {
+func (ps *jsonPath) Peek() *jsonPathElement {
 	l := len(*ps)
 	if l == 0 {
-		return ""
+		return nil
 	}
 	result := (*ps)[l-1]
 	*ps = (*ps)[:l-1]
 	return result
 }
 
-func (ps *jsonPath) Pop() string {
+func (ps *jsonPath) Pop() *jsonPathElement {
 	l := len(*ps)
 	if l == 0 {
-		return ""
+		return nil
 	}
 	result := (*ps)[l-1]
 	*ps = (*ps)[:l-1]
 	return result
+}
+
+func (ps *jsonPath) Name() string {
+	l := len(*ps)
+	if l == 0 {
+		return ""
+	}
+	return (*ps)[l-1].name
+}
+
+func (ps *jsonPath) Path() string {
+	l := len(*ps)
+	if l < 2 {
+		return ""
+	}
+	var buffer strings.Builder
+	next := false
+	for _, e := range (*ps)[:l-2] {
+		if next {
+			buffer.WriteString(".")
+		} else {
+			next = true
+		}
+		buffer.WriteString(e.name)
+	}
+	return buffer.String()
+}
+
+func (ps *jsonPath) String() string {
+	var buffer strings.Builder
+	next := false
+	for _, e := range *ps {
+		if next {
+			buffer.WriteString(".")
+		} else {
+			next = true
+		}
+		buffer.WriteString(e.name)
+	}
+	return buffer.String()
+}
+
+func (ps *jsonPath) Inc() {
+	if e := ps.Peek(); e != nil {
+		e.index++
+	}
 }
 
 type JSONCursor struct {
@@ -89,11 +151,11 @@ func (j *JSONCursor) PathInfo() (string, string) {
 	if l == 0 {
 		return "", ""
 	}
-	name := j.jp[l-1]
+	name := j.jp.Name()
 	if l == 1 {
 		return name, ""
 	}
-	return name, Concat(j.jp[:l-2], ".")
+	return name, j.jp.Path()
 }
 
 func (j *JSONCursor) More() bool {
@@ -129,7 +191,7 @@ func (j *JSONCursor) Token() (json.Token, error) {
 	case JSONS_O:
 		str, ok := t.(string)
 		if ok {
-			j.jp.Push(str)
+			j.jp.Push(NewJSONPathAttribute(str))
 			j.jss.Push(JSONS_OV)
 			return t, nil
 		}
@@ -149,9 +211,11 @@ func (j *JSONCursor) Token() (json.Token, error) {
 				j.jss.Push(JSONS_O)
 			case '[':
 				j.jss.Push(JSONS_A)
+				j.jp.Push(NewJSONPathIndex(0))
 			case '}':
 				j.jss.Pop()
 				if j.jss.Peek() == JSONS_O {
+					// we are not in an array, thus pop the attribute name
 					j.jp.Pop()
 				}
 			default:
@@ -166,12 +230,15 @@ func (j *JSONCursor) Token() (json.Token, error) {
 				j.jss.Push(JSONS_O)
 			case '[':
 				j.jss.Push(JSONS_A)
+				j.jp.Push(NewJSONPathIndex(0))
 			case ']':
 				j.jss.Pop()
+				j.jp.Pop()
 			default:
 				return nil, fmt.Errorf("expecting [,{ or ] at position %v", j.dec.InputOffset())
 			}
 		}
+		j.jp.Inc()
 	default:
 		return nil, errors.New("state error")
 	}
