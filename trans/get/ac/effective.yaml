@@ -2,6 +2,6 @@ iterator: object
 path: [policies]
 columns:
   - name: OBJECT
-    id: true
+    meta: name
   - name: VALUES
     type: list

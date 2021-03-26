@@ -3,7 +3,7 @@
 iterator: object
 columns:
   - name: ID
-    id: true
+    meta: name
   - name: STATUS
     path: [status]
   - name: CREATED

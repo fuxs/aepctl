@@ -92,7 +92,7 @@ func NewTableDescriptor(def string) (*TableDescriptor, error) {
 			return nil, fmt.Errorf("name is empty in column %v", i)
 		}
 		// determine column type
-		if !c.ID {
+		if c.Meta == "" {
 			// c.Type has highest priority
 			if c.Type == "" {
 				c.Type = "str"
@@ -150,8 +150,12 @@ func (t *TableDescriptor) Preprocess(i JSONResponse) error {
 func processColumns(scope *Scope, cols []*TableColumnDescriptor, q *Query) []string {
 	result := make([]string, len(cols))
 	for i, c := range cols {
-		if c.ID {
+		switch c.Meta {
+		case "name":
 			result[i] = q.JSONName()
+			continue
+		case "path":
+			result[i] = q.JSONPath()
 			continue
 		}
 		result[i] = c.Extract(scope, q)
@@ -213,7 +217,7 @@ type TableColumnDescriptor struct {
 	Name       string   `json:"name" yaml:"name"`
 	Long       string   `json:"long" yaml:"long"`
 	Type       string   `json:"type" yaml:"type"`
-	ID         bool     `json:"id,omitempty" yaml:"id,omitempty"`
+	Meta       string   `json:"meta,omitempty" yaml:"meta,omitempty"`
 	Path       []string `json:"path,omitempty" yaml:"path,omitempty"`
 	Format     string   `json:"format,omitempty" yaml:"format,omitempty"`
 	Parameters []string `json:"parameters,omitempty" yaml:"parameters,omitempty"`
@@ -293,7 +297,7 @@ func (t *TableColumnDescriptor) assignFunc() {
 type DescriptorVars struct {
 	Name  string `json:"name,omitempty" yaml:"name,omitempty"`
 	Type  string `json:"type,omitempty" yaml:"type,omitempty"`
-	ID    bool   `json:"id,omitempty" yaml:"id,omitempty"`
+	Meta  string `json:"meta,omitempty" yaml:"meta,omitempty"`
 	Cast  string `json:"cast,omitempty" yaml:"cast,omitempty"`
 	Value string `json:"value,omitempty" yaml:"value,omitempty"`
 }
@@ -360,9 +364,12 @@ func (s *Scope) Set(name, value string) bool {
 func NewScope(parent *Scope, vars []*DescriptorVars, q *Query) *Scope {
 	result := make(map[string]*Query, len(vars))
 	for _, v := range vars {
-		if v.ID {
-			// store the name as a new query
+		switch v.Meta {
+		case "name":
 			result[v.Name] = NewQuery(q.JSONName())
+			continue
+		case "path":
+			result[v.Name] = NewQuery(q.JSONPath())
 			continue
 		}
 		switch v.Cast {

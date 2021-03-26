@@ -2,7 +2,7 @@ iterator: object
 path: [permissions]
 vars:
   - name: operationName
-    id: true
+    meta: name
 range:
   vars:
     - name: permissions
@@ -12,7 +12,7 @@ range:
     - name: OPERATION
       var: operationName
     - name: OBJECT
-      id: true
+      meta: name
     - name: R
       long: READ
       var: permissions
