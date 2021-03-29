@@ -72,7 +72,6 @@ func (ps *jsonPath) Peek() *jsonPathElement {
 		return nil
 	}
 	result := (*ps)[l-1]
-	*ps = (*ps)[:l-1]
 	return result
 }
 
@@ -166,6 +165,28 @@ func (j *JSONCursor) Offset() int64 {
 	return j.dec.InputOffset()
 }
 
+func (j *JSONCursor) MoreTokens() bool {
+	return j.jss.Peek() != JSONS_DONE
+}
+
+func (j *JSONCursor) NextValue() (*Query, error) {
+	state := j.jss.Peek()
+	for state != JSONS_DONE {
+		path := j.jp[:]
+		t, err := j.Token()
+		if err != nil {
+			return nil, err
+		}
+		if state == JSONS_OV || state == JSONS_A {
+			if _, ok := t.(json.Delim); !ok {
+				return NewQueryM(t, path.Name(), path.Path()), nil
+			}
+		}
+		state = j.jss.Peek()
+	}
+	return nil, io.EOF
+}
+
 func (j *JSONCursor) Token() (json.Token, error) {
 	state := j.jss.Peek()
 	if state == JSONS_DONE {
@@ -204,6 +225,7 @@ func (j *JSONCursor) Token() (json.Token, error) {
 			j.jp.Pop()
 		}
 	case JSONS_OV:
+		j.jss.Pop()
 		d, ok := t.(json.Delim)
 		if ok {
 			switch d {
@@ -213,14 +235,15 @@ func (j *JSONCursor) Token() (json.Token, error) {
 				j.jss.Push(JSONS_A)
 				j.jp.Push(NewJSONPathIndex(0))
 			case '}':
-				j.jss.Pop()
-				if j.jss.Peek() == JSONS_O {
-					// we are not in an array, thus pop the attribute name
-					j.jp.Pop()
-				}
+				//if j.jss.Peek() == JSONS_O {
+				// we are not in an array, thus pop the attribute name
+				j.jp.Pop()
+				//}
 			default:
 				return nil, fmt.Errorf("expecting [,{ or } at position %v", j.dec.InputOffset())
 			}
+		} else {
+			j.jp.Pop()
 		}
 	case JSONS_A:
 		d, ok := t.(json.Delim)
@@ -233,6 +256,7 @@ func (j *JSONCursor) Token() (json.Token, error) {
 				j.jp.Push(NewJSONPathIndex(0))
 			case ']':
 				j.jss.Pop()
+				j.jp.Pop()
 				j.jp.Pop()
 			default:
 				return nil, fmt.Errorf("expecting [,{ or ] at position %v", j.dec.InputOffset())

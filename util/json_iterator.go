@@ -57,7 +57,7 @@ func NewJSONIterator(stream io.ReadCloser) *JSONIterator {
 
 // More checks if there is another element in the current object or array
 func (j *JSONIterator) More() bool {
-	return j.c.More()
+	return j.c.MoreTokens()
 }
 
 func (j *JSONIterator) Token() (json.Token, error) {
@@ -105,7 +105,8 @@ func (j *JSONIterator) Skip() error {
 		return err
 	}
 	// must be '['
-	for t, err = j.c.Token(); err != nil; t, err = j.c.Token() {
+	t, err = j.c.Token()
+	for err == nil {
 		d, ok = t.(json.Delim)
 		if ok {
 			switch d {
@@ -118,6 +119,7 @@ func (j *JSONIterator) Skip() error {
 				}
 			}
 		}
+		t, err = j.c.Token()
 	}
 	return err
 }
@@ -182,7 +184,7 @@ func (j *JSONIterator) Path(path ...string) error {
 			if err != nil {
 				return err
 			}
-			if id == p {
+			if id == p || p == "?" {
 				found = true
 				break
 			}

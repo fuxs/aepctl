@@ -196,6 +196,8 @@ func (t *TableDescriptor) Iterator(stream io.ReadCloser) (JSONResponse, error) {
 		return NewJSONFilterIterator(t.Filter, stream), nil
 	case "object":
 		return NewJSONMapIterator(stream), nil
+	case "value":
+		return NewJSONValueIterator(stream), nil
 	default:
 		return nil, fmt.Errorf("unknown iterator %v", t.Iter)
 	}
