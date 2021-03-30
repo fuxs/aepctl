@@ -75,53 +75,7 @@ func (j *JSONIterator) Offset() int64 {
 
 // Skip skips the next element like for example a string, object or array
 func (j *JSONIterator) Skip() error {
-	t, err := j.c.Token()
-	if err != nil {
-		return err
-	}
-	d, ok := t.(json.Delim)
-	if !ok || d == '}' || d == ']' {
-		// everything is fine
-		return nil
-	}
-	counter := 1
-	if d == '{' {
-		t, err = j.c.Token()
-		for err == nil {
-			d, ok = t.(json.Delim)
-			if ok {
-				switch d {
-				case '{':
-					counter++
-				case '}':
-					counter--
-					if counter == 0 {
-						return nil
-					}
-				}
-			}
-			t, err = j.c.Token()
-		}
-		return err
-	}
-	// must be '['
-	t, err = j.c.Token()
-	for err == nil {
-		d, ok = t.(json.Delim)
-		if ok {
-			switch d {
-			case '[':
-				counter++
-			case ']':
-				counter--
-				if counter == 0 {
-					return nil
-				}
-			}
-		}
-		t, err = j.c.Token()
-	}
-	return err
+	return j.c.Skip()
 }
 
 // Enter moves forward to the first element
@@ -237,12 +191,11 @@ func (j *JSONIterator) Interface() (interface{}, error) {
 }
 
 func (j *JSONIterator) Query() (*Query, error) {
-	name, path := j.c.PathInfo()
 	obj, err := j.Interface()
 	if err != nil {
 		return nil, err
 	}
-	return NewQueryM(obj, name, path), nil
+	return NewQueryM(obj, j.c.jp[:]), nil
 }
 
 // Bool returns the boolean at the current position

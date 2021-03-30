@@ -1,0 +1,8 @@
+iterator: value
+select: ["?", entity]
+columns:
+  - name: ATTRIBUTE
+    meta: name
+  - name: VALUE
+  - name: PATH
+    meta: path

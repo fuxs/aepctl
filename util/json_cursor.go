@@ -62,8 +62,8 @@ func NewJSONPathIndex(index int) *jsonPathElement {
 
 type jsonPath []*jsonPathElement
 
-func (ps *jsonPath) Push(p *jsonPathElement) {
-	*ps = append(*ps, p)
+func (ps *jsonPath) Push(p ...*jsonPathElement) {
+	*ps = append(*ps, p...)
 }
 
 func (ps *jsonPath) Peek() *jsonPathElement {
@@ -111,6 +111,20 @@ func (ps *jsonPath) Path() string {
 	return buffer.String()
 }
 
+func (ps *jsonPath) Full() string {
+	var buffer strings.Builder
+	next := false
+	for _, e := range *ps {
+		if next {
+			buffer.WriteString(".")
+		} else {
+			next = true
+		}
+		buffer.WriteString(e.name)
+	}
+	return buffer.String()
+}
+
 func (ps *jsonPath) String() string {
 	var buffer strings.Builder
 	next := false
@@ -129,6 +143,26 @@ func (ps *jsonPath) Inc() {
 	if e := ps.Peek(); e != nil {
 		e.index++
 	}
+}
+
+// Matches returns true,false
+func (ps *jsonPath) Matches(path []string) bool {
+	if len(path) > len(*ps) {
+		return false
+	}
+	for i, pe := range path {
+		if pe == "?" || pe == (*ps)[i].name {
+			continue
+		}
+		return false
+	}
+	return true
+}
+
+func (ps *jsonPath) Clone() jsonPath {
+	result := make(jsonPath, len(*ps))
+	copy(result, *ps)
+	return result
 }
 
 type JSONCursor struct {
@@ -169,6 +203,17 @@ func (j *JSONCursor) MoreTokens() bool {
 	return j.jss.Peek() != JSONS_DONE
 }
 
+func (j *JSONCursor) NextValueF(filter []string) (*Query, error) {
+	q, err := j.NextValue()
+	for err == nil {
+		if q.jp.Matches(filter) {
+			return q, nil
+		}
+		q, err = j.NextValue()
+	}
+	return nil, err
+}
+
 func (j *JSONCursor) NextValue() (*Query, error) {
 	state := j.jss.Peek()
 	for state != JSONS_DONE {
@@ -179,7 +224,7 @@ func (j *JSONCursor) NextValue() (*Query, error) {
 		}
 		if state == JSONS_OV || state == JSONS_A {
 			if _, ok := t.(json.Delim); !ok {
-				return NewQueryM(t, path.Name(), path.Path()), nil
+				return NewQueryM(t, path), nil
 			}
 		}
 		state = j.jss.Peek()
@@ -267,6 +312,61 @@ func (j *JSONCursor) Token() (json.Token, error) {
 		return nil, errors.New("state error")
 	}
 	return t, nil
+}
+
+// Skip skips the next element like for example a string, object or array
+func (j *JSONCursor) Skip() error {
+	state := j.jss.Peek()
+	if state == JSONS_DONE {
+		return io.EOF
+	}
+	t, err := j.Token()
+	if err != nil {
+		return err
+	}
+	d, ok := t.(json.Delim)
+	if !ok || d == '}' || d == ']' {
+		// everything is fine
+		return nil
+	}
+	counter := 1
+	if d == '{' {
+		t, err = j.Token()
+		for err == nil {
+			d, ok = t.(json.Delim)
+			if ok {
+				switch d {
+				case '{':
+					counter++
+				case '}':
+					counter--
+					if counter == 0 {
+						return nil
+					}
+				}
+			}
+			t, err = j.Token()
+		}
+		return err
+	}
+	// must be '['
+	t, err = j.Token()
+	for err == nil {
+		d, ok = t.(json.Delim)
+		if ok {
+			switch d {
+			case '[':
+				counter++
+			case ']':
+				counter--
+				if counter == 0 {
+					return nil
+				}
+			}
+		}
+		t, err = j.Token()
+	}
+	return err
 }
 
 func (j *JSONCursor) Decode(v interface{}) error {

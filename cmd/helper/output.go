@@ -230,6 +230,9 @@ func (o *OutputConf) streamResult(i util.JSONResponse) error {
 		for i.More() {
 			q, err := i.Next()
 			if err != nil {
+				if err == io.EOF {
+					return nil
+				}
 				return err
 			}
 			if err = o.tf.WriteRow(q, w, wide); err != nil {
@@ -274,7 +277,6 @@ func (o *OutputConf) PrintTable(paged api.Paged) error {
 	if err := w.Write(o.tf.Header(wide)...); err != nil {
 		return err
 	}
-	w.Flush() // TODO debug only
 	return paged.Execute(o.td.Path, func(j util.JSONResponse) error {
 		return j.Range(func(q *util.Query) error {
 			return o.tf.WriteRow(q, w, wide)

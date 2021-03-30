@@ -20,14 +20,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"strconv"
+	"runtime"
 )
 
 // Query supports queries on raw json objects
 type Query struct {
-	obj  interface{}
-	name string
-	path string
+	obj interface{}
+	jp  jsonPath
 }
 
 // NewQuery creates an initialized query object
@@ -35,8 +34,8 @@ func NewQuery(obj interface{}) *Query {
 	return &Query{obj: obj}
 }
 
-func NewQueryM(obj interface{}, name, path string) *Query {
-	return &Query{obj: obj, name: name, path: path}
+func NewQueryM(obj interface{}, jp jsonPath) *Query {
+	return &Query{obj: obj, jp: jp}
 }
 
 func NewQueryStream(stream io.Reader) (*Query, error) {
@@ -58,39 +57,33 @@ func UnmarshallQuery(data []byte) (*Query, error) {
 }
 
 func (q *Query) JSONName() string {
-	return q.name
+	if len(q.jp) == 0 {
+		runtime.Breakpoint()
+	}
+	return q.jp.Name()
 }
 
 func (q *Query) JSONPath() string {
-	return q.path
+	return q.jp.Path()
 }
 
 func (q *Query) JSONFullPath() string {
-	return Concat(".", q.path, q.name)
+	return q.jp.Full()
 }
 
 // Path queries nested objects, e.g. property a.b.c will be queried with Path("a","b","c")
 func (q *Query) Path(path ...string) *Query {
 	cur := q.obj
+	jp := q.jp.Clone()
 	for _, p := range path {
 		if next, ok := cur.(map[string]interface{}); ok {
 			cur = next[p]
+			jp.Push(NewJSONPathAttribute(p))
 		} else {
 			return &Query{}
 		}
 	}
-	l := len(path)
-	var name string
-	if l == 0 {
-		name = q.name
-	} else {
-		name = path[l-1]
-	}
-	var p string
-	if l > 1 {
-		p = Concat(".", path[:l-2]...)
-	}
-	return &Query{obj: cur, name: name, path: Concat(".", p)}
+	return NewQueryM(cur, jp)
 }
 
 // Interface returns the current object
@@ -155,10 +148,10 @@ func (q *Query) Length() int {
 func (q *Query) QueryArray() []*Query {
 	if ar, ok := q.obj.([]interface{}); ok {
 		response := make([]*Query, len(ar))
-		path := q.JSONFullPath()
 		for index, obj := range ar {
-			name := strconv.FormatInt(int64(index), 10)
-			response[index] = &Query{obj: obj, name: name, path: path}
+			jp := q.jp.Clone()
+			jp.Push(NewJSONPathIndex(index))
+			response[index] = &Query{obj: obj, jp: jp}
 		}
 		return response
 	}
@@ -175,10 +168,10 @@ func (q *Query) Array() []interface{} {
 // Range executes the passed function on all children of the current object
 func (q *Query) Range(rf func(*Query)) {
 	if ar, ok := q.obj.([]interface{}); ok {
-		path := q.JSONFullPath()
 		for index, obj := range ar {
-			name := strconv.FormatInt(int64(index), 10)
-			rf(&Query{obj: obj, name: name, path: path})
+			jp := q.jp.Clone()
+			jp.Push(NewJSONPathIndex(index))
+			rf(&Query{obj: obj, jp: jp})
 		}
 	}
 }
@@ -186,10 +179,10 @@ func (q *Query) Range(rf func(*Query)) {
 // RangeI executes the passed function on all children of the current object. It provides the index of the object.
 func (q *Query) RangeI(rf func(int, *Query)) {
 	if ar, ok := q.obj.([]interface{}); ok {
-		path := q.JSONFullPath()
 		for index, obj := range ar {
-			name := strconv.FormatInt(int64(index), 10)
-			rf(index, &Query{obj: obj, name: name, path: path})
+			jp := q.jp.Clone()
+			jp.Push(NewJSONPathIndex(index))
+			rf(index, &Query{obj: obj, jp: jp})
 		}
 	}
 }
@@ -199,15 +192,15 @@ func (q *Query) Concat(separator string, rf func(*Query) string) string {
 	var buffer bytes.Buffer
 	if ar, ok := q.obj.([]interface{}); ok {
 		next := false
-		path := q.JSONFullPath()
 		for index, obj := range ar {
 			if next {
 				buffer.WriteString(separator)
 			} else {
 				next = true
 			}
-			name := strconv.FormatInt(int64(index), 10)
-			buffer.WriteString(rf(&Query{obj: obj, name: name, path: path}))
+			jp := q.jp.Clone()
+			jp.Push(NewJSONPathIndex(index))
+			buffer.WriteString(rf(&Query{obj: obj, jp: jp}))
 		}
 	}
 	return buffer.String()
@@ -218,8 +211,9 @@ func (q *Query) Get(index int) *Query {
 	var result *Query
 	if ar, ok := q.obj.([]interface{}); ok {
 		if index < len(ar) {
-			name := strconv.FormatInt(int64(index), 10)
-			result = &Query{obj: ar[index], name: name, path: q.JSONFullPath()}
+			jp := q.jp.Clone()
+			jp.Push(NewJSONPathIndex(index))
+			result = &Query{obj: ar[index], jp: jp}
 		}
 	}
 	return result
@@ -228,9 +222,10 @@ func (q *Query) Get(index int) *Query {
 // RangeAttributes executes the passed function on all children of the current object
 func (q *Query) RangeAttributes(rf func(string, *Query)) {
 	if ar, ok := q.obj.(map[string]interface{}); ok {
-		path := q.JSONFullPath()
 		for k, v := range ar {
-			rf(k, &Query{obj: v, name: k, path: path})
+			jp := q.jp.Clone()
+			jp.Push(NewJSONPathAttribute(k))
+			rf(k, &Query{obj: v, jp: jp})
 		}
 	}
 }
@@ -238,9 +233,10 @@ func (q *Query) RangeAttributes(rf func(string, *Query)) {
 // RangeAttributesE executes the passed function on all children of the current object
 func (q *Query) RangeAttributesE(rf func(string, *Query) error) error {
 	if ar, ok := q.obj.(map[string]interface{}); ok {
-		path := q.JSONFullPath()
 		for k, v := range ar {
-			if err := rf(k, &Query{obj: v, name: k, path: path}); err != nil {
+			jp := q.jp.Clone()
+			jp.Push(NewJSONPathAttribute(k))
+			if err := rf(k, &Query{obj: v, jp: jp}); err != nil {
 				return err
 			}
 		}

@@ -30,6 +30,7 @@ type TableDescriptor struct {
 	Columns []*TableColumnDescriptor `json:"columns,omitempty" yaml:"columns,omitempty"`
 	//	Wide    []*TableColumnDescriptor `json:"wide,omitempty" yaml:"wide,omitempty"`
 	Path   []string          `json:"path,omitempty" yaml:"path,omitempty"`
+	Select []string          `json:"select,omitempty" yaml:"select,omitempty"`
 	Iter   string            `json:"iterator,omitempty" yaml:"iterator,omitempty"`
 	Filter []string          `json:"filter,omitempty" yaml:"filter,omitempty"`
 	Vars   []*DescriptorVars `json:"vars,omitempty" yaml:"vars,omitempty"`
@@ -197,7 +198,7 @@ func (t *TableDescriptor) Iterator(stream io.ReadCloser) (JSONResponse, error) {
 	case "object":
 		return NewJSONMapIterator(stream), nil
 	case "value":
-		return NewJSONValueIterator(stream), nil
+		return NewJSONValueIterator(stream, t.Select), nil
 	default:
 		return nil, fmt.Errorf("unknown iterator %v", t.Iter)
 	}
