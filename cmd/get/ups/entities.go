@@ -98,3 +98,39 @@ func NewProfileCommand(conf *helper.Configuration) *cobra.Command {
 	flags.BoolVar(&p.CA, "ca", false, "Feature flag for enabling computed attributes for lookup")
 	return cmd
 }
+
+func NewEventsCommand(conf *helper.Configuration) *cobra.Command {
+	output := helper.NewOutputConf(nil)
+	p := &api.UPSEntitiesParams{Schema: "_xdm.context.experienceevent", RelatedSchema: "_xdm.context.profile"}
+	cmd := &cobra.Command{
+		Use:                   "events",
+		Short:                 "Display events for a profile",
+		Long:                  "long",
+		Example:               "example",
+		DisableFlagsInUseLine: true,
+		Args:                  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
+			helper.CheckErrs(output.SetTransformationFile(pkger.Include("/trans/get/ups/profile.yaml")))
+			p.RelatedID = args[0]
+			output.StreamResultRaw(api.UPSGetEntities(context.Background(), conf.Authentication, p))
+		},
+	}
+	output.AddOutputFlags(cmd)
+	flags := cmd.Flags()
+	// flags.StringVar(&p.Schema, "schema", "_xdm.context.profile", "XED schema class name, default is _xdm.context.profile")
+	// flags.StringVar(&p.RelatedSchema, "related-schema", "", "Must be set if schema is _xdm.context.experienceevent")
+	// flags.StringVarP(&p.ID, "id", "i", "", "ID of the entity. For Native XID lookup, use <XID> and leave ns empty")
+	//flags.StringVarP(&p.NS, "ns", "n", "", "Identity namespace code")
+	// flags.StringVar(&p.RelatedID, "related-id", "", "ID of the entity that the ExperienceEvents are associated with.")
+	flags.StringVar(&p.RelatedNS, "related-ns", "", "Identity namespace code")
+	flags.StringVar(&p.Fields, "fields", "", "Fields for the model object. By default, all fields will be fetched")
+	flags.StringVar(&p.MP, "mp", "", "ID of the merge policy")
+	flags.StringVar(&p.Start, "start", "", "Start time of Time range filter for ExperienceEvents")
+	flags.StringVar(&p.End, "end", "", "End time of Time range filter for ExperienceEvents")
+	flags.IntVar(&p.Limit, "limit", 0, "Number of records to return from the result")
+	flags.StringVar(&p.Order, "order", "", "The sort order of retrieved ExperienceEvents by timestamp")
+	flags.StringVar(&p.Property, "property", "", "End time of Time range filter for ExperienceEvents")
+	flags.BoolVar(&p.CA, "ca", false, "Feature flag for enabling computed attributes for lookup")
+	return cmd
+}

@@ -29,5 +29,6 @@ func NewUPSCommand(conf *helper.Configuration) *cobra.Command {
 	}
 	cmd.AddCommand(ups.NewEntitiesCommand(conf))
 	cmd.AddCommand(ups.NewProfileCommand(conf))
+	cmd.AddCommand(ups.NewEventsCommand(conf))
 	return cmd
 }
