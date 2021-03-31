@@ -57,7 +57,7 @@ func NewJSONIterator(stream io.ReadCloser) *JSONIterator {
 
 // More checks if there is another element in the current object or array
 func (j *JSONIterator) More() bool {
-	return j.c.MoreTokens()
+	return j.c.More()
 }
 
 func (j *JSONIterator) Token() (json.Token, error) {
@@ -191,11 +191,12 @@ func (j *JSONIterator) Interface() (interface{}, error) {
 }
 
 func (j *JSONIterator) Query() (*Query, error) {
+	jp := j.c.jp.Clone()
 	obj, err := j.Interface()
 	if err != nil {
 		return nil, err
 	}
-	return NewQueryM(obj, j.c.jp[:]), nil
+	return NewQueryM(obj, jp), nil
 }
 
 // Bool returns the boolean at the current position

@@ -18,3 +18,7 @@ func (j *JSONValueIterator) Next() (*Query, error) {
 	}
 	return j.c.NextValue()
 }
+
+func (j *JSONValueIterator) More() bool {
+	return j.c.MoreTokens()
+}

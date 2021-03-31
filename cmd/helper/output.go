@@ -227,6 +227,7 @@ func (o *OutputConf) streamResult(i util.JSONResponse) error {
 		if err := w.Write(o.tf.Header(wide)...); err != nil {
 			return err
 		}
+		w.Flush()
 		for i.More() {
 			q, err := i.Next()
 			if err != nil {
