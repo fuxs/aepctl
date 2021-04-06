@@ -42,5 +42,6 @@ func NewCommand(conf *helper.Configuration) *cobra.Command {
 	}
 	conf.AddAuthenticationFlags(cmd)
 	cmd.AddCommand(NewODCommand(conf))
+	cmd.AddCommand(NewCatalogCommand(conf))
 	return cmd
 }

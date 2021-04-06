@@ -17,6 +17,8 @@ specific language governing permissions and limitations under the License.
 package api
 
 import (
+	"errors"
+	"io"
 	"net/http"
 
 	"github.com/fuxs/aepctl/util"
@@ -37,9 +39,20 @@ func NewJSONFilterIterator(filter []string, res *http.Response, err error) (*uti
 }
 
 func NewQuery(res *http.Response, err error) (*util.Query, error) {
-	i, err := NewJSONIterator(res, err)
+	i, err := NewJSONIterator(HandleStatusCode(res, err))
 	if err != nil {
 		return nil, err
 	}
 	return i.Query()
+}
+
+func HandleStatusCode(res *http.Response, err error) (*http.Response, error) {
+	if err != nil || (res.StatusCode >= 200 && res.StatusCode < 300) {
+		return res, err
+	}
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+	return nil, errors.New(string(data))
 }
