@@ -17,11 +17,15 @@ specific language governing permissions and limitations under the License.
 package get
 
 import (
+	_ "embed"
+
 	"github.com/fuxs/aepctl/api/token"
 	"github.com/fuxs/aepctl/cmd/helper"
-	"github.com/markbates/pkger"
 	"github.com/spf13/cobra"
 )
+
+//go:embed token.yaml
+var transformation string
 
 // NewTokenCommand creates an initialized command object
 func NewTokenCommand(conf *helper.Configuration) *cobra.Command {
@@ -34,7 +38,7 @@ func NewTokenCommand(conf *helper.Configuration) *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			helper.CheckErr(output.SetTransformationFile(pkger.Include("/trans/get/token.yaml")))
+			helper.CheckErr(output.SetTransformationDesc(transformation))
 			output.StreamResultRaw(token.GetRaw(conf.Authentication))
 		},
 	}
