@@ -18,13 +18,16 @@ package flow
 
 import (
 	"context"
+	_ "embed"
 	"net/http"
 
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
-	"github.com/markbates/pkger"
 	"github.com/spf13/cobra"
 )
+
+//go:embed trans/connections.yaml
+var connectionsTransformation string
 
 // NewDatasetsCommand creates an initialized command object
 func NewConnectionsCommand(conf *helper.Configuration) *cobra.Command {
@@ -39,7 +42,7 @@ func NewConnectionsCommand(conf *helper.Configuration) *cobra.Command {
 		Args:                  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			helper.CheckErrs(output.SetTransformationFile(pkger.Include("/trans/get/flow/connections.yaml")))
+			helper.CheckErrs(output.SetTransformationDesc(connectionsTransformation))
 			//output.PB = cc
 			fp := api.NewFlowPaged(context.Background(), conf.Authentication, cc.p)
 			helper.CheckErr(output.Print(fp))

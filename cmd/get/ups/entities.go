@@ -18,15 +18,18 @@ package ups
 
 import (
 	"context"
+	_ "embed"
 	"time"
 
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
-	"github.com/markbates/pkger"
 	"github.com/spf13/cobra"
 )
 
-// NewBatchesCommand creates an initialized command object
+//go:embed trans/profile.yaml
+var profileTransformation string
+
+// NewEntitiesCommand creates an initialized command object
 func NewEntitiesCommand(conf *helper.Configuration) *cobra.Command {
 	output := helper.NewOutputConf(nil)
 	p := &api.UPSEntitiesParams{}
@@ -39,7 +42,7 @@ func NewEntitiesCommand(conf *helper.Configuration) *cobra.Command {
 		Args:                  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			helper.CheckErrs(output.SetTransformationFile(pkger.Include("/trans/get/catalog/batches.yaml")))
+			helper.CheckErrs(output.SetTransformationDesc(profileTransformation))
 			output.StreamResultRaw(api.UPSGetEntities(context.Background(), conf.Authentication, p))
 		},
 	}
@@ -75,7 +78,7 @@ func NewProfileCommand(conf *helper.Configuration) *cobra.Command {
 		Args:                  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			helper.CheckErrs(output.SetTransformationFile(pkger.Include("/trans/get/ups/profile.yaml")))
+			helper.CheckErrs(output.SetTransformationDesc(profileTransformation))
 			p.ID = args[0]
 			output.StreamResultRaw(api.UPSGetEntities(context.Background(), conf.Authentication, p))
 		},
@@ -111,7 +114,7 @@ func NewEventsCommand(conf *helper.Configuration) *cobra.Command {
 		Args:                  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			helper.CheckErrs(output.SetTransformationFile(pkger.Include("/trans/get/ups/profile.yaml")))
+			helper.CheckErrs(output.SetTransformationDesc(profileTransformation))
 			p.RelatedID = args[0]
 			output.StreamResultRaw(api.UPSGetEntities(context.Background(), conf.Authentication, p))
 		},

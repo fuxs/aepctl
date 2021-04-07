@@ -18,11 +18,11 @@ package get
 
 import (
 	"context"
+	_ "embed"
 
 	"github.com/fuxs/aepctl/api/acl"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
-	"github.com/markbates/pkger"
 	"github.com/spf13/cobra"
 )
 
@@ -114,6 +114,12 @@ var validArgs = []string{
 	"/resource-types/streaming-source",
 }
 
+//go:embed trans/permissions.yaml
+var permissionsTransformation string
+
+//go:embed trans/effective.yaml
+var effectiveTransformation string
+
 // NewACCommand creates an initialized command object
 func NewACCommand(conf *helper.Configuration) *cobra.Command {
 	output := helper.NewOutputConf(nil)
@@ -130,10 +136,10 @@ func NewACCommand(conf *helper.Configuration) *cobra.Command {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			ctx := context.Background()
 			if len(args) == 0 {
-				helper.CheckErr(output.SetTransformationFile(pkger.Include("/trans/get/ac/permissions.yaml")))
+				helper.CheckErr(output.SetTransformationDesc(permissionsTransformation))
 				output.StreamResult(acl.GetPermissionsAndResourcesRaw(ctx, conf.Authentication))
 			} else {
-				helper.CheckErr(output.SetTransformationFile(pkger.Include("/trans/get/ac/effective.yaml")))
+				helper.CheckErr(output.SetTransformationDesc(effectiveTransformation))
 				output.StreamResultRaw(acl.GetEffecticeACLPoliciesRaw(ctx, conf.Authentication, args))
 			}
 		},

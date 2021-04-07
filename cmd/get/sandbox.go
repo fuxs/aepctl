@@ -18,13 +18,22 @@ package get
 
 import (
 	"context"
+	_ "embed"
 
 	"github.com/fuxs/aepctl/api/sandbox"
 	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
-	"github.com/markbates/pkger"
 	"github.com/spf13/cobra"
 )
+
+//go:embed sandboxes.yaml
+var sandboxesTransformation string
+
+//go:embed details.yaml
+var detailsTransformation string
+
+//go:embed types.yaml
+var typesTransformation string
 
 // NewSandboxCommand creates an initialized command object
 func NewSandboxCommand(conf *helper.Configuration) *cobra.Command {
@@ -43,10 +52,10 @@ func NewSandboxCommand(conf *helper.Configuration) *cobra.Command {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			switch len(args) {
 			case 0:
-				helper.CheckErr(output.SetTransformationFile(pkger.Include("/trans/get/sandbox/sandboxes.yaml")))
+				helper.CheckErr(output.SetTransformationDesc(sandboxesTransformation))
 				output.StreamResultRaw(sandbox.ListRaw(context.Background(), conf.Authentication))
 			case 1:
-				helper.CheckErr(output.SetTransformationFile(pkger.Include("/trans/get/sandbox/details.yaml")))
+				helper.CheckErr(output.SetTransformationDesc(detailsTransformation))
 				output.StreamResultRaw(sandbox.GetRaw(context.Background(), conf.Authentication, args[0]))
 			}
 		},
@@ -66,15 +75,15 @@ func NewSandboxesCommand(conf *helper.Configuration) *cobra.Command {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			switch len(args) {
 			case 0:
-				helper.CheckErr(output.SetTransformationFile(pkger.Include("/trans/get/sandbox/sandboxes.yaml")))
+				helper.CheckErr(output.SetTransformationDesc(sandboxesTransformation))
 				output.StreamResultRaw(sandbox.ListRaw(context.Background(), conf.Authentication))
 			case 1:
 				switch args[0] {
 				case "all":
-					helper.CheckErr(output.SetTransformationFile(pkger.Include("/trans/get/sandbox/sandboxes.yaml")))
+					helper.CheckErr(output.SetTransformationDesc(sandboxesTransformation))
 					output.StreamResultRaw(sandbox.ListAllRaw(context.Background(), conf.Authentication))
 				case "types":
-					helper.CheckErr(output.SetTransformationFile(pkger.Include("/trans/get/sandbox/types.yaml")))
+					helper.CheckErr(output.SetTransformationDesc(typesTransformation))
 					output.StreamResultRaw(sandbox.ListTypesRaw(context.Background(), conf.Authentication))
 				}
 			}

@@ -37,8 +37,6 @@ func NewFileCommand(conf *helper.Configuration) *cobra.Command {
 		Args:                  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			//helper.CheckErrs(output.SetTransformationFile(pkger.Include("/trans/get/da/files.yaml")))
-
 			output.StreamResultRaw(api.DAGetFile(context.Background(), conf.Authentication, args[0], "", ""))
 		},
 	}

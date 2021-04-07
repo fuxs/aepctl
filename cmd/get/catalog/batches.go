@@ -18,14 +18,17 @@ package catalog
 
 import (
 	"context"
+	_ "embed"
 	"strconv"
 	"time"
 
 	"github.com/fuxs/aepctl/api/catalog"
 	"github.com/fuxs/aepctl/cmd/helper"
-	"github.com/markbates/pkger"
 	"github.com/spf13/cobra"
 )
+
+//go:embed trans/batches.yaml
+var batchesTransformation string
 
 // NewBatchesCommand creates an initialized command object
 func NewBatchesCommand(conf *helper.Configuration) *cobra.Command {
@@ -41,7 +44,7 @@ func NewBatchesCommand(conf *helper.Configuration) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			options, err := bc.ToOptions()
-			helper.CheckErrs(err, output.SetTransformationFile(pkger.Include("/trans/get/catalog/batches.yaml")))
+			helper.CheckErrs(err, output.SetTransformationDesc(batchesTransformation))
 			output.StreamResultRaw(catalog.GetBatches(context.Background(), conf.Authentication, options))
 		},
 	}

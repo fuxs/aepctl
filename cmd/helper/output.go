@@ -30,7 +30,6 @@ import (
 	"github.com/PaesslerAG/jsonpath"
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/util"
-	"github.com/markbates/pkger"
 	"github.com/spf13/cobra"
 )
 
@@ -94,36 +93,23 @@ func (o *OutputConf) SetTransformation(tf Transformer) {
 }
 
 // SetTransformationDesc changes the Transformer object
-func (o *OutputConf) SetTransformationDesc(yaml string) error {
-	tf, err := util.NewTableDescriptor(yaml)
-	if err != nil {
-		return err
+func (o *OutputConf) SetTransformationDesc(def string) error {
+	yaml := def
+	if o.transPath != "" {
+		f, err := os.Open(o.transPath)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		var d []byte
+		if d, err = ioutil.ReadAll(f); err != nil {
+			return err
+		}
+		yaml = string(d)
 	}
-	o.tf = tf
-	return nil
-}
-
-// SetTransformationFile changes the Transformer object
-func (o *OutputConf) SetTransformationFile(path string) error {
-	var (
-		f   io.ReadCloser
-		err error
-		d   []byte
-	)
-	if o.transPath == "" {
-		f, err = pkger.Open(path)
-	} else {
-		f, err = os.Open(o.transPath)
-	}
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	if d, err = ioutil.ReadAll(f); err != nil {
-		return err
-	}
-	o.td, err = util.NewTableDescriptor(string(d))
-	o.tf = o.td
+	td, err := util.NewTableDescriptor(yaml)
+	o.td = td
+	o.tf = td
 	return err
 }
 

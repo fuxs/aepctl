@@ -18,13 +18,16 @@ package da
 
 import (
 	"context"
+	_ "embed"
 	"strconv"
 
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
-	"github.com/markbates/pkger"
 	"github.com/spf13/cobra"
 )
+
+//go:embed trans/files.yaml
+var filesTransformation string
 
 // NewDatasetsCommand creates an initialized command object
 func NewFilesCommand(conf *helper.Configuration) *cobra.Command {
@@ -39,7 +42,7 @@ func NewFilesCommand(conf *helper.Configuration) *cobra.Command {
 		Args:                  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			helper.CheckErrs(output.SetTransformationFile(pkger.Include("/trans/get/da/files.yaml")))
+			helper.CheckErrs(output.SetTransformationDesc(filesTransformation))
 			start, limit := fc.Strings()
 			output.StreamResultRaw(api.DAGetFiles(context.Background(), conf.Authentication, args[0], start, limit))
 		},

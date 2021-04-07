@@ -37,7 +37,6 @@ func NewBatchesCommand(conf *helper.Configuration) *cobra.Command {
 		Args:                  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd))
-			//helper.CheckErrs(output.SetTransformationFile(pkger.Include("/trans/get/da/files.yaml")))
 			bid := args[0]
 			q, err := api.NewQuery(api.DAGetFiles(context.Background(), conf.Authentication, bid, "", ""))
 			helper.CheckErr(err)

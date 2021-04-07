@@ -38,7 +38,6 @@ func NewDatasetsCommand(conf *helper.Configuration) *cobra.Command {
 		Args:                  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd))
-			//helper.CheckErrs(output.SetTransformationFile(pkger.Include("/trans/get/da/files.yaml")))
 			options := &catalog.BatchesOptions{Dataset: args[0]}
 			q, err := api.NewQuery(catalog.GetBatches(context.Background(), conf.Authentication, options))
 			helper.CheckErr(err)

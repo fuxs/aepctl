@@ -3,17 +3,15 @@ BIN=bin
 GEN=gen
 GEN_FILE=$(GEN)/pkged.go
 DIST=dist
-CMD_FILES=$(vpath %.go cmd)
+
 ifeq ($(OS),Windows_NT)     # is Windows_NT on XP, 2000, 7, Vista, 10...
 	AEPCTL=$(BIN)/aepctl.exe
 	AEPCTLDBG=$(BIN)/aepctldbg.exe
 	DATE_CMD=powershell Get-Date -format "{dd-MMM-yyyy HH:mm}"
-	# MKDIR_CMD=powershell New-Item -ItemType directory -Name
 else
 	AEPCTL=$(BIN)/aepctl
 	AEPCTLDBG=$(BIN)/aepctldbg
 	DATE_CMD=date
-	# MKDIR_CMD=mkdir -pm 755
 endif
 
 COMMIT=$(shell git rev-list -1 HEAD)
@@ -27,12 +25,6 @@ LDFLAGS+=-X 'github.com/fuxs/aepctl/cmd.Version=${VERSION}'
 
 $(BIN):
 	@mkdir $(BIN)
-
-$(GEN):
-	@mkdir $(GEN)
-
-$(GEN_FILE): $(GEN) $(CMD_FILES)
-	@pkger -o gen
 
 build-in-container: $(BIN)
 	DOCKER_BUILDKIT=1 docker build . --target bin \
@@ -67,7 +59,7 @@ build-win-amd64: dependencies
 	@shasum -a 256 $(DIST)/aepctl-windows-amd64.tgz | head -c 64 > $(DIST)/aepctl-windows-amd64.tgz.sha256
 	@shasum -a 256 $(DIST)/windows/amd64/bin/aepctl.exe | head -c 64 > $(DIST)/windows/amd64/bin/aepctl.exe.sha256
 
-dependencies: $(GEN_FILE)
+dependencies:
 	@go get ./...
 
 vet:

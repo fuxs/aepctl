@@ -18,12 +18,15 @@ package catalog
 
 import (
 	"context"
+	_ "embed"
 
 	"github.com/fuxs/aepctl/api/catalog"
 	"github.com/fuxs/aepctl/cmd/helper"
-	"github.com/markbates/pkger"
 	"github.com/spf13/cobra"
 )
+
+//go:embed trans/datasets.yaml
+var datasetsTransformation string
 
 // NewDatasetsCommand creates an initialized command object
 func NewDatasetsCommand(conf *helper.Configuration) *cobra.Command {
@@ -39,7 +42,7 @@ func NewDatasetsCommand(conf *helper.Configuration) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			options, err := bc.ToOptions()
-			helper.CheckErrs(err, output.SetTransformationFile(pkger.Include("/trans/get/catalog/datasets.yaml")))
+			helper.CheckErrs(err, output.SetTransformationDesc(datasetsTransformation))
 			output.StreamResultRaw(catalog.GetDatasets(context.Background(), conf.Authentication, options))
 		},
 	}

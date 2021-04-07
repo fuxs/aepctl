@@ -2,12 +2,18 @@ package sr
 
 import (
 	"context"
+	_ "embed"
 
 	"github.com/fuxs/aepctl/api/sr"
 	"github.com/fuxs/aepctl/cmd/helper"
-	"github.com/markbates/pkger"
 	"github.com/spf13/cobra"
 )
+
+//go:embed trans/stats.yaml
+var statsTransformation string
+
+//go:embed trans/created.yaml
+var createdTransformation string
 
 // NewStatsCommand creates an initialized command object
 func NewStatsCommand(conf *helper.Configuration) *cobra.Command {
@@ -22,14 +28,14 @@ func NewStatsCommand(conf *helper.Configuration) *cobra.Command {
 		ValidArgs:             []string{"created"},
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			desc := pkger.Include("/trans/get/sr/stats.yaml")
+			desc := statsTransformation
 			if len(args) == 1 {
 				switch args[0] {
 				case "created":
-					desc = pkger.Include("/trans/get/sr/created.yaml")
+					desc = createdTransformation
 				}
 			}
-			helper.CheckErr(output.SetTransformationFile(desc))
+			helper.CheckErr(output.SetTransformationDesc(desc))
 			output.StreamResultRaw(sr.GetStatsRaw(context.Background(), conf.Authentication))
 		},
 	}
