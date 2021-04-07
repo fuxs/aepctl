@@ -1,19 +1,23 @@
 PLATFORM?=local
-BIN=$(CURDIR)/bin
-GEN=$(CURDIR)/gen
+BIN=bin
+GEN=gen
 GEN_FILE=$(GEN)/pkged.go
-DIST=$(CURDIR)/dist
+DIST=dist
 CMD_FILES=$(vpath %.go cmd)
 ifeq ($(OS),Windows_NT)     # is Windows_NT on XP, 2000, 7, Vista, 10...
 	AEPCTL=$(BIN)/aepctl.exe
 	AEPCTLDBG=$(BIN)/aepctldbg.exe
+	DATE_CMD=powershell Get-Date -format "{dd-MMM-yyyy HH:mm}"
+	# MKDIR_CMD=powershell New-Item -ItemType directory -Name
 else
 	AEPCTL=$(BIN)/aepctl
 	AEPCTLDBG=$(BIN)/aepctldbg
+	DATE_CMD=date
+	# MKDIR_CMD=mkdir -pm 755
 endif
 
 COMMIT=$(shell git rev-list -1 HEAD)
-BUILD_TIME=$(shell date)
+BUILD_TIME=$(shell $(DATE_CMD))
 VERSION=$(shell git describe --tags)
 LDFLAGS=-X 'github.com/fuxs/aepctl/cmd/version.Commit=${COMMIT}'
 LDFLAGS+=-X 'github.com/fuxs/aepctl/cmd/version.BuildTime=${BUILD_TIME}'
@@ -22,11 +26,12 @@ LDFLAGS+=-X 'github.com/fuxs/aepctl/cmd.Version=${VERSION}'
 .PHONY: build build-dbg build-dist build-win-386 build-win-amd64 debug dependencies lint vet build-in-container lint-in-container
 
 $(BIN):
-	@echo "\033[1;32mCreating new bin directory\033[0m"
-	@mkdir -m 755 $(BIN)
+	@mkdir $(BIN)
 
-$(GEN_FILE): $(CMD_FILES)
-	@mkdir -pm 755 $(GEN)
+$(GEN):
+	@mkdir $(GEN)
+
+$(GEN_FILE): $(GEN) $(CMD_FILES)
 	@pkger -o gen
 
 build-in-container: $(BIN)
@@ -63,7 +68,7 @@ build-win-amd64: dependencies
 	@shasum -a 256 $(DIST)/windows/amd64/bin/aepctl.exe | head -c 64 > $(DIST)/windows/amd64/bin/aepctl.exe.sha256
 
 dependencies: $(GEN_FILE)
-	go get ./...
+	@go get ./...
 
 vet:
 	go vet ./...

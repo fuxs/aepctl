@@ -19,7 +19,7 @@ package api
 import (
 	"context"
 	"errors"
-	"io"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 
@@ -78,7 +78,7 @@ func (fp *FlowPaged) First() (util.JSONResponse, error) {
 		return nil, err
 	}
 	if res.StatusCode >= 300 {
-		data, err := io.ReadAll(res.Body)
+		data, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			return nil, err
 		}
@@ -113,7 +113,7 @@ func (fp *FlowPaged) Execute(path []string, f func(util.JSONResponse) error) err
 					return err
 				}
 				if res.StatusCode >= 300 {
-					data, err := io.ReadAll(res.Body)
+					data, err := ioutil.ReadAll(res.Body)
 					if err != nil {
 						return err
 					}

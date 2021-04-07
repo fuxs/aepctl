@@ -18,7 +18,7 @@ package api
 
 import (
 	"errors"
-	"io"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/fuxs/aepctl/util"
@@ -50,7 +50,7 @@ func HandleStatusCode(res *http.Response, err error) (*http.Response, error) {
 	if err != nil || (res.StatusCode >= 200 && res.StatusCode < 300) {
 		return res, err
 	}
-	data, err := io.ReadAll(res.Body)
+	data, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}

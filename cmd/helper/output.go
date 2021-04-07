@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -118,7 +119,7 @@ func (o *OutputConf) SetTransformationFile(path string) error {
 		return err
 	}
 	defer f.Close()
-	if d, err = io.ReadAll(f); err != nil {
+	if d, err = ioutil.ReadAll(f); err != nil {
 		return err
 	}
 	o.td, err = util.NewTableDescriptor(string(d))
@@ -170,7 +171,7 @@ func (o *OutputConf) ValidateFlags() error {
 func (o *OutputConf) StreamResultRaw(res *http.Response, err error) {
 	CheckErr(err)
 	if res.StatusCode >= 300 {
-		data, err := io.ReadAll(res.Body)
+		data, err := ioutil.ReadAll(res.Body)
 		CheckErrs(err, errors.New(string(data)))
 	}
 	var (
