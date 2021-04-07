@@ -34,7 +34,7 @@ Planed APIs:
         ```
     * Windows (requires PowerShell)
         ```terminal
-        Invoke-WebRequest https://www.bungenstock.de/aepctl/releases/v0.1.1/windows/amd64/aepctl.exe -OutFile aepctl.exe
+        Invoke-WebRequest https://www.bungenstock.de/aepctl/releases/v0.2.0/windows/amd64/aepctl.exe -OutFile aepctl.exe
         ```
         Add `aepctl.exe` to your `PATH`
 2. Create an [Adobe I/O Project](https://console.adobe.io/projects) ([detailed documentation](doc/new_project.md))
