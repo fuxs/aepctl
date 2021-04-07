@@ -71,19 +71,19 @@ aepctl in order to ease the input with complex ids or names.
 Open the PowerShell and follow the instructions:
 
 1. Download the latest pre-release [aepctl
-v0.1.1](https://www.bungenstock.de/aepctl/releases/v0.1.1/windows/amd64/aepctl.exe) or use `Invoke-WebRequest`:
+v0.2.0](https://www.bungenstock.de/aepctl/releases/v0.2.0/windows/amd64/aepctl.exe) or use `Invoke-WebRequest`:
 
 ```terminal
-Invoke-WebRequest https://www.bungenstock.de/aepctl/releases/v0.1.1/windows/amd64/aepctl.exe -OutFile aepctl.exe
+Invoke-WebRequest https://www.bungenstock.de/aepctl/releases/v0.2.0/windows/amd64/aepctl.exe -OutFile aepctl.exe
 ```
 
 2. The validation of the binary is optional (go to step 4 if you want to skip
    it). Download the [SHA256
-   file](https://www.bungenstock.de/aepctl/releases/v0.1.1/windows/amd64/aepctl.exe.sha256)
+   file](https://www.bungenstock.de/aepctl/releases/v0.2.0/windows/amd64/aepctl.exe.sha256)
    or use `Invoke-WebRequest`:
 
 ```terminal
-Invoke-WebRequest https://www.bungenstock.de/aepctl/releases/v0.1.1/windows/amd64/aepctl.exe.sha256 -OutFile aepctl.exe.sha256
+Invoke-WebRequest https://www.bungenstock.de/aepctl/releases/v0.2.0/windows/amd64/aepctl.exe.sha256 -OutFile aepctl.exe.sha256
 ```
 3. Check the integrity with the following command. You should get the value
    `True` as result.
