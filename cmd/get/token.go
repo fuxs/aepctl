@@ -24,7 +24,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//go:embed token.yaml
+//go:embed trans/token.yaml
 var transformation string
 
 // NewTokenCommand creates an initialized command object

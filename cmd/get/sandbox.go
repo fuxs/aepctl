@@ -26,13 +26,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//go:embed sandboxes.yaml
+//go:embed trans/sandboxes.yaml
 var sandboxesTransformation string
 
-//go:embed details.yaml
+//go:embed trans/details.yaml
 var detailsTransformation string
 
-//go:embed types.yaml
+//go:embed trans/types.yaml
 var typesTransformation string
 
 // NewSandboxCommand creates an initialized command object
