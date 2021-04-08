@@ -65,6 +65,49 @@ The zsh is the default shell since macOS 10.15 Catalina and provides strong
 completion capabilities. It is recommended to activate completions for
 aepctl in order to ease the input with complex ids or names.
 
+The zsh requires some code for the completion function which must be stored in a
+file with the name `_aepctl`. This file must be located in a subdirectory of the
+`$fpath` environment variable. Sounds too complicated? Just follow the next
+steps:
+
+Execute the following helper command:
+```terminal
+aepctl zsh
+```
+This creates the `_aepctl` file in your home directory `~/.aepctl/zsh_completion`
+
+Now you have to add two lines to the `.zshrc` file. The first line adds the
+directory of the created `_aepctl` file to the `$fpath` environemnt variable.
+The second line with the `compinit` function activates the extended completion
+system of zsh.
+
+```terminal
+cat <<EOT >> ~/.zshrc
+fpath=(~/.aepctl/zsh_completion "${fpath[@]}")
+autoload -U compinit; compinit
+EOT
+```
+
+Some zsh frameworks like oh-my-zsh are calling `compinit` on their own. If you
+use oh-my-zsh then you must update the `fpath` before the source command in
+`.zshrc`.
+
+A valid configuraion could look like this:
+
+```bash
+fpath=(~/.aepctl/zsh_completion "${fpath[@]}")
+source $ZSH/oh-my-zsh.s
+```
+
+### Completion for other shells
+
+Please call the following command for other shells and follow the instructions:
+
+```terminal
+aepctl help completion
+```
+
+
 ## Windows
 
 ### PowerShell

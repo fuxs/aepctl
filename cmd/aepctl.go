@@ -57,6 +57,7 @@ func NewCommand() *cobra.Command {
 	cmd.AddCommand(delete.NewCommand(conf))
 	cmd.AddCommand(update.NewCommand(conf))
 	cmd.AddCommand(completion.NewCommand())
+	cmd.AddCommand(completion.NewZSHCommand(gcfg))
 	cmd.AddCommand(configure.NewConfigureCommand(gcfg))
 	cmd.AddCommand(download.NewCommand(conf))
 	cmd.AddCommand(version.NewCommand(Version))
