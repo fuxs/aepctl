@@ -68,7 +68,7 @@ func (q *Query) JSONPath() string {
 }
 
 func (q *Query) JSONFullPath() string {
-	return q.jp.Full()
+	return q.jp.String()
 }
 
 // Path queries nested objects, e.g. property a.b.c will be queried with Path("a","b","c")

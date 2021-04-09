@@ -25,8 +25,10 @@ import (
 // NewSRCommand creates an initialized command object
 func NewSRCommand(conf *helper.Configuration) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "sr",
+		Use:   "sr",
+		Short: "Schema Registry",
 	}
 	cmd.AddCommand(sr.NewStatsCommand(conf))
+	cmd.AddCommand(sr.NewSchemasCommand(conf))
 	return cmd
 }

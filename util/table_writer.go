@@ -62,6 +62,7 @@ func (t *RowWriter) AutoFlush(l int) *RowWriter {
 func (t *RowWriter) Write(v ...string) error {
 	for i, w := range v {
 		if i > 0 {
+			// write delimiter
 			if _, err := t.w.Write([]byte(t.d)); err != nil {
 				return err
 			}

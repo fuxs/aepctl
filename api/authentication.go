@@ -223,6 +223,11 @@ func (o *AuthenticationConfig) GetRequestRaw(ctx context.Context, url string, a 
 	return o.FullRequestRaw(ctx, "GET", nil, nil, url, a...)
 }
 
+// GetRequestHRaw sends a http get request to the passed url
+func (o *AuthenticationConfig) GetRequestHRaw(ctx context.Context, header map[string]string, url string, a ...interface{}) (*http.Response, error) {
+	return o.FullRequestRaw(ctx, "GET", header, nil, url, a...)
+}
+
 // DeleteRequest sends a http delete request to the passed url
 func (o *AuthenticationConfig) DeleteRequest(ctx context.Context, url string, a ...interface{}) (interface{}, error) {
 	return o.Request(ctx, "DELETE", url, a...)
@@ -265,7 +270,7 @@ func (o *AuthenticationConfig) FullRequestRaw(ctx context.Context, verb string, 
 	if o.DryRun {
 		log.Debug().Msg("Dry-run done")
 		//debug.PrintStack()
-		return nil, nil
+		return &http.Response{StatusCode: http.StatusTeapot}, nil
 	}
 
 	c := http.Client{

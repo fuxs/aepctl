@@ -30,6 +30,7 @@ import (
 	"github.com/PaesslerAG/jsonpath"
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/util"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -45,10 +46,14 @@ const (
 	YAMLOut
 	// TableOut is used for tablized output
 	TableOut
-	// Wide is used for wide tablized output
-	Wide
+	// WideOut is used for wide tablized output
+	WideOut
 	// RawOut is used for raw output
 	RawOut
+	// PVOut is using two columns path and value
+	PVOut
+	// PVOut is using three columns name, value and path
+	NVPOUT
 )
 
 // Transformer objects will implement transformation logic for certain OutputTypes
@@ -116,7 +121,13 @@ func (o *OutputConf) SetTransformationDesc(def string) error {
 // AddOutputFlags extends the passed command with flags for output
 func (o *OutputConf) AddOutputFlags(cmd *cobra.Command) {
 	flags := cmd.PersistentFlags()
-	flags.StringVarP(&o.Output, "output", "o", "", "Output format (json|jsonpath=''|yaml|text).")
+	flags.StringVarP(&o.Output, "output", "o", "", "Output format (json|jsonpath=''|nvp|pv|raw|table|wide)")
+	if err := cmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+
+		return []string{"json", "jsonpath=", "nvp", "pv", "raw", "table", "wide"}, cobra.ShellCompDirectiveNoFileComp
+	}); err != nil {
+		fatal("Error in AddOutputFlags", 1)
+	}
 }
 
 // ValidateFlags checks the passed flags
@@ -126,10 +137,14 @@ func (o *OutputConf) ValidateFlags() error {
 		o.Type = TableOut
 	case "json":
 		o.Type = JSONOut
+	case "vp":
+		o.Type = PVOut
+	case "nvp":
+		o.Type = NVPOUT
 	case "raw":
 		o.Type = RawOut
 	case "wide":
-		o.Type = Wide
+		o.Type = WideOut
 	default:
 		switch {
 		case strings.HasPrefix(o.Output, "table="):
@@ -157,18 +172,25 @@ func (o *OutputConf) ValidateFlags() error {
 func (o *OutputConf) StreamResultRaw(res *http.Response, err error) {
 	CheckErr(err)
 	if res.StatusCode >= 300 {
+		if res.StatusCode == http.StatusTeapot {
+			return
+		}
+		log.Debug().Int("Status code", res.StatusCode).Msg("HTTP error response")
 		data, err := ioutil.ReadAll(res.Body)
-		CheckErrs(err, errors.New(string(data)))
+		CheckErr(err)
+		if len(data) > 0 {
+			CheckErr(errors.New(string(data)))
+		} else {
+			CheckErr(fmt.Errorf("http error with no message, status code: %v", res.StatusCode))
+		}
 	}
 	var (
 		i util.JSONResponse
 	)
-	if o.tf != nil {
-		i, err = o.tf.Iterator(res.Body)
-
-	} else {
-		i = util.NewJSONIterator(res.Body)
+	if o.tf == nil || o.Type == NVPOUT || o.Type == PVOut {
+		o.tf = &util.NVPTransformer{}
 	}
+	i, err = o.tf.Iterator(res.Body)
 	CheckErr(err)
 	CheckErr(o.streamResult(i))
 }
@@ -201,7 +223,7 @@ func (o *OutputConf) streamResult(i util.JSONResponse) error {
 		enc := json.NewEncoder(bout)
 		enc.SetIndent("", "  ")
 		return enc.Encode(value)
-	case Wide, TableOut:
+	case NVPOUT, PVOut, WideOut, TableOut:
 		w := util.NewTableWriter(os.Stdout)
 		defer func() {
 			w.Flush()
@@ -210,11 +232,10 @@ func (o *OutputConf) streamResult(i util.JSONResponse) error {
 		if err := o.tf.Preprocess(i); err != nil {
 			return err
 		}
-		wide := o.Type == Wide
+		wide := o.Type == WideOut || o.Type == NVPOUT
 		if err := w.Write(o.tf.Header(wide)...); err != nil {
 			return err
 		}
-		w.Flush()
 		for i.More() {
 			q, err := i.Next()
 			if err != nil {
@@ -237,7 +258,7 @@ func (o *OutputConf) Print(paged api.Paged) error {
 		i, err := paged.First()
 		CheckErr(err)
 		return i.PrintPretty()
-	case Wide, TableOut:
+	case WideOut, TableOut:
 		return o.PrintTable(paged)
 	}
 	return nil
@@ -261,7 +282,7 @@ func (o *OutputConf) PrintTable(paged api.Paged) error {
 	defer func() {
 		w.Flush()
 	}()
-	wide := o.Type == Wide
+	wide := o.Type == WideOut
 	if err := w.Write(o.tf.Header(wide)...); err != nil {
 		return err
 	}

@@ -1,3 +1,19 @@
+/*
+Package util util consists of general utility functions and structures.
+
+Copyright 2021 Michael Bungenstock
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+*/
 package util
 
 import (
@@ -20,6 +36,7 @@ const (
 	JSONS_O  // object attribute, expecting string or }
 	JSONS_OV // object value, expecting {, [ VALUE or }
 	JSONS_A  // array value, expecting {, [ VALUE or ]
+	JSONS_AV // close array value, required for simple values
 )
 
 type jsonStateStack []jsonState
@@ -90,7 +107,15 @@ func (ps *jsonPath) Name() string {
 	if l == 0 {
 		return ""
 	}
-	return (*ps)[l-1].name
+	last := (*ps)[l-1]
+	if last.array {
+		var buffer strings.Builder
+		buffer.WriteRune('[')
+		buffer.WriteString(last.name)
+		buffer.WriteRune(']')
+		return buffer.String()
+	}
+	return last.name
 }
 
 func (ps *jsonPath) Path() string {
@@ -102,25 +127,19 @@ func (ps *jsonPath) Path() string {
 	next := false
 	for _, e := range (*ps)[:l-1] {
 		if next {
-			buffer.WriteString(".")
+			if !e.array {
+				buffer.WriteString(".")
+			}
 		} else {
 			next = true
 		}
-		buffer.WriteString(e.name)
-	}
-	return buffer.String()
-}
-
-func (ps *jsonPath) Full() string {
-	var buffer strings.Builder
-	next := false
-	for _, e := range *ps {
-		if next {
-			buffer.WriteString(".")
+		if e.array {
+			buffer.WriteRune('[')
+			buffer.WriteString(e.name)
+			buffer.WriteRune(']')
 		} else {
-			next = true
+			buffer.WriteString(e.name)
 		}
-		buffer.WriteString(e.name)
 	}
 	return buffer.String()
 }
@@ -130,11 +149,19 @@ func (ps *jsonPath) String() string {
 	next := false
 	for _, e := range *ps {
 		if next {
-			buffer.WriteString(".")
+			if !e.array {
+				buffer.WriteString(".")
+			}
 		} else {
 			next = true
 		}
-		buffer.WriteString(e.name)
+		if e.array {
+			buffer.WriteRune('[')
+			buffer.WriteString(e.name)
+			buffer.WriteRune(']')
+		} else {
+			buffer.WriteString(e.name)
+		}
 	}
 	return buffer.String()
 }
@@ -142,6 +169,7 @@ func (ps *jsonPath) String() string {
 func (ps *jsonPath) Inc() {
 	if e := ps.Peek(); e != nil {
 		e.index++
+		e.name = strconv.FormatInt(int64(e.index), 10)
 	}
 }
 
@@ -217,12 +245,12 @@ func (j *JSONCursor) NextValueF(filter []string) (*Query, error) {
 func (j *JSONCursor) NextValue() (*Query, error) {
 	state := j.jss.Peek()
 	for state != JSONS_DONE {
-		path := j.jp[:]
+		path := j.jp.Clone()
 		t, err := j.Token()
 		if err != nil {
 			return nil, err
 		}
-		if state == JSONS_OV || state == JSONS_A {
+		if state == JSONS_OV || state == JSONS_A || state == JSONS_AV {
 			if _, ok := t.(json.Delim); !ok {
 				return NewQueryM(t, path), nil
 			}
@@ -236,6 +264,11 @@ func (j *JSONCursor) Token() (json.Token, error) {
 	state := j.jss.Peek()
 	if state == JSONS_DONE {
 		return nil, io.EOF
+	}
+	if state == JSONS_AV {
+		j.jp.Inc()
+		j.jss.Pop()
+		state = j.jss.Peek()
 	}
 	t, err := j.dec.Token()
 	if err != nil {
@@ -266,7 +299,9 @@ func (j *JSONCursor) Token() (json.Token, error) {
 			return nil, fmt.Errorf("expecting } position %v", j.dec.InputOffset())
 		}
 		j.jss.Pop()
-		if j.jss.Peek() == JSONS_O {
+		if j.jss.Peek() == JSONS_A {
+			j.jp.Inc()
+		} else {
 			j.jp.Pop()
 		}
 	case JSONS_OV:
@@ -280,14 +315,18 @@ func (j *JSONCursor) Token() (json.Token, error) {
 				j.jss.Push(JSONS_A)
 				j.jp.Push(NewJSONPathIndex(0))
 			case '}':
-				//if j.jss.Peek() == JSONS_O {
-				// we are not in an array, thus pop the attribute name
-				j.jp.Pop()
-				//}
+				if j.jss.Peek() == JSONS_A {
+					// increment array index
+					j.jp.Inc()
+				} else {
+					// must be object, pop attribute name
+					j.jp.Pop()
+				}
 			default:
 				return nil, fmt.Errorf("expecting [,{ or } at position %v", j.dec.InputOffset())
 			}
 		} else {
+			// it's a value
 			j.jp.Pop()
 		}
 	case JSONS_A:
@@ -302,12 +341,17 @@ func (j *JSONCursor) Token() (json.Token, error) {
 			case ']':
 				j.jss.Pop()
 				j.jp.Pop()
-				j.jp.Pop()
+				if j.jss.Peek() == JSONS_A {
+					j.jp.Inc()
+				} else {
+					j.jp.Pop()
+				}
 			default:
 				return nil, fmt.Errorf("expecting [,{ or ] at position %v", j.dec.InputOffset())
 			}
+		} else {
+			j.jss.Push(JSONS_AV)
 		}
-		j.jp.Inc()
 	default:
 		return nil, errors.New("state error")
 	}
@@ -380,8 +424,10 @@ func (j *JSONCursor) Decode(v interface{}) error {
 	if err := j.dec.Decode(v); err != nil {
 		return err
 	}
-	j.jss.Pop()
-	if j.jss.Peek() == JSONS_O {
+	if state != JSONS_A {
+		j.jss.Pop()
+	}
+	if state == JSONS_O {
 		j.jp.Pop()
 	}
 	return nil

@@ -25,36 +25,43 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//go:embed trans/stats.yaml
-var statsTransformation string
+//go:embed trans/schemas_sum.yaml
+var schemasSumTransformation string
 
-//go:embed trans/created.yaml
-var createdTransformation string
+//go:embed trans/schemas_full.yaml
+var schemasFullTransformation string
 
 // NewStatsCommand creates an initialized command object
-func NewStatsCommand(conf *helper.Configuration) *cobra.Command {
+func NewSchemasCommand(conf *helper.Configuration) *cobra.Command {
 	output := helper.NewOutputConf(nil)
+	p := &api.SRGetSchemasParam{}
 	cmd := &cobra.Command{
-		Use:                   "stats",
-		Short:                 "Display all stats",
+		Use:                   "schemas [global|tenant]",
+		Short:                 "Display schemas",
 		Long:                  "long",
 		Example:               "example",
 		DisableFlagsInUseLine: true,
 		Args:                  cobra.MaximumNArgs(1),
-		ValidArgs:             []string{"created"},
+		ValidArgs:             []string{"global", "tenant"},
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			desc := statsTransformation
 			if len(args) == 1 {
-				switch args[0] {
-				case "created":
-					desc = createdTransformation
-				}
+				p.ContainerID = args[0]
+			}
+			desc := schemasSumTransformation
+			if p.Full {
+				desc = schemasFullTransformation
 			}
 			helper.CheckErr(output.SetTransformationDesc(desc))
-			output.StreamResultRaw(api.SRGetStatsRaw(context.Background(), conf.Authentication))
+			output.StreamResultRaw(api.SRGetSchemasRaw(context.Background(), conf.Authentication, p))
 		},
 	}
 	output.AddOutputFlags(cmd)
+	flags := cmd.Flags()
+	flags.StringVar(&p.Properties, "properties", "", "Comma separated list of top-level object properties to be returned in the response")
+	flags.StringVar(&p.OrderBy, "order", "", "Sort response by specified fields separated by \",\"")
+	flags.StringVar(&p.Start, "start", "", "The start value of the first orderBy field")
+	flags.UintVar(&p.Limit, "limit", 0, "Specify a limit for the number of results to be displayed")
+	flags.BoolVar(&p.Full, "full", false, "Returns full JSON for each resource")
 	return cmd
 }

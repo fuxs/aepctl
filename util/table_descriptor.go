@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -150,16 +151,17 @@ func (t *TableDescriptor) Preprocess(i JSONResponse) error {
 
 func processColumns(scope *Scope, cols []*TableColumnDescriptor, q *Query) []string {
 	result := make([]string, len(cols))
+	var value string
 	for i, c := range cols {
 		switch c.Meta {
 		case "name":
-			result[i] = q.JSONName()
-			continue
+			value = q.JSONName()
 		case "path":
-			result[i] = q.JSONPath()
-			continue
+			value = q.JSONPath()
+		default:
+			value = c.Extract(scope, q)
 		}
-		result[i] = c.Extract(scope, q)
+		result[i] = strings.Replace(value, "\t", " ", -1)
 	}
 	return result
 }
