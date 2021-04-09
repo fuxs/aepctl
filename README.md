@@ -92,7 +92,7 @@ Some zsh frameworks like oh-my-zsh are calling `compinit` on their own. If you
 use oh-my-zsh then you must update the `fpath` before the source command in
 `.zshrc`.
 
-A valid configuraion could look like this:
+A valid configuration could look like this:
 
 ```bash
 fpath=(~/.aepctl/zsh_completion "${fpath[@]}")
