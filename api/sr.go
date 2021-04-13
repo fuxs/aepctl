@@ -35,12 +35,12 @@ func SRGetStats(ctx context.Context, p *AuthenticationConfig) (util.JSONResponse
 }
 
 type SRGetSchemasParam struct {
-	ContainerID string
-	Properties  string
-	OrderBy     string
-	Start       string
-	Limit       uint
-	Full        bool
+	Properties string
+	OrderBy    string
+	Start      string
+	Limit      uint
+	Global     bool
+	Full       bool
 }
 
 func (p *SRGetSchemasParam) toParams() string {
@@ -52,8 +52,10 @@ func (p *SRGetSchemasParam) toParams() string {
 }
 
 func SRGetSchemasRaw(ctx context.Context, a *AuthenticationConfig, p *SRGetSchemasParam) (*http.Response, error) {
-	cid := p.ContainerID
-	if cid == "" {
+	var cid string
+	if p.Global {
+		cid = "global"
+	} else {
 		cid = "tenant"
 	}
 	accept := "application/vnd.adobe.xed-id+json"
@@ -62,4 +64,19 @@ func SRGetSchemasRaw(ctx context.Context, a *AuthenticationConfig, p *SRGetSchem
 	}
 	header := map[string]string{"Accept": accept}
 	return a.GetRequestHRaw(ctx, header, "https://platform.adobe.io/data/foundation/schemaregistry/%s/schemas%s", cid, p.toParams())
+}
+
+func SRGetSchemaRaw(ctx context.Context, a *AuthenticationConfig, p *SRGetSchemasParam, id string) (*http.Response, error) {
+	var cid string
+	if p.Global {
+		cid = "global"
+	} else {
+		cid = "tenant"
+	}
+	accept := "application/vnd.adobe.xed-id+json"
+	if p.Full {
+		accept = "application/vnd.adobe.xed+json"
+	}
+	header := map[string]string{"Accept": accept}
+	return a.GetRequestHRaw(ctx, header, "https://platform.adobe.io/data/foundation/schemaregistry/%s/schemas/%s", cid, id)
 }

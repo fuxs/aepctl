@@ -36,18 +36,14 @@ func NewSchemasCommand(conf *helper.Configuration) *cobra.Command {
 	output := helper.NewOutputConf(nil)
 	p := &api.SRGetSchemasParam{}
 	cmd := &cobra.Command{
-		Use:                   "schemas [global|tenant]",
+		Use:                   "schemas",
 		Short:                 "Display schemas",
 		Long:                  "long",
 		Example:               "example",
 		DisableFlagsInUseLine: true,
-		Args:                  cobra.MaximumNArgs(1),
-		ValidArgs:             []string{"global", "tenant"},
+		Args:                  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			if len(args) == 1 {
-				p.ContainerID = args[0]
-			}
 			desc := schemasSumTransformation
 			if p.Full {
 				desc = schemasFullTransformation
@@ -62,6 +58,40 @@ func NewSchemasCommand(conf *helper.Configuration) *cobra.Command {
 	flags.StringVar(&p.OrderBy, "order", "", "Sort response by specified fields separated by \",\"")
 	flags.StringVar(&p.Start, "start", "", "The start value of the first orderBy field")
 	flags.UintVar(&p.Limit, "limit", 0, "Specify a limit for the number of results to be displayed")
+	flags.BoolVar(&p.Global, "global", false, "Return core resources instead of custom resources")
+	flags.BoolVar(&p.Full, "full", false, "Returns full JSON for each resource")
+	return cmd
+}
+
+// NewStatsCommand creates an initialized command object
+func NewSchemaCommand(conf *helper.Configuration) *cobra.Command {
+	output := helper.NewOutputConf(nil)
+	p := &api.SRGetSchemasParam{}
+	cmd := &cobra.Command{
+		Use:                   "schema",
+		Short:                 "Display schema",
+		Long:                  "long",
+		Example:               "example",
+		DisableFlagsInUseLine: true,
+		Args:                  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
+
+			desc := schemasSumTransformation
+			if p.Full {
+				desc = schemasFullTransformation
+			}
+			helper.CheckErr(output.SetTransformationDesc(desc))
+			output.StreamResultRaw(api.SRGetSchemasRaw(context.Background(), conf.Authentication, p))
+		},
+	}
+	output.AddOutputFlags(cmd)
+	flags := cmd.Flags()
+	flags.StringVar(&p.Properties, "properties", "", "Comma separated list of top-level object properties to be returned in the response")
+	flags.StringVar(&p.OrderBy, "order", "", "Sort response by specified fields separated by \",\"")
+	flags.StringVar(&p.Start, "start", "", "The start value of the first orderBy field")
+	flags.UintVar(&p.Limit, "limit", 0, "Specify a limit for the number of results to be displayed")
+	flags.BoolVar(&p.Global, "global", false, "Return core resources instead of custom resources")
 	flags.BoolVar(&p.Full, "full", false, "Returns full JSON for each resource")
 	return cmd
 }
