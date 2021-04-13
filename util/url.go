@@ -17,6 +17,7 @@ specific language governing permissions and limitations under the License.
 package util
 
 import (
+	"net/url"
 	"strings"
 )
 
@@ -37,7 +38,7 @@ func Par(pairs ...string) string {
 			sb.WriteString(pairs[i])
 			i++
 			sb.WriteByte('=')
-			sb.WriteString(pairs[i])
+			sb.WriteString(url.QueryEscape(pairs[i]))
 			i++
 			sep = "&"
 		} else {
