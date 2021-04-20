@@ -18,8 +18,8 @@ package helper
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -30,7 +30,6 @@ import (
 	"github.com/PaesslerAG/jsonpath"
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/util"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -61,13 +60,90 @@ type Transformer interface {
 	Header(wide bool) []string
 	Preprocess(util.JSONResponse) error
 	WriteRow(*util.Query, *util.RowWriter, bool) error
-	Iterator(io.ReadCloser) (util.JSONResponse, error)
+	Iterator(*util.JSONCursor) (util.JSONResponse, error)
 }
 
 /*type Pageable interface {
 	InitialCall(context.Context, *api.AuthenticationConfig) (*http.Response, error)
 	NextCall(context.Context, *api.AuthenticationConfig, string) (*http.Response, error)
 }*/
+
+type Pager struct {
+	Func      api.Func
+	Auth      *api.AuthenticationConfig
+	Values    util.Params
+	Context   context.Context
+	Filter    []string
+	Path      []string
+	Parameter string
+	nextToken string
+	calls     int
+	jf        *util.JSONFinder
+}
+
+func NewPager(f api.Func, auth *api.AuthenticationConfig, v util.Params) *Pager {
+	result := &Pager{
+		Func:      f,
+		Auth:      auth,
+		Values:    v,
+		Filter:    []string{"_links"},
+		Path:      []string{"next", "href"},
+		Parameter: "continuationToken",
+	}
+	result.initJF()
+	return result
+}
+
+func (p *Pager) Next() bool {
+	return p.calls == 0 || p.nextToken != ""
+}
+
+func (p *Pager) Call() error {
+	if !p.Next() {
+		return io.EOF
+	}
+	if p.calls == 0 {
+		if p.Context == nil {
+			p.Context = context.Background()
+		}
+	}
+	if p.nextToken != "" {
+		p.Values[p.Parameter] = []string{p.nextToken}
+		p.nextToken = ""
+	}
+	res, err := api.HandleStatusCode(p.Func(p.Context, p.Auth, p.Values))
+	if err != nil {
+		return err
+	}
+	p.calls++
+	i := util.NewJSONIterator(util.NewJSONCursor(res.Body))
+	defer i.Close()
+	p.jf.SetIterator(i)
+
+	return p.jf.Run()
+}
+
+func (p *Pager) initJF() {
+	jf := util.NewJSONFinder()
+	jf.Add(func(j util.JSONResponse) error {
+		q, err := j.Query()
+		if err != nil {
+			return err
+		}
+		url := q.Str(p.Path...)
+		token, err := util.GetParam(url, p.Parameter)
+		if err != nil {
+			return err
+		}
+		p.nextToken = token
+		return nil
+	}, p.Filter...)
+	p.jf = jf
+}
+
+func (p *Pager) Add(f func(util.JSONResponse) error, path ...string) {
+	p.jf.Add(f, path...)
+}
 
 // OutputConf contains all options for the output
 type OutputConf struct {
@@ -170,27 +246,15 @@ func (o *OutputConf) ValidateFlags() error {
 }
 
 func (o *OutputConf) StreamResultRaw(res *http.Response, err error) {
+	res, err = api.HandleStatusCode(res, err)
 	CheckErr(err)
-	if res.StatusCode >= 300 {
-		if res.StatusCode == http.StatusTeapot {
-			return
-		}
-		log.Debug().Int("Status code", res.StatusCode).Msg("HTTP error response")
-		data, err := ioutil.ReadAll(res.Body)
-		CheckErr(err)
-		if len(data) > 0 {
-			CheckErr(errors.New(string(data)))
-		} else {
-			CheckErr(fmt.Errorf("http error with no message, status code: %v", res.StatusCode))
-		}
-	}
 	var (
 		i util.JSONResponse
 	)
 	if o.tf == nil || o.Type == NVPOUT || o.Type == PVOut {
 		o.tf = &util.NVPTransformer{}
 	}
-	i, err = o.tf.Iterator(res.Body)
+	i, err = o.tf.Iterator(util.NewJSONCursor(res.Body))
 	CheckErr(err)
 	CheckErr(o.streamResult(i))
 }
@@ -229,24 +293,39 @@ func (o *OutputConf) streamResult(i util.JSONResponse) error {
 			w.Flush()
 			i.Close()
 		}()
-		if err := o.tf.Preprocess(i); err != nil {
+		if err := o.streamTableHeader(w); err != nil {
 			return err
 		}
-		wide := o.Type == WideOut || o.Type == NVPOUT
-		if err := w.Write(o.tf.Header(wide)...); err != nil {
+		if err := o.streamTableBody(i, w); err != nil {
 			return err
 		}
-		for i.More() {
-			q, err := i.Next()
-			if err != nil {
-				if err == io.EOF {
-					return nil
-				}
-				return err
+	}
+	return nil
+}
+
+func (o *OutputConf) wide() bool {
+	return o.Type == WideOut || o.Type == NVPOUT
+}
+
+func (o *OutputConf) streamTableHeader(w *util.RowWriter) error {
+	return w.Write(o.tf.Header(o.wide())...)
+}
+
+func (o *OutputConf) streamTableBody(i util.JSONResponse, w *util.RowWriter) error {
+	if err := o.tf.Preprocess(i); err != nil {
+		return err
+	}
+	wide := o.wide()
+	for i.More() {
+		q, err := i.Next()
+		if err != nil {
+			if err == io.EOF {
+				return nil
 			}
-			if err = o.tf.WriteRow(q, w, wide); err != nil {
-				return err
-			}
+			return err
+		}
+		if err = o.tf.WriteRow(q, w, wide); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -286,9 +365,49 @@ func (o *OutputConf) PrintTable(paged api.Paged) error {
 	if err := w.Write(o.tf.Header(wide)...); err != nil {
 		return err
 	}
+
 	return paged.Execute(o.td.Path, func(j util.JSONResponse) error {
 		return j.Range(func(q *util.Query) error {
 			return o.tf.WriteRow(q, w, wide)
 		})
 	})
+}
+
+func (o *OutputConf) Page(f api.Func, auth *api.AuthenticationConfig, v util.Params) error {
+	pager := NewPager(f, auth, v)
+	switch o.Type {
+	case WideOut, TableOut:
+
+		return o.PrintTableP(pager)
+	}
+	return nil
+}
+
+func (o *OutputConf) PrintTableP(pager *Pager) error {
+	w := util.NewTableWriter(os.Stdout)
+	defer w.Flush()
+
+	pager.Add(func(j util.JSONResponse) error {
+		c, err := j.Cursor().New()
+		if err != nil {
+			return err
+		}
+		defer c.End()
+		i, err := o.tf.Iterator(c)
+		if err != nil {
+			return err
+		}
+		return o.streamTableBody(i, w)
+	}, o.td.ValuePath...)
+
+	if err := o.streamTableHeader(w); err != nil {
+		return err
+	}
+
+	for pager.Next() {
+		if err := pager.Call(); err != nil {
+			return err
+		}
+	}
+	return nil
 }

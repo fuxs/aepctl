@@ -18,6 +18,7 @@ package util
 
 import (
 	"net/url"
+	"sort"
 	"strings"
 )
 
@@ -48,4 +49,71 @@ func Par(pairs ...string) string {
 	}
 	a := sb.String()
 	return a
+}
+
+// GetParam returns the first parameter value with given name from the passed
+// url
+func GetParam(str, name string) (string, error) {
+	u, err := url.Parse(str)
+	if err != nil {
+		return "", err
+	}
+	return u.Query().Get(name), nil
+}
+
+type Params map[string][]string
+
+func NewParams(pairs ...string) Params {
+	result := make(Params, len(pairs)/2)
+	result.Set(pairs...)
+	return result
+}
+
+func (p Params) Add(name, value string) {
+	p[name] = append(p[name], value)
+}
+
+func (p Params) Set(pairs ...string) {
+	l := len(pairs)
+	if l%2 != 0 {
+		l--
+	}
+	if l == 0 {
+		return
+	}
+	for i := 0; i < l; i = i + 2 {
+		if pairs[i+1] != "" {
+			p.Add(pairs[i], pairs[i+1])
+		}
+	}
+}
+
+func (p Params) Encode() string {
+	if p == nil {
+		return ""
+	}
+	var buf strings.Builder
+	keys := make([]string, len(p))
+	i := 0
+	for k := range p {
+		keys[i] = k
+		i++
+	}
+	sort.Strings(keys)
+	more := false
+	for _, k := range keys {
+		vs := p[k]
+		keyEscaped := url.QueryEscape(k)
+		for _, v := range vs {
+			if more {
+				buf.WriteByte('&')
+			} else {
+				more = true
+			}
+			buf.WriteString(keyEscaped)
+			buf.WriteByte('=')
+			buf.WriteString(url.QueryEscape(v))
+		}
+	}
+	return buf.String()
 }

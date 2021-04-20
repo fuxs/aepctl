@@ -16,10 +16,6 @@ specific language governing permissions and limitations under the License.
 */
 package util
 
-import (
-	"io"
-)
-
 // NVPTransformer is a generic transformer to Name, Value and Path
 type NVPTransformer struct{}
 
@@ -51,6 +47,6 @@ func (t *NVPTransformer) WriteRow(q *Query, w *RowWriter, wide bool) error {
 }
 
 // Iterator returns a JSONValueIterator returning all values
-func (*NVPTransformer) Iterator(stream io.ReadCloser) (JSONResponse, error) {
-	return NewJSONValueIterator(stream, nil), nil
+func (*NVPTransformer) Iterator(c *JSONCursor) (JSONResponse, error) {
+	return NewJSONValueIterator(c, nil), nil
 }

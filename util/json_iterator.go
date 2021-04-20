@@ -19,10 +19,10 @@ package util
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 )
 
 // JSONResponse is the interface for streaming JSON objects
+// TODO remove this interface
 type JSONResponse interface {
 	Close() error
 	//Delim() (json.Delim, error)
@@ -41,6 +41,7 @@ type JSONResponse interface {
 	Range(func(*Query) error) error
 	Skip() error
 	Token() (json.Token, error)
+	Cursor() *JSONCursor
 }
 
 // JSONIterator implements the JSONResponse interface
@@ -51,8 +52,16 @@ type JSONIterator struct {
 }
 
 // NewJSONIterator creates an initialized JSONIterator object
-func NewJSONIterator(stream io.ReadCloser) *JSONIterator {
-	return &JSONIterator{c: NewJSONCursor(stream)}
+//func NewJSONIterator(stream io.ReadCloser) *JSONIterator {
+//	return &JSONIterator{c: NewJSONCursor(stream)}
+//}
+
+func NewJSONIterator(c *JSONCursor) *JSONIterator {
+	return &JSONIterator{c: c}
+}
+
+func (j *JSONIterator) Cursor() *JSONCursor {
+	return j.c
 }
 
 // More checks if there is another element in the current object or array
@@ -247,7 +256,10 @@ func (j *JSONIterator) String() (string, error) {
 	return result, nil
 }
 
+// Range iterates over all elements of the current JSON object or array and
+// calls the passed function
 func (j *JSONIterator) Range(f func(*Query) error) error {
+	// TODO switch to EnterArray
 	if err := j.Enter(); err != nil {
 		return err
 	}
@@ -293,8 +305,8 @@ type JSONMapIterator struct {
 }
 
 // NewJSONMapIterator creates an initialized JSONMapIterator
-func NewJSONMapIterator(stream io.ReadCloser) *JSONMapIterator {
-	base := NewJSONIterator(stream)
+func NewJSONMapIterator(c *JSONCursor) *JSONMapIterator {
+	base := NewJSONIterator(c)
 	return &JSONMapIterator{JSONIterator: base}
 }
 
@@ -331,8 +343,8 @@ type JSONFilterIterator struct {
 	Filter map[string]bool
 }
 
-func NewJSONFilterIterator(filter []string, stream io.ReadCloser) *JSONFilterIterator {
-	base := NewJSONIterator(stream)
+func NewJSONFilterIterator(filter []string, c *JSONCursor) *JSONFilterIterator {
+	base := NewJSONIterator(c)
 	fm := make(map[string]bool, len(filter))
 	for _, f := range filter {
 		fm[f] = true

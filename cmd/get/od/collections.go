@@ -17,7 +17,6 @@ specific language governing permissions and limitations under the License.
 package od
 
 import (
-	"io"
 	"strconv"
 
 	"github.com/fuxs/aepctl/api/od"
@@ -49,7 +48,7 @@ func (*collectionTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bo
 	)
 }
 
-func (*collectionTransformer) Iterator(io.ReadCloser) (util.JSONResponse, error) {
+func (*collectionTransformer) Iterator(*util.JSONCursor) (util.JSONResponse, error) {
 	return nil, nil
 }
 

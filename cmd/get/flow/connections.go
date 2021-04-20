@@ -43,9 +43,11 @@ func NewConnectionsCommand(conf *helper.Configuration) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErrs(output.SetTransformationDesc(connectionsTransformation))
+
+			helper.CheckErr(output.Page(api.FlowGetConnections, conf.Authentication, cc.p.Params()))
 			//output.PB = cc
-			fp := api.NewFlowPaged(context.Background(), conf.Authentication, cc.p)
-			helper.CheckErr(output.Print(fp))
+			//fp := api.NewFlowPaged(context.Background(), conf.Authentication, cc.p)
+			//helper.CheckErr(output.Print(fp))
 			/*r, err := api.NewRestreamable(api.FlowGetConnections(context.Background(), conf.Authentication, params))
 			helper.CheckErr(err)
 			q, err := util.NewQueryStream(r.Reader())
@@ -78,7 +80,7 @@ func (c *connectionsConf) AddFlags(cmd *cobra.Command) {
 }
 
 func (c *connectionsConf) InitialCall(ctx context.Context, auth *api.AuthenticationConfig) (*http.Response, error) {
-	return api.FlowGetConnections(ctx, auth, c.p)
+	return api.FlowGetConnections(ctx, auth, c.p.Params())
 }
 
 func (c *connectionsConf) NextCall(ctx context.Context, auth *api.AuthenticationConfig, url string) (*http.Response, error) {

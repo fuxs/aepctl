@@ -207,6 +207,26 @@ func NewJSONCursor(stream io.ReadCloser) *JSONCursor {
 	return &JSONCursor{dec: json.NewDecoder(stream), stream: stream, jss: jss, jp: jp}
 }
 
+func (j *JSONCursor) New() (*JSONCursor, error) {
+	state := j.jss.Peek()
+	if state == JSONS_DONE {
+		return nil, io.EOF
+	}
+	if state != JSONS_OV && state != JSONS_A && state != JSONS_OPEN {
+		return nil, errors.New("state error")
+	}
+	if state != JSONS_A {
+		j.jss.Pop()
+	}
+	if state == JSONS_O {
+		j.jp.Pop()
+	}
+	jss := make(jsonStateStack, 0, 16)
+	jss.Push(JSONS_OPEN)
+	jp := make(jsonPath, 0, 16)
+	return &JSONCursor{dec: j.dec, stream: j.stream, jss: jss, jp: jp}, nil
+}
+
 func (j *JSONCursor) PathInfo() (string, string) {
 	l := len(j.jp)
 	if l == 0 {
@@ -411,6 +431,22 @@ func (j *JSONCursor) Skip() error {
 		t, err = j.Token()
 	}
 	return err
+}
+
+func (j *JSONCursor) End() error {
+	state := j.jss.Peek()
+	for state != JSONS_DONE {
+		if err := j.Skip(); err != nil {
+			if err == io.EOF {
+				if state = j.jss.Peek(); state != JSONS_DONE {
+					return errors.New("eof but not JSONS_DONE")
+				}
+				return nil
+			}
+		}
+		state = j.jss.Peek()
+	}
+	return nil
 }
 
 func (j *JSONCursor) Decode(v interface{}) error {

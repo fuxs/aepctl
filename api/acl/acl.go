@@ -35,7 +35,7 @@ func GetPermissionsAndResourcesRaw(ctx context.Context, p *api.AuthenticationCon
 	if err != nil {
 		return nil, err
 	}
-	return util.NewJSONMapIterator(res.Body), nil
+	return util.NewJSONMapIterator(util.NewJSONCursor(res.Body)), nil
 }
 
 // GetEffecticeACLPolicies returns the effective acl policies

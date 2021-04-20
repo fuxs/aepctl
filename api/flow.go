@@ -18,8 +18,6 @@ package api
 
 import (
 	"context"
-	"errors"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 
@@ -34,8 +32,7 @@ type FlowGetConnectionsParams struct {
 	Count             bool
 }
 
-// DAGetFile returns a list of files for the passed fileId
-func FlowGetConnections(ctx context.Context, auth *AuthenticationConfig, p *FlowGetConnectionsParams) (*http.Response, error) {
+func (p *FlowGetConnectionsParams) Params() util.Params {
 	var limit, count string
 	if p.Limit > 0 {
 		limit = strconv.FormatInt(int64(p.Limit), 10)
@@ -43,19 +40,51 @@ func FlowGetConnections(ctx context.Context, auth *AuthenticationConfig, p *Flow
 	if p.Count {
 		count = "true"
 	}
+	return util.NewParams(
+		"property", p.Property,
+		"limit", limit,
+		"oderby", p.OrderBy,
+		"continuationToken", p.ContinuationToken,
+		"count", count,
+	)
+}
+
+// DAGetFile returns a list of files for the passed fileId
+func FlowGetConnections(ctx context.Context, auth *AuthenticationConfig, params util.Params) (*http.Response, error) {
 	return auth.GetRequestRaw(ctx,
-		"https://platform.adobe.io/data/foundation/flowservice/connections%s",
-		util.Par(
-			"property", p.Property,
-			"limit", limit,
-			"oderby", p.OrderBy,
-			"continuationToken", p.ContinuationToken,
-			"count", count,
-		))
+		"https://platform.adobe.io/data/foundation/flowservice/connections?%s",
+		params.Encode())
 }
 
 func FlowGetNext(ctx context.Context, auth *AuthenticationConfig, url string) (*http.Response, error) {
 	return auth.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/flowservice%s", url)
+}
+
+type Generic interface {
+	Call() (*http.Response, error)
+	NextToken(string)
+}
+
+type GenericFlowGetConnections struct {
+	ctx  context.Context
+	auth *AuthenticationConfig
+	p    *FlowGetConnectionsParams
+}
+
+func NewFlowGetConnections(auth *AuthenticationConfig, p *FlowGetConnectionsParams) *GenericFlowGetConnections {
+	return &GenericFlowGetConnections{
+		ctx:  context.Background(),
+		auth: auth,
+		p:    p,
+	}
+}
+
+func (g *GenericFlowGetConnections) Call() (*http.Response, error) {
+	return FlowGetConnections(g.ctx, g.auth, g.p.Params())
+}
+
+func (g *GenericFlowGetConnections) NextToken(token string) {
+	g.p.ContinuationToken = token
 }
 
 type Paged interface {
@@ -73,18 +102,11 @@ func NewFlowPaged(ctx context.Context, auth *AuthenticationConfig, p *FlowGetCon
 }
 
 func (fp *FlowPaged) First() (util.JSONResponse, error) {
-	res, err := FlowGetConnections(fp.ctx, fp.auth, fp.p)
+	res, err := HandleStatusCode(FlowGetConnections(fp.ctx, fp.auth, fp.p.Params()))
 	if err != nil {
 		return nil, err
 	}
-	if res.StatusCode >= 300 {
-		data, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return nil, err
-		}
-		return nil, errors.New(string(data))
-	}
-	return util.NewJSONIterator(res.Body), nil
+	return util.NewJSONIterator(util.NewJSONCursor(res.Body)), nil
 }
 
 func (fp *FlowPaged) Execute(path []string, f func(util.JSONResponse) error) error {
@@ -104,22 +126,15 @@ func (fp *FlowPaged) Execute(path []string, f func(util.JSONResponse) error) err
 
 	// next and i are used by Run()
 	for next {
-		// anonymous function for innder defer i.Close commands
-		func() error {
+		// anonymous function for inner defer i.Close commands
+		err := func() error {
 			next = false
 			if url != "" {
-				res, err := FlowGetNext(fp.ctx, fp.auth, url)
+				res, err := HandleStatusCode(FlowGetNext(fp.ctx, fp.auth, url))
 				if err != nil {
 					return err
 				}
-				if res.StatusCode >= 300 {
-					data, err := ioutil.ReadAll(res.Body)
-					if err != nil {
-						return err
-					}
-					return errors.New(string(data))
-				}
-				i := util.NewJSONIterator(res.Body)
+				i := util.NewJSONIterator(util.NewJSONCursor(res.Body))
 				defer i.Close()
 				jf.SetIterator(i)
 			} else {
@@ -135,6 +150,9 @@ func (fp *FlowPaged) Execute(path []string, f func(util.JSONResponse) error) err
 			}
 			return nil
 		}()
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

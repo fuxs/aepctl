@@ -18,6 +18,7 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -28,14 +29,14 @@ func NewJSONIterator(res *http.Response, err error) (*util.JSONIterator, error) 
 	if err != nil {
 		return nil, err
 	}
-	return util.NewJSONIterator(res.Body), nil
+	return util.NewJSONIterator(util.NewJSONCursor(res.Body)), nil
 }
 
 func NewJSONFilterIterator(filter []string, res *http.Response, err error) (*util.JSONFilterIterator, error) {
 	if err != nil {
 		return nil, err
 	}
-	return util.NewJSONFilterIterator(filter, res.Body), nil
+	return util.NewJSONFilterIterator(filter, util.NewJSONCursor(res.Body)), nil
 }
 
 func NewQuery(res *http.Response, err error) (*util.Query, error) {
@@ -54,5 +55,8 @@ func HandleStatusCode(res *http.Response, err error) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	return nil, errors.New(string(data))
+	if len(data) > 0 {
+		return nil, errors.New(string(data))
+	}
+	return nil, fmt.Errorf("http error with no message, status code: %v", res.StatusCode)
 }

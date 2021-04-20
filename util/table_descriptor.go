@@ -19,7 +19,6 @@ package util
 import (
 	"errors"
 	"fmt"
-	"io"
 	"strings"
 	"time"
 
@@ -30,14 +29,15 @@ import (
 type TableDescriptor struct {
 	Columns []*TableColumnDescriptor `json:"columns,omitempty" yaml:"columns,omitempty"`
 	//	Wide    []*TableColumnDescriptor `json:"wide,omitempty" yaml:"wide,omitempty"`
-	Path   []string          `json:"path,omitempty" yaml:"path,omitempty"`
-	Select []string          `json:"select,omitempty" yaml:"select,omitempty"`
-	Iter   string            `json:"iterator,omitempty" yaml:"iterator,omitempty"`
-	Filter []string          `json:"filter,omitempty" yaml:"filter,omitempty"`
-	Vars   []*DescriptorVars `json:"vars,omitempty" yaml:"vars,omitempty"`
-	Range  *DescriptorRange  `json:"range,omitempty" yaml:"range,omitempty"`
-	thin   []*TableColumnDescriptor
-	wide   []*TableColumnDescriptor
+	Path      []string          `json:"path,omitempty" yaml:"path,omitempty"`
+	Select    []string          `json:"select,omitempty" yaml:"select,omitempty"`
+	Iter      string            `json:"iterator,omitempty" yaml:"iterator,omitempty"`
+	Filter    []string          `json:"filter,omitempty" yaml:"filter,omitempty"`
+	Vars      []*DescriptorVars `json:"vars,omitempty" yaml:"vars,omitempty"`
+	Range     *DescriptorRange  `json:"range,omitempty" yaml:"range,omitempty"`
+	ValuePath []string          `json:"valuePath,omitempty" yaml:"valuePath,omitempty"`
+	thin      []*TableColumnDescriptor
+	wide      []*TableColumnDescriptor
 }
 
 // NewTableDescriptor creates an initialzed TableDescriptor. It accpets a
@@ -191,16 +191,16 @@ func (t *TableDescriptor) WriteRow(q *Query, w *RowWriter, wide bool) error {
 }
 
 // Iterator selects the configured iterator for the passed JSON stream
-func (t *TableDescriptor) Iterator(stream io.ReadCloser) (JSONResponse, error) {
+func (t *TableDescriptor) Iterator(c *JSONCursor) (JSONResponse, error) {
 	switch t.Iter {
 	case "array":
-		return NewJSONIterator(stream), nil
+		return NewJSONIterator(c), nil
 	case "filter":
-		return NewJSONFilterIterator(t.Filter, stream), nil
+		return NewJSONFilterIterator(t.Filter, c), nil
 	case "object":
-		return NewJSONMapIterator(stream), nil
+		return NewJSONMapIterator(c), nil
 	case "value":
-		return NewJSONValueIterator(stream, t.Select), nil
+		return NewJSONValueIterator(c, t.Select), nil
 	default:
 		return nil, fmt.Errorf("unknown iterator %v", t.Iter)
 	}
