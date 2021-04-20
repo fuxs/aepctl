@@ -53,7 +53,7 @@ func NewCreatePlacementCommand(conf *helper.Configuration, ac *cache.AutoContain
 
 			l := len(args)
 			if l == 1 || l == 2 || l > 4 {
-				helper.CheckErr(fmt.Errorf("Invalid number of arguments (0, 3 or 4): %v", l))
+				helper.CheckErr(fmt.Errorf("invalid number of arguments (0, 3 or 4): %v", l))
 			}
 			if l > 2 {
 				placement := &od.Placement{

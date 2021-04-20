@@ -79,12 +79,12 @@ func NewCreateCollectionCommand(conf *helper.Configuration, ac *cache.AutoContai
 			helper.CheckErr(err)
 			l := len(args)
 			if l == 1 || l == 2 {
-				return fmt.Errorf("Invalid number of arguments (0, 3 or more): %v", l)
+				return fmt.Errorf("invalid number of arguments (0, 3 or more): %v", l)
 			}
 			if l > 2 {
 				filter := args[1]
 				if filter != "all" && filter != "any" && filter != "offers" {
-					return fmt.Errorf("Second argument must be either any, all or offers: %v", filter)
+					return fmt.Errorf("second argument must be either any, all or offers: %v", filter)
 				}
 				collection := &od.Collection{
 					Name:   args[0],

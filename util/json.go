@@ -93,7 +93,7 @@ func JSONPrintPretty(dec *json.Decoder, out io.Writer) error {
 		if expectID {
 			id, ok := token.(string)
 			if !ok {
-				return fmt.Errorf("Expected id at position %v", dec.InputOffset())
+				return fmt.Errorf("expected id at position %v", dec.InputOffset())
 			}
 			if _, err := out.Write([]byte(JSONString(id))); err != nil {
 				return err
@@ -136,7 +136,7 @@ func JSONPrintPretty(dec *json.Decoder, out io.Writer) error {
 				}
 			case ']':
 				if state, ok = ss.Pop(); !ok {
-					return fmt.Errorf("Unbalanced ] at postion %v", dec.InputOffset())
+					return fmt.Errorf("unbalanced ] at postion %v", dec.InputOffset())
 				}
 				if _, err = out.Write([]byte("]")); err != nil {
 					return err
@@ -178,7 +178,7 @@ func JSONPrintPretty(dec *json.Decoder, out io.Writer) error {
 				}
 			case '}':
 				if state, ok = ss.Pop(); !ok {
-					return fmt.Errorf("Unbalanced ] at postion %v", dec.InputOffset())
+					return fmt.Errorf("unbalanced ] at postion %v", dec.InputOffset())
 				}
 				if _, err = out.Write([]byte("}")); err != nil {
 					return err

@@ -32,16 +32,16 @@ func LoadPrivateKeyPEM(path string) (*rsa.PrivateKey, error) {
 	)
 	//var pkey *rsa.PrivateKey
 	if dat, err = ioutil.ReadFile(path); err != nil {
-		return nil, fmt.Errorf("Could not load private key: %v", err)
+		return nil, fmt.Errorf("could not load private key: %v", err)
 	}
 	block, _ := pem.Decode(dat)
 	if block == nil {
-		return nil, fmt.Errorf("Failed to decode PEM block in file %v", path)
+		return nil, fmt.Errorf("failed to decode PEM block in file %v", path)
 	}
 	var key interface{}
 	key, err = x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to parse private key in file %v: %v", path, err)
+		return nil, fmt.Errorf("failed to parse private key in file %v: %v", path, err)
 	}
 	// TODO: better error handling
 	return key.(*rsa.PrivateKey), nil
