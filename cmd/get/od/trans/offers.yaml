@@ -1,0 +1,37 @@
+mappings:
+  status:
+    approved: ● Approved
+    draft: ◯ Draft
+path: [_embedded, results]
+vars:
+  - name: sc
+    path: [_instance, xdm:selectionConstraint]
+columns:
+  - name: ID
+    path: [_instance, "@id"]
+    mode: wide
+  - name: INSTANCE ID
+    path: [instanceId]
+    mode: wide
+  - name: NAME
+    path: [_instance, xdm:name]
+  - name: STATUS
+    path: [_instance, xdm:status]
+    format: map
+    parameters: [status]
+  - name: PRIORITY
+    path: [_instance, xdm:rank, xdm:priority]  
+  - name: START DATE
+    var: sc
+    path: [xdm:startDate]
+    format: localTime
+    parameters: ["01/02/2006"]
+  - name: END DATE
+    var: sc
+    path: [xdm:endDate]
+    format: localTime
+    parameters: ["01/02/2006"]
+  - name: LAST MODIFIED
+    path: [repo:lastModifiedDate]
+    format: localTime
+    parameters: ["01/02/2006, 03:04 PM"]

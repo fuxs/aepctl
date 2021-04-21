@@ -1,0 +1,17 @@
+path: [_embedded, results]
+columns:
+  - name: ID
+    path: [_instance, "@id"]
+    mode: wide
+  - name: INSTANCE ID
+    path: [instanceId]
+    mode: wide
+  - name: NAME
+    path: [_instance, xdm:name]
+  - name: "# OFFERS"
+    path: [_instance, xdm:ids]
+    type: list
+    format: count
+  - name: LAST MODIFIED
+    path: [repo:lastModifiedDate]
+    format: localTime

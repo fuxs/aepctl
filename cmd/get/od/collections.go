@@ -17,7 +17,7 @@ specific language governing permissions and limitations under the License.
 package od
 
 import (
-	"strconv"
+	_ "embed"
 
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cache"
@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type collectionTransformer struct{}
+/*type collectionTransformer struct{}
 
 func (*collectionTransformer) Header(wide bool) []string {
 	return []string{"NAME", "# OFFERS", "LAST MODIFIED"}
@@ -48,28 +48,33 @@ func (*collectionTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bo
 	)
 }
 
-func (*collectionTransformer) Iterator(*util.JSONCursor) (util.JSONResponse, error) {
-	return nil, nil
-}
+func (*collectionTransformer) Iterator(c *util.JSONCursor) (util.JSONResponse, error) {
+	return util.NewJSONIterator(c), nil
+}*/
+
+//go:embed trans/collections.yaml
+var collectionsTransformation string
 
 // NewCollectionsCommand creates an initialized command object
 func NewCollectionsCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	ct := &collectionTransformer{}
+	td, err := util.NewTableDescriptor(collectionsTransformation)
+	helper.CheckErr(err)
 	return NewQueryCommand(
 		conf,
 		ac,
 		od.CollectionSchema,
 		"collections",
-		ct)
+		td)
 }
 
 // NewCollectionCommand creates an initialized command object
 func NewCollectionCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	ct := &collectionTransformer{}
+	td, err := util.NewTableDescriptor(collectionsTransformation)
+	helper.CheckErr(err)
 	return NewGetCommand(
 		conf,
 		ac,
 		od.CollectionSchema,
 		"collection",
-		ct)
+		td)
 }

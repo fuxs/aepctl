@@ -17,6 +17,8 @@ specific language governing permissions and limitations under the License.
 package od
 
 import (
+	_ "embed"
+
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
@@ -24,48 +26,32 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type tagTransformer struct{}
-
-func (*tagTransformer) Header(wide bool) []string {
-	return []string{"NAME", "LAST MODIFIED"}
-}
-
-func (*tagTransformer) Preprocess(i util.JSONResponse) error {
-	if err := i.Path("_embedded", "results"); err != nil {
-		return err
-	}
-	return i.EnterArray()
-}
-
-func (*tagTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
-	return w.Write(
-		q.Str("_instance", "xdm:name"),
-		util.LocalTimeStr(q.Str("repo:lastModifiedDate")),
-	)
-}
-
-func (*tagTransformer) Iterator(*util.JSONCursor) (util.JSONResponse, error) {
-	return nil, nil
-}
+//go:embed trans/tags.yaml
+var tagsTransformation string
 
 // NewTagsCommand creates an initialized command object
 func NewTagsCommand(auth *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	tt := &tagTransformer{}
+	// TODO auf string umstellen
+	td, err := util.NewTableDescriptor(tagsTransformation)
+	helper.CheckErr(err)
+	//tt := &tagTransformer{}
 	return NewQueryCommand(
 		auth,
 		ac,
 		od.TagSchema,
 		"tags",
-		tt)
+		td)
 }
 
 // NewTagCommand creates an initialized command object
 func NewTagCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	tt := &tagTransformer{}
+	td, err := util.NewTableDescriptor(tagsTransformation)
+	helper.CheckErr(err)
+	//tt := &tagTransformer{}
 	return NewGetCommand(
 		conf,
 		ac,
 		od.TagSchema,
 		"tag",
-		tt)
+		td)
 }

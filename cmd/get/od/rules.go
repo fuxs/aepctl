@@ -17,6 +17,8 @@ specific language governing permissions and limitations under the License.
 package od
 
 import (
+	_ "embed"
+
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
@@ -24,50 +26,31 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type ruleTransformer struct{}
-
-func (*ruleTransformer) Header(wide bool) []string {
-	return []string{"NAME", "LAST MODIFIED", "DESCRIPTION"}
-}
-
-func (*ruleTransformer) Preprocess(i util.JSONResponse) error {
-	if err := i.Path("_embedded", "results"); err != nil {
-		return err
-	}
-	return i.EnterArray()
-}
-
-func (*ruleTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
-	s := q.Path("_instance")
-	return w.Write(
-		s.Str("xdm:name"),
-		util.LocalTimeStr(q.Str("repo:lastModifiedDate")),
-		s.Str("xdm:description"),
-	)
-}
-
-func (*ruleTransformer) Iterator(*util.JSONCursor) (util.JSONResponse, error) {
-	return nil, nil
-}
+//go:embed trans/rules.yaml
+var rulesTransformation string
 
 // NewRulesCommand creates an initialized command object
 func NewRulesCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	rt := &ruleTransformer{}
+	td, err := util.NewTableDescriptor(rulesTransformation)
+	helper.CheckErr(err)
+	//rt := &ruleTransformer{}
 	return NewQueryCommand(
 		conf,
 		ac,
 		od.RuleSchema,
 		"rules",
-		rt)
+		td)
 }
 
 // NewRuleCommand creates an initialized command object
 func NewRuleCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	rt := &ruleTransformer{}
+	td, err := util.NewTableDescriptor(rulesTransformation)
+	helper.CheckErr(err)
+	//rt := &ruleTransformer{}
 	return NewGetCommand(
 		conf,
 		ac,
 		od.RuleSchema,
 		"rule",
-		rt)
+		td)
 }

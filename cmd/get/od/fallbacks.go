@@ -17,6 +17,8 @@ specific language governing permissions and limitations under the License.
 package od
 
 import (
+	_ "embed"
+
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
@@ -24,50 +26,29 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type fallbackTransformer struct{}
-
-func (*fallbackTransformer) Header(wide bool) []string {
-	return []string{"NAME", "STATUS", "LAST MODIFIED"}
-}
-
-func (*fallbackTransformer) Preprocess(i util.JSONResponse) error {
-	if err := i.Path("_embedded", "results"); err != nil {
-		return err
-	}
-	return i.EnterArray()
-}
-
-func (*fallbackTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
-	s := q.Path("_instance")
-	return w.Write(
-		s.Str("xdm:name"),
-		StatusMapper.Lookup(s.Str("xdm:status")),
-		util.LocalTimeStrCustom(q.Str("repo:lastModifiedDate"), longDate),
-	)
-}
-
-func (*fallbackTransformer) Iterator(*util.JSONCursor) (util.JSONResponse, error) {
-	return nil, nil
-}
+//go:embed trans/fallbacks.yaml
+var fallbacksTransformation string
 
 // NewFallbacksCommand creates an initialized command object
 func NewFallbacksCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	ft := &fallbackTransformer{}
+	td, err := util.NewTableDescriptor(fallbacksTransformation)
+	helper.CheckErr(err)
 	return NewQueryCommand(
 		conf,
 		ac,
 		od.FallbackSchema,
 		"fallbacks",
-		ft)
+		td)
 }
 
 // NewFallbackCommand creates an initialized command object
 func NewFallbackCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	ft := &fallbackTransformer{}
+	td, err := util.NewTableDescriptor(fallbacksTransformation)
+	helper.CheckErr(err)
 	return NewGetCommand(
 		conf,
 		ac,
 		od.FallbackSchema,
 		"fallback",
-		ft)
+		td)
 }

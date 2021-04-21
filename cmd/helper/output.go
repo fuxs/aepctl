@@ -18,7 +18,6 @@ package helper
 
 import (
 	"bufio"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -68,83 +67,6 @@ type Transformer interface {
 	NextCall(context.Context, *api.AuthenticationConfig, string) (*http.Response, error)
 }*/
 
-type Pager struct {
-	Func      api.Func
-	Auth      *api.AuthenticationConfig
-	Values    util.Params
-	Context   context.Context
-	Filter    []string
-	Path      []string
-	Parameter string
-	nextToken string
-	calls     int
-	jf        *util.JSONFinder
-}
-
-func NewPager(f api.Func, auth *api.AuthenticationConfig, v util.Params) *Pager {
-	result := &Pager{
-		Func:      f,
-		Auth:      auth,
-		Values:    v,
-		Filter:    []string{"_links"},
-		Path:      []string{"next", "href"},
-		Parameter: "continuationToken",
-	}
-	result.initJF()
-	return result
-}
-
-func (p *Pager) Next() bool {
-	return p.calls == 0 || p.nextToken != ""
-}
-
-func (p *Pager) Call() error {
-	if !p.Next() {
-		return io.EOF
-	}
-	if p.calls == 0 {
-		if p.Context == nil {
-			p.Context = context.Background()
-		}
-	}
-	if p.nextToken != "" {
-		p.Values[p.Parameter] = []string{p.nextToken}
-		p.nextToken = ""
-	}
-	res, err := api.HandleStatusCode(p.Func(p.Context, p.Auth, p.Values))
-	if err != nil {
-		return err
-	}
-	p.calls++
-	i := util.NewJSONIterator(util.NewJSONCursor(res.Body))
-	defer i.Close()
-	p.jf.SetIterator(i)
-
-	return p.jf.Run()
-}
-
-func (p *Pager) initJF() {
-	jf := util.NewJSONFinder()
-	jf.Add(func(j util.JSONResponse) error {
-		q, err := j.Query()
-		if err != nil {
-			return err
-		}
-		url := q.Str(p.Path...)
-		token, err := util.GetParam(url, p.Parameter)
-		if err != nil {
-			return err
-		}
-		p.nextToken = token
-		return nil
-	}, p.Filter...)
-	p.jf = jf
-}
-
-func (p *Pager) Add(f func(util.JSONResponse) error, path ...string) {
-	p.jf.Add(f, path...)
-}
-
 // OutputConf contains all options for the output
 type OutputConf struct {
 	Output    string
@@ -152,7 +74,7 @@ type OutputConf struct {
 	jsonPath  string
 	transPath string
 	tf        Transformer
-	td        *util.TableDescriptor
+	//td        *util.TableDescriptor
 	//PB        Pageable
 }
 
@@ -165,7 +87,7 @@ func NewOutputConf(tf Transformer) *OutputConf {
 
 // SetTableTransformation changes the Transformer object
 func (o *OutputConf) SetTableTransformation(td *util.TableDescriptor) {
-	o.td = td
+	o.tf = td
 }
 
 // SetTransformation changes the Transformer object
@@ -189,7 +111,7 @@ func (o *OutputConf) SetTransformationDesc(def string) error {
 		yaml = string(d)
 	}
 	td, err := util.NewTableDescriptor(yaml)
-	o.td = td
+	//o.td = td
 	o.tf = td
 	return err
 }
@@ -331,83 +253,41 @@ func (o *OutputConf) streamTableBody(i util.JSONResponse, w *util.RowWriter) err
 	return nil
 }
 
-func (o *OutputConf) Print(paged api.Paged) error {
-	switch o.Type {
-	case JSONOut:
-		i, err := paged.First()
-		CheckErr(err)
-		return i.PrintPretty()
-	case WideOut, TableOut:
-		return o.PrintTable(paged)
-	}
-	return nil
-}
-
-/*func (o *OutputConf) PrintJSON(auth *api.AuthenticationConfig) error {
-	ctx := context.Background()
-	res, err := o.PB.InitialCall(ctx, auth)
-	CheckErr(err)
-	if res.StatusCode >= 300 {
-		data, err := io.ReadAll(res.Body)
-		CheckErrs(err, errors.New(string(data)))
-	}
-	i, err := o.tf.Iterator(res.Body)
-	CheckErr(err)
-	return i.PrintPretty()
-}*/
-
-func (o *OutputConf) PrintTable(paged api.Paged) error {
-	w := util.NewTableWriter(os.Stdout)
-	defer func() {
-		w.Flush()
-	}()
-	wide := o.Type == WideOut
-	if err := w.Write(o.tf.Header(wide)...); err != nil {
-		return err
-	}
-
-	return paged.Execute(o.td.Path, func(j util.JSONResponse) error {
-		return j.Range(func(q *util.Query) error {
-			return o.tf.WriteRow(q, w, wide)
-		})
-	})
-}
-
-func (o *OutputConf) Page(f api.Func, auth *api.AuthenticationConfig, v util.Params) error {
+func (o *OutputConf) PrintPaged(f api.Func, auth *api.AuthenticationConfig, v util.Params) error {
 	pager := NewPager(f, auth, v)
 	switch o.Type {
 	case WideOut, TableOut:
-
-		return o.PrintTableP(pager)
+		return o.PrintTable(pager)
 	}
 	return nil
 }
 
-func (o *OutputConf) PrintTableP(pager *Pager) error {
+// PrintTable prints out multiple JSON responses into one table
+func (o *OutputConf) PrintTable(pager *Pager) error {
 	w := util.NewTableWriter(os.Stdout)
 	defer w.Flush()
-
+	// add payload handler
 	pager.Add(func(j util.JSONResponse) error {
+		// copy a reseted cursor
 		c, err := j.Cursor().New()
 		if err != nil {
 			return err
 		}
+		// complete JSON document must be processed
 		defer c.End()
+		// create the new iterator for the copied cursor
 		i, err := o.tf.Iterator(c)
 		if err != nil {
 			return err
 		}
+		// print table body
 		return o.streamTableBody(i, w)
-	}, o.td.ValuePath...)
-
+		// TODO Nur temporär!!
+	}) //,o.td.ValuePath...)
+	// print the header
 	if err := o.streamTableHeader(w); err != nil {
 		return err
 	}
-
-	for pager.Next() {
-		if err := pager.Call(); err != nil {
-			return err
-		}
-	}
-	return nil
+	// print the table body
+	return pager.Run()
 }

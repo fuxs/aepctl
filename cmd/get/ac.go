@@ -137,7 +137,7 @@ func NewACCommand(conf *helper.Configuration) *cobra.Command {
 			ctx := context.Background()
 			if len(args) == 0 {
 				helper.CheckErr(output.SetTransformationDesc(permissionsTransformation))
-				output.StreamResult(acl.GetPermissionsAndResourcesRaw(ctx, conf.Authentication))
+				output.StreamResultRaw(acl.GetPermissionsAndResourcesRaw(ctx, conf.Authentication))
 			} else {
 				helper.CheckErr(output.SetTransformationDesc(effectiveTransformation))
 				output.StreamResultRaw(acl.GetEffecticeACLPoliciesRaw(ctx, conf.Authentication, args))

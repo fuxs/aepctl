@@ -44,7 +44,7 @@ func NewConnectionsCommand(conf *helper.Configuration) *cobra.Command {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErrs(output.SetTransformationDesc(connectionsTransformation))
 
-			helper.CheckErr(output.Page(api.FlowGetConnections, conf.Authentication, cc.p.Params()))
+			helper.CheckErr(output.PrintPaged(api.FlowGetConnections, conf.Authentication, cc.p.Params()))
 			//output.PB = cc
 			//fp := api.NewFlowPaged(context.Background(), conf.Authentication, cc.p)
 			//helper.CheckErr(output.Print(fp))

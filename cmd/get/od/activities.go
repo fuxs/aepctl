@@ -64,8 +64,8 @@ func (t *activityTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bo
 	)
 }
 
-func (*activityTransformer) Iterator(*util.JSONCursor) (util.JSONResponse, error) {
-	return nil, nil
+func (*activityTransformer) Iterator(c *util.JSONCursor) (util.JSONResponse, error) {
+	return util.NewJSONIterator(c), nil
 }
 
 // NewActivitiesCommand creates an initialized command object

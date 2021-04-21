@@ -1,0 +1,34 @@
+mappings:
+  channel:
+    https://ns.adobe.com/xdm/channel-types/email: email
+    https://ns.adobe.com/xdm/channel-types/offline: offline
+    https://ns.adobe.com/xdm/channel-types/social: social
+    https://ns.adobe.com/xdm/channel-types/web: web
+  content:
+    https://ns.adobe.com/experience/offer-management/content-component-html: html
+    https://ns.adobe.com/experience/offer-management/content-component-imagelink: image
+    https://ns.adobe.com/experience/offer-management/content-component-json: json
+    https://ns.adobe.com/experience/offer-management/content-component-text: text
+path: [_embedded, results]
+columns:
+  - name: ID
+    path: [_instance, "@id"]
+    mode: wide
+  - name: INSTANCE ID
+    path: [instanceId]
+    mode: wide
+  - name: NAME
+    path: [_instance, xdm:name]
+  - name: CHANNEL TYPE
+    path: [_instance, xdm:channel]
+    format: map
+    parameters: [channel]
+  - name: CONTENT TYPE
+    path: [_instance, xdm:componentType]
+    format: map
+    parameters: [content]
+  - name: LAST MODIFIED
+    path: [repo:lastModifiedDate]
+    format: localTime
+  - name: DESCRIPTION
+    path: [_instance, xdm:description]

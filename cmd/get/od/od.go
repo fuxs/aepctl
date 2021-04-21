@@ -78,8 +78,7 @@ func NewGetCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema, 
 			cid, err := ac.Get()
 			helper.CheckErr(err)
 			for _, name := range args {
-				output.StreamResult(od.GetRaw(context.Background(), conf.Authentication, cid, schema, idc.Lookup(name)))
-
+				output.StreamResultRaw(od.GetRaw(context.Background(), conf.Authentication, cid, schema, idc.Lookup(name)))
 			}
 		},
 	}
@@ -99,7 +98,7 @@ func NewQueryCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			cid, err := ac.Get()
 			helper.CheckErr(err)
-			output.StreamResult(od.QueryRaw(context.Background(), conf.Authentication, cid, schema, qc.Query, qc.QOP, qc.Field, qc.OrderBy, qc.Limit))
+			output.StreamResultRaw(od.QueryRaw(context.Background(), conf.Authentication, cid, schema, qc.Query, qc.QOP, qc.Field, qc.OrderBy, qc.Limit))
 		},
 	}
 	output.AddOutputFlags(cmd)

@@ -17,6 +17,8 @@ specific language governing permissions and limitations under the License.
 package od
 
 import (
+	_ "embed"
+
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
@@ -24,54 +26,29 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type offerTransformer struct{}
-
-func (*offerTransformer) Header(wide bool) []string {
-	return []string{"NAME", "STATUS", "PRIORITY", "START DATE", "END DATE", "LAST MODIFIED"}
-}
-
-func (*offerTransformer) Preprocess(i util.JSONResponse) error {
-	if err := i.Path("_embedded", "results"); err != nil {
-		return err
-	}
-	return i.EnterArray()
-}
-
-func (*offerTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
-	s := q.Path("_instance")
-	d := s.Path("xdm:selectionConstraint")
-	return w.Write(
-		s.Str("xdm:name"),
-		StatusMapper.Lookup(s.Str("xdm:status")),
-		s.Str("xdm:rank", "xdm:priority"),
-		util.LocalTimeStrCustom(d.Str("xdm:startDate"), shortDate),
-		util.LocalTimeStrCustom(d.Str("xdm:endDate"), shortDate),
-		util.LocalTimeStrCustom(q.Str("repo:lastModifiedDate"), longDate),
-	)
-}
-
-func (*offerTransformer) Iterator(*util.JSONCursor) (util.JSONResponse, error) {
-	return nil, nil
-}
+//go:embed trans/offers.yaml
+var offersTransformation string
 
 // NewOffersCommand creates an initialized command object
 func NewOffersCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	ot := &offerTransformer{}
+	td, err := util.NewTableDescriptor(offersTransformation)
+	helper.CheckErr(err)
 	return NewQueryCommand(
 		conf,
 		ac,
 		od.OfferSchema,
 		"offers",
-		ot)
+		td)
 }
 
 // NewOfferCommand creates an initialized command object
 func NewOfferCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	ot := &offerTransformer{}
+	td, err := util.NewTableDescriptor(offersTransformation)
+	helper.CheckErr(err)
 	return NewGetCommand(
 		conf,
 		ac,
 		od.OfferSchema,
 		"offer",
-		ot)
+		td)
 }

@@ -19,6 +19,7 @@ package util
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -27,7 +28,8 @@ import (
 
 // TableDescriptor contains all information to transform a JSON object to a table
 type TableDescriptor struct {
-	Columns []*TableColumnDescriptor `json:"columns,omitempty" yaml:"columns,omitempty"`
+	Mappings map[string]Mapper        `json:"mappings,omitempty" yaml:"mappings,omitempty"`
+	Columns  []*TableColumnDescriptor `json:"columns,omitempty" yaml:"columns,omitempty"`
 	//	Wide    []*TableColumnDescriptor `json:"wide,omitempty" yaml:"wide,omitempty"`
 	Path      []string          `json:"path,omitempty" yaml:"path,omitempty"`
 	Select    []string          `json:"select,omitempty" yaml:"select,omitempty"`
@@ -35,7 +37,7 @@ type TableDescriptor struct {
 	Filter    []string          `json:"filter,omitempty" yaml:"filter,omitempty"`
 	Vars      []*DescriptorVars `json:"vars,omitempty" yaml:"vars,omitempty"`
 	Range     *DescriptorRange  `json:"range,omitempty" yaml:"range,omitempty"`
-	ValuePath []string          `json:"valuePath,omitempty" yaml:"valuePath,omitempty"`
+	ValuePath []string          `json:"valuePath,omitempty" yaml:"valuePath,omitempty"` // used by JSONFinder
 	thin      []*TableColumnDescriptor
 	wide      []*TableColumnDescriptor
 }
@@ -90,6 +92,7 @@ func NewTableDescriptor(def string) (*TableDescriptor, error) {
 	w := make([]*TableColumnDescriptor, 0, l)
 	t := make([]*TableColumnDescriptor, 0, l)
 	for i, c := range cols {
+		c.parent = result
 		if c.Name == "" {
 			return nil, fmt.Errorf("name is empty in column %v", i)
 		}
@@ -172,14 +175,15 @@ func (t *TableDescriptor) WriteRow(q *Query, w *RowWriter, wide bool) error {
 	if wide {
 		cols = t.wide
 	}
+	s := NewScope(nil, t.Vars, t.Mappings, q)
 	if t.Range == nil {
-		out := processColumns(rootScope, cols, q)
+		out := processColumns(s, cols, q)
 		return w.Write(out...)
 	}
 	r := t.Range
-	s := NewScope(rootScope, t.Vars, q)
+
 	return q.RangeAttributesE(func(name string, q *Query) error {
-		ss := NewScope(s, r.Vars, q)
+		ss := NewScope(s, r.Vars, nil, q)
 		out := processColumns(ss, cols, q)
 		if r.Post != nil {
 			for _, v := range r.Post.Vars {
@@ -229,6 +233,7 @@ type TableColumnDescriptor struct {
 	Var        string   `json:"var,omitempty" yaml:"var,omitempty"`
 	Mode       string   `json:"mode,omitempty" yaml:"mode,omitempty"`
 	o          func(*Scope, *Query) string
+	parent     *TableDescriptor
 }
 
 // Extract retrieves the value from the JSON document and returns it as
@@ -268,6 +273,18 @@ func (t *TableColumnDescriptor) assignFunc() {
 			t.o = func(_ *Scope, q *Query) string {
 				return stateMapper.Lookup(q.String())
 			}
+		case "map":
+			if len(t.Parameters) == 0 {
+				t.o = func(_ *Scope, q *Query) string {
+					return q.String()
+				}
+				break
+			}
+			name := t.Parameters[0]
+			t.o = func(s *Scope, q *Query) string {
+				m := s.Mapping(name)
+				return m.Lookup(q.String())
+			}
 		}
 	case "num":
 		switch t.Format {
@@ -294,17 +311,22 @@ func (t *TableColumnDescriptor) assignFunc() {
 			t.o = func(_ *Scope, q *Query) string {
 				return ContainsS(t.Parameters[0], q.Strings())
 			}
+		case "count":
+			t.o = func(_ *Scope, q *Query) string {
+				return strconv.FormatInt(int64(q.Length()), 10)
+			}
 		}
 	}
 }
 
 // DescriptorVars represents a variable
 type DescriptorVars struct {
-	Name  string `json:"name,omitempty" yaml:"name,omitempty"`
-	Type  string `json:"type,omitempty" yaml:"type,omitempty"`
-	Meta  string `json:"meta,omitempty" yaml:"meta,omitempty"`
-	Cast  string `json:"cast,omitempty" yaml:"cast,omitempty"`
-	Value string `json:"value,omitempty" yaml:"value,omitempty"`
+	Name  string   `json:"name,omitempty" yaml:"name,omitempty"`
+	Type  string   `json:"type,omitempty" yaml:"type,omitempty"`
+	Meta  string   `json:"meta,omitempty" yaml:"meta,omitempty"`
+	Cast  string   `json:"cast,omitempty" yaml:"cast,omitempty"`
+	Value string   `json:"value,omitempty" yaml:"value,omitempty"`
+	Path  []string `json:"path,omitempty" yaml:"path,omitempty"`
 }
 
 // DescriptorRange represents a range. Usually used to extract sub-values in
@@ -320,12 +342,28 @@ type RangePost struct {
 	Vars []*DescriptorVars `json:"vars,omitempty" yaml:"vars,omitempty"`
 }
 
-var rootScope = &Scope{vars: make(map[string]*Query)}
-
 // Scope represents the current variable scope
 type Scope struct {
-	parent *Scope
-	vars   map[string]*Query
+	parent   *Scope
+	vars     map[string]*Query
+	mappings map[string]Mapper
+}
+
+// Get returns the value of a variable
+func (s *Scope) Mapping(name string) Mapper {
+	if s.mappings == nil {
+		if s.parent != nil {
+			return s.parent.Mapping(name)
+		}
+		return Mapper{}
+	}
+	if v, found := s.mappings[name]; found {
+		return v
+	}
+	if s.parent != nil {
+		return s.parent.Mapping(name)
+	}
+	return Mapper{}
 }
 
 // Get returns the value of a variable
@@ -366,25 +404,36 @@ func (s *Scope) Set(name, value string) bool {
 }
 
 // NewScope creates an initialized Scope object
-func NewScope(parent *Scope, vars []*DescriptorVars, q *Query) *Scope {
+func NewScope(parent *Scope, vars []*DescriptorVars, mappings map[string]Mapper, q *Query) *Scope {
 	result := make(map[string]*Query, len(vars))
 	for _, v := range vars {
-		switch v.Meta {
-		case "name":
-			result[v.Name] = NewQuery(q.JSONName())
-			continue
-		case "path":
-			result[v.Name] = NewQuery(q.JSONPath())
+		// use the path
+		if len(v.Path) > 0 {
+			result[v.Name] = q.Path(v.Path...)
 			continue
 		}
-		switch v.Cast {
-		case "strings":
-			result[v.Name] = NewQuery(q.Strings())
-			continue
+		// use the metadata
+		if v.Meta != "" {
+			switch v.Meta {
+			case "name":
+				result[v.Name] = NewQuery(q.JSONName())
+				continue
+			case "path":
+				result[v.Name] = NewQuery(q.JSONPath())
+				continue
+			}
+		}
+		if v.Cast != "" {
+			switch v.Cast {
+			case "strings":
+				result[v.Name] = NewQuery(q.Strings())
+				continue
+			}
 		}
 	}
 	return &Scope{
-		parent: parent,
-		vars:   result,
+		parent:   parent,
+		vars:     result,
+		mappings: mappings,
 	}
 }

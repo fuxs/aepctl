@@ -17,6 +17,8 @@ specific language governing permissions and limitations under the License.
 package od
 
 import (
+	_ "embed"
+
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
@@ -24,63 +26,31 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type placementTransformer struct{}
-
-func (*placementTransformer) Header(wide bool) []string {
-	if wide {
-		return []string{"ID", "NAME", "CHANNEL TYPE", "CONTENT TYPE", "LAST MODIFIED", "DESCRIPTION"}
-	}
-	return []string{"NAME", "CHANNEL TYPE", "CONTENT TYPE", "LAST MODIFIED", "DESCRIPTION"}
-}
-
-func (*placementTransformer) Preprocess(i util.JSONResponse) error {
-	if err := i.Path("_embedded", "results"); err != nil {
-		return err
-	}
-	return i.EnterArray()
-}
-
-func (*placementTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
-	s := q.Path("_instance")
-	if wide {
-		return w.Write(
-			s.Str("@id"),
-			s.Str("xdm:name"),
-			helper.ChannelLToS.Lookup(s.Str("xdm:channel")),
-			helper.ContentLToS.Lookup(s.Str("xdm:componentType")),
-			util.LocalTimeStr(q.Str("repo:lastModifiedDate")),
-			s.Str("xdm:description"))
-	}
-	return w.Write(
-		s.Str("xdm:name"),
-		helper.ChannelLToS.Lookup(s.Str("xdm:channel")),
-		helper.ContentLToS.Lookup(s.Str("xdm:componentType")),
-		util.LocalTimeStr(q.Str("repo:lastModifiedDate")),
-		s.Str("xdm:description"))
-}
-
-func (*placementTransformer) Iterator(*util.JSONCursor) (util.JSONResponse, error) {
-	return nil, nil
-}
+//go:embed trans/placements.yaml
+var placementsTransformation string
 
 // NewPlacementsCommand creates an initialized command object
 func NewPlacementsCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	pt := &placementTransformer{}
+	td, err := util.NewTableDescriptor(placementsTransformation)
+	helper.CheckErr(err)
+	//pt := &placementTransformer{}
 	return NewQueryCommand(
 		conf,
 		ac,
 		od.PlacementSchema,
 		"placements",
-		pt)
+		td)
 }
 
 // NewPlacementCommand creates an initialized command object
 func NewPlacementCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	pt := &placementTransformer{}
+	td, err := util.NewTableDescriptor(placementsTransformation)
+	helper.CheckErr(err)
+	//pt := &placementTransformer{}
 	return NewGetCommand(
 		conf,
 		ac,
 		od.PlacementSchema,
 		"placement",
-		pt)
+		td)
 }
