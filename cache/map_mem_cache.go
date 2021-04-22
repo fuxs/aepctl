@@ -81,3 +81,10 @@ func (c *MapMemCache) Values() []string {
 	}
 	return c.cached.Values()
 }
+
+func (c *MapMemCache) Mapper() util.Mapper {
+	if err := c.Load(); err != nil {
+		return nil
+	}
+	return c.cached
+}

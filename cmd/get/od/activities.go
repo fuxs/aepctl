@@ -17,75 +17,39 @@ specific language governing permissions and limitations under the License.
 package od
 
 import (
+	_ "embed"
+
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
-	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
 )
 
-type activityTransformer struct {
-	idc *cache.MapMemCache
-}
+//go:embed trans/activities.yaml
+var activitiesTransformation string
 
-func newActivityTransformer(ac *cache.AutoContainer) *activityTransformer {
-	// get list of placements and store map[@id]channel
+func getPlacementCache(ac *cache.AutoContainer) *cache.MapMemCache {
 	t := cache.NewODTrans().K("_instance", "@id").V("_instance", "xdm:channel")
 	c := cache.NewODCall(ac, od.PlacementSchema)
-	idc := cache.NewMapMemCache(c, t)
-	return &activityTransformer{
-		idc: idc,
-	}
-}
-
-func (*activityTransformer) Header(wide bool) []string {
-	return []string{"NAME", "STATUS", "START DATE", "END DATE", "CHANNEL TYPE", "LAST MODIFIED"}
-}
-
-func (*activityTransformer) Preprocess(i util.JSONResponse) error {
-	if err := i.Path("_embedded", "results"); err != nil {
-		return err
-	}
-	return i.EnterArray()
-}
-
-func (t *activityTransformer) WriteRow(q *util.Query, w *util.RowWriter, wide bool) error {
-	s := q.Path("_instance")
-	return w.Write(
-		s.Str("xdm:name"),
-		StatusMapper.Lookup(s.Str("xdm:status")),
-		util.LocalTimeStrCustom(s.Str("xdm:startDate"), shortDate),
-		util.LocalTimeStrCustom(s.Str("xdm:endDate"), shortDate),
-		s.Path("xdm:criteria").Concat(",", func(q *util.Query) string {
-			id := q.Path("xdm:placements").Get(0).String()
-			return helper.ChannelLToS.Lookup(t.idc.Lookup(id))
-		}),
-		util.LocalTimeStrCustom(q.Str("repo:lastModifiedDate"), longDate),
-	)
-}
-
-func (*activityTransformer) Iterator(c *util.JSONCursor) (util.JSONResponse, error) {
-	return util.NewJSONIterator(c), nil
+	return cache.NewMapMemCache(c, t)
 }
 
 // NewActivitiesCommand creates an initialized command object
 func NewActivitiesCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	at := newActivityTransformer(ac)
 	return NewQueryCommand(
 		conf,
 		ac,
 		od.ActivitySchema,
 		"activities",
-		at)
+		activitiesTransformation, "placements", getPlacementCache(ac))
 }
 
 // NewActivityCommand creates an initialized command object
 func NewActivityCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	at := newActivityTransformer(ac)
 	return NewGetCommand(
 		conf,
 		ac,
 		od.ActivitySchema,
 		"activity",
-		at)
+		activitiesTransformation, "placements", getPlacementCache(ac))
 }

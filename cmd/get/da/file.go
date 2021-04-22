@@ -26,7 +26,7 @@ import (
 
 // NewDatasetsCommand creates an initialized command object
 func NewFileCommand(conf *helper.Configuration) *cobra.Command {
-	output := helper.NewOutputConf(nil)
+	output := &helper.OutputConf{}
 	fc := &fileConf{}
 	cmd := &cobra.Command{
 		Use:                   "file fileId",

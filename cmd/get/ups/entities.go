@@ -31,7 +31,7 @@ var profileTransformation string
 
 // NewEntitiesCommand creates an initialized command object
 func NewEntitiesCommand(conf *helper.Configuration) *cobra.Command {
-	output := helper.NewOutputConf(nil)
+	output := &helper.OutputConf{}
 	p := &api.UPSEntitiesParams{}
 	cmd := &cobra.Command{
 		Use:                   "entities",
@@ -67,7 +67,7 @@ func NewEntitiesCommand(conf *helper.Configuration) *cobra.Command {
 }
 
 func NewProfileCommand(conf *helper.Configuration) *cobra.Command {
-	output := helper.NewOutputConf(nil)
+	output := &helper.OutputConf{}
 	p := &api.UPSEntitiesParams{Schema: "_xdm.context.profile"}
 	cmd := &cobra.Command{
 		Use:                   "profile",
@@ -103,7 +103,7 @@ func NewProfileCommand(conf *helper.Configuration) *cobra.Command {
 }
 
 func NewEventsCommand(conf *helper.Configuration) *cobra.Command {
-	output := helper.NewOutputConf(nil)
+	output := &helper.OutputConf{}
 	p := &api.UPSEntitiesParams{Schema: "_xdm.context.experienceevent", RelatedSchema: "_xdm.context.profile"}
 	cmd := &cobra.Command{
 		Use:                   "events",

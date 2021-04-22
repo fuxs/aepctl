@@ -33,7 +33,7 @@ var schemasFullTransformation string
 
 // NewStatsCommand creates an initialized command object
 func NewSchemasCommand(conf *helper.Configuration) *cobra.Command {
-	output := helper.NewOutputConf(nil)
+	output := &helper.OutputConf{}
 	p := &api.SRGetSchemasParam{}
 	cmd := &cobra.Command{
 		Use:                   "schemas",
@@ -65,7 +65,7 @@ func NewSchemasCommand(conf *helper.Configuration) *cobra.Command {
 
 // NewStatsCommand creates an initialized command object
 func NewSchemaCommand(conf *helper.Configuration) *cobra.Command {
-	output := helper.NewOutputConf(nil)
+	output := &helper.OutputConf{}
 	p := &api.SRGetSchemasParam{}
 	cmd := &cobra.Command{
 		Use:                   "schema",

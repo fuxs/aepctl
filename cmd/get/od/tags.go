@@ -22,7 +22,6 @@ import (
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
-	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
 )
 
@@ -31,27 +30,20 @@ var tagsTransformation string
 
 // NewTagsCommand creates an initialized command object
 func NewTagsCommand(auth *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	// TODO auf string umstellen
-	td, err := util.NewTableDescriptor(tagsTransformation)
-	helper.CheckErr(err)
-	//tt := &tagTransformer{}
 	return NewQueryCommand(
 		auth,
 		ac,
 		od.TagSchema,
 		"tags",
-		td)
+		tagsTransformation, "", nil)
 }
 
 // NewTagCommand creates an initialized command object
 func NewTagCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	td, err := util.NewTableDescriptor(tagsTransformation)
-	helper.CheckErr(err)
-	//tt := &tagTransformer{}
 	return NewGetCommand(
 		conf,
 		ac,
 		od.TagSchema,
 		"tag",
-		td)
+		tagsTransformation, "", nil)
 }

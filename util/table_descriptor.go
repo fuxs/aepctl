@@ -91,6 +91,7 @@ func NewTableDescriptor(def string) (*TableDescriptor, error) {
 	l = len(cols)
 	w := make([]*TableColumnDescriptor, 0, l)
 	t := make([]*TableColumnDescriptor, 0, l)
+	// initialize columns
 	for i, c := range cols {
 		c.parent = result
 		if c.Name == "" {
@@ -107,6 +108,11 @@ func NewTableDescriptor(def string) (*TableDescriptor, error) {
 						c.Type = t
 					}
 				}
+			}
+		}
+		if c.Query != nil {
+			if err := c.Query.Prepare(); err != nil {
+				return nil, err
 			}
 		}
 		switch c.Mode {
@@ -210,6 +216,10 @@ func (t *TableDescriptor) Iterator(c *JSONCursor) (JSONResponse, error) {
 	}
 }
 
+func (t *TableDescriptor) AddMapping(name string, m Mapper) {
+	t.Mappings[name] = m
+}
+
 // StatusMapper maps status values to a pretty representation
 var statusMapper = Mapper{
 	"live":     "● Live",
@@ -223,15 +233,16 @@ var stateMapper = Mapper{
 
 // TableColumnDescriptor contains all information to extract a column value
 type TableColumnDescriptor struct {
-	Name       string   `json:"name" yaml:"name"`
-	Long       string   `json:"long" yaml:"long"`
-	Type       string   `json:"type" yaml:"type"`
-	Meta       string   `json:"meta,omitempty" yaml:"meta,omitempty"`
-	Path       []string `json:"path,omitempty" yaml:"path,omitempty"`
-	Format     string   `json:"format,omitempty" yaml:"format,omitempty"`
-	Parameters []string `json:"parameters,omitempty" yaml:"parameters,omitempty"`
-	Var        string   `json:"var,omitempty" yaml:"var,omitempty"`
-	Mode       string   `json:"mode,omitempty" yaml:"mode,omitempty"`
+	Name       string            `json:"name" yaml:"name"`
+	Long       string            `json:"long" yaml:"long"`
+	Type       string            `json:"type" yaml:"type"`
+	Meta       string            `json:"meta,omitempty" yaml:"meta,omitempty"`
+	Path       []string          `json:"path,omitempty" yaml:"path,omitempty"`
+	Format     string            `json:"format,omitempty" yaml:"format,omitempty"`
+	Parameters []string          `json:"parameters,omitempty" yaml:"parameters,omitempty"`
+	Var        string            `json:"var,omitempty" yaml:"var,omitempty"`
+	Mode       string            `json:"mode,omitempty" yaml:"mode,omitempty"`
+	Query      *QueryDescription `json:"query,omitempty" yaml:"query,omitempty"`
 	o          func(*Scope, *Query) string
 	parent     *TableDescriptor
 }
@@ -302,10 +313,32 @@ func (t *TableColumnDescriptor) assignFunc() {
 			}
 		}
 	case "list":
+		var f func(*Scope, *Query) *Query
+		if t.Query != nil {
+			f = t.Query.Func
+		}
 		switch t.Format {
 		case "":
-			t.o = func(_ *Scope, q *Query) string {
-				return q.Concat(",", func(q *Query) string { return q.String() })
+			if f != nil {
+				t.o = func(s *Scope, q *Query) string {
+					var (
+						b    strings.Builder
+						next bool
+					)
+					q.Range(func(sq *Query) {
+						if next {
+							b.WriteByte(',')
+						} else {
+							next = true
+						}
+						b.WriteString(f(s, sq).String())
+					})
+					return b.String()
+				}
+			} else {
+				t.o = func(_ *Scope, q *Query) string {
+					return q.Concat(",", func(q *Query) string { return q.String() })
+				}
 			}
 		case "contains":
 			t.o = func(_ *Scope, q *Query) string {
@@ -317,6 +350,65 @@ func (t *TableColumnDescriptor) assignFunc() {
 			}
 		}
 	}
+}
+
+// QueryDescription represents a query
+type QueryDescription struct {
+	CMD        string            `json:"cmd,omitempty" yaml:"cmd,omitempty"`
+	Parameters []interface{}     `json:"parameters,omitempty" yaml:"parameters,omitempty"`
+	Path       []string          `json:"path,omitempty" yaml:"path,omitempty"`
+	Query      *QueryDescription `json:"query,omitempty" yaml:"query,omitempty"`
+	Func       func(*Scope, *Query) *Query
+}
+
+func (d *QueryDescription) Prepare() error {
+	var f func(*Scope, *Query) *Query
+	if d.Query != nil {
+		if err := d.Query.Prepare(); err != nil {
+			return err
+		}
+		f = d.Query.Func
+	}
+	switch d.CMD {
+	case "get":
+		index := 0
+		if len(d.Parameters) > 0 {
+			index = GetInt(d.Parameters[0])
+		}
+		if f != nil {
+			d.Func = func(s *Scope, q *Query) *Query {
+				return f(s, q.Path(d.Path...)).Get(index)
+			}
+		} else {
+			d.Func = func(_ *Scope, q *Query) *Query {
+				return q.Path(d.Path...).Get(index)
+			}
+		}
+	case "map":
+		if len(d.Parameters) == 0 {
+			return errors.New("command map requires a name in parameters")
+		}
+		name := GetString(d.Parameters[0])
+		var m Mapper
+		if f != nil {
+			d.Func = func(s *Scope, q *Query) *Query {
+				if m == nil {
+					m = s.mappings[name]
+				}
+				return NewQuery(m.Lookup(f(s, q.Path(d.Path...)).String()))
+			}
+		} else {
+			d.Func = func(s *Scope, q *Query) *Query {
+				if m == nil {
+					m = s.mappings[name]
+				}
+				return NewQuery(m.Lookup(q.Str(d.Path...)))
+			}
+		}
+	default:
+		return fmt.Errorf("unknown command %s", d.CMD)
+	}
+	return nil
 }
 
 // DescriptorVars represents a variable

@@ -22,7 +22,6 @@ import (
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
-	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
 )
 
@@ -31,24 +30,20 @@ var offersTransformation string
 
 // NewOffersCommand creates an initialized command object
 func NewOffersCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	td, err := util.NewTableDescriptor(offersTransformation)
-	helper.CheckErr(err)
 	return NewQueryCommand(
 		conf,
 		ac,
 		od.OfferSchema,
 		"offers",
-		td)
+		offersTransformation, "", nil)
 }
 
 // NewOfferCommand creates an initialized command object
 func NewOfferCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	td, err := util.NewTableDescriptor(offersTransformation)
-	helper.CheckErr(err)
 	return NewGetCommand(
 		conf,
 		ac,
 		od.OfferSchema,
 		"offer",
-		td)
+		offersTransformation, "", nil)
 }

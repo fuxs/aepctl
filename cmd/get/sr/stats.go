@@ -33,7 +33,7 @@ var createdTransformation string
 
 // NewStatsCommand creates an initialized command object
 func NewStatsCommand(conf *helper.Configuration) *cobra.Command {
-	output := helper.NewOutputConf(nil)
+	output := &helper.OutputConf{}
 	cmd := &cobra.Command{
 		Use:                   "stats",
 		Short:                 "Display all stats",

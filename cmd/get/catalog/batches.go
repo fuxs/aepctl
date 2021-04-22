@@ -32,7 +32,7 @@ var batchesTransformation string
 
 // NewBatchesCommand creates an initialized command object
 func NewBatchesCommand(conf *helper.Configuration) *cobra.Command {
-	output := helper.NewOutputConf(nil)
+	output := &helper.OutputConf{}
 	bc := &batchesConf{}
 	cmd := &cobra.Command{
 		Use:                   "batches",

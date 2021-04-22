@@ -31,7 +31,7 @@ var connectionsTransformation string
 
 // NewDatasetsCommand creates an initialized command object
 func NewConnectionsCommand(conf *helper.Configuration) *cobra.Command {
-	output := helper.NewOutputConf(nil)
+	output := &helper.OutputConf{}
 	cc := NewConnectionsConf()
 	cmd := &cobra.Command{
 		Use:                   "connections",

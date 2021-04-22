@@ -37,7 +37,7 @@ var typesTransformation string
 
 // NewSandboxCommand creates an initialized command object
 func NewSandboxCommand(conf *helper.Configuration) *cobra.Command {
-	output := helper.NewOutputConf(nil)
+	output := &helper.OutputConf{}
 	cmd := &cobra.Command{
 		Use:  "sandbox",
 		Args: cobra.MaximumNArgs(1),
@@ -66,7 +66,7 @@ func NewSandboxCommand(conf *helper.Configuration) *cobra.Command {
 
 // NewSandboxesCommand creates an initialized command object
 func NewSandboxesCommand(conf *helper.Configuration) *cobra.Command {
-	output := helper.NewOutputConf(nil)
+	output := &helper.OutputConf{}
 	cmd := &cobra.Command{
 		Use:       "sandboxes",
 		Args:      cobra.MaximumNArgs(1),

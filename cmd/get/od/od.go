@@ -58,8 +58,8 @@ func (q *QueryConf) AddQueryFlags(cmd *cobra.Command) {
 }
 
 // NewGetCommand creates an initialized command object
-func NewGetCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema, use string, t helper.Transformer) *cobra.Command {
-	output := helper.NewOutputConf(t)
+func NewGetCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema, use, t, n string, c *cache.MapMemCache) *cobra.Command {
+	output := &helper.OutputConf{}
 	cmd := &cobra.Command{
 		Use:  use,
 		Args: cobra.MinimumNArgs(1),
@@ -75,6 +75,12 @@ func NewGetCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema, 
 			idc := cache.NewODNameToID(ac, use, schema, conf.Sandboxed())
 			idc.Delete()
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
+			td, err := util.NewTableDescriptor(t)
+			helper.CheckErr(err)
+			if c != nil {
+				td.AddMapping(n, c.Mapper())
+			}
+			output.SetTransformation(td)
 			cid, err := ac.Get()
 			helper.CheckErr(err)
 			for _, name := range args {
@@ -88,14 +94,20 @@ func NewGetCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema, 
 }
 
 // NewQueryCommand creates an initialized command object
-func NewQueryCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema, use string, t helper.Transformer) *cobra.Command {
-	output := helper.NewOutputConf(t)
+func NewQueryCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema, use, t, n string, c *cache.MapMemCache) *cobra.Command {
+	output := &helper.OutputConf{}
 	qc := &QueryConf{}
 	cmd := &cobra.Command{
 		Use:  use,
 		Args: cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
+			td, err := util.NewTableDescriptor(t)
+			helper.CheckErr(err)
+			if c != nil {
+				td.AddMapping(n, c.Mapper())
+			}
+			output.SetTransformation(td)
 			cid, err := ac.Get()
 			helper.CheckErr(err)
 			output.StreamResultRaw(od.QueryRaw(context.Background(), conf.Authentication, cid, schema, qc.Query, qc.QOP, qc.Field, qc.OrderBy, qc.Limit))

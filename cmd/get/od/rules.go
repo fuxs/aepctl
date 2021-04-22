@@ -22,7 +22,6 @@ import (
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
-	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
 )
 
@@ -31,26 +30,20 @@ var rulesTransformation string
 
 // NewRulesCommand creates an initialized command object
 func NewRulesCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	td, err := util.NewTableDescriptor(rulesTransformation)
-	helper.CheckErr(err)
-	//rt := &ruleTransformer{}
 	return NewQueryCommand(
 		conf,
 		ac,
 		od.RuleSchema,
 		"rules",
-		td)
+		rulesTransformation, "", nil)
 }
 
 // NewRuleCommand creates an initialized command object
 func NewRuleCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	td, err := util.NewTableDescriptor(rulesTransformation)
-	helper.CheckErr(err)
-	//rt := &ruleTransformer{}
 	return NewGetCommand(
 		conf,
 		ac,
 		od.RuleSchema,
 		"rule",
-		td)
+		rulesTransformation, "", nil)
 }

@@ -29,7 +29,7 @@ var transformation string
 
 // NewTokenCommand creates an initialized command object
 func NewTokenCommand(conf *helper.Configuration) *cobra.Command {
-	output := helper.NewOutputConf(nil)
+	output := &helper.OutputConf{}
 	cmd := &cobra.Command{
 		Use:  "token",
 		Args: cobra.NoArgs,

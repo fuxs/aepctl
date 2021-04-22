@@ -22,7 +22,6 @@ import (
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
-	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
 )
 
@@ -31,24 +30,20 @@ var fallbacksTransformation string
 
 // NewFallbacksCommand creates an initialized command object
 func NewFallbacksCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	td, err := util.NewTableDescriptor(fallbacksTransformation)
-	helper.CheckErr(err)
 	return NewQueryCommand(
 		conf,
 		ac,
 		od.FallbackSchema,
 		"fallbacks",
-		td)
+		fallbacksTransformation, "", nil)
 }
 
 // NewFallbackCommand creates an initialized command object
 func NewFallbackCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	td, err := util.NewTableDescriptor(fallbacksTransformation)
-	helper.CheckErr(err)
 	return NewGetCommand(
 		conf,
 		ac,
 		od.FallbackSchema,
 		"fallback",
-		td)
+		fallbacksTransformation, "", nil)
 }

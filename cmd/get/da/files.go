@@ -31,7 +31,7 @@ var filesTransformation string
 
 // NewDatasetsCommand creates an initialized command object
 func NewFilesCommand(conf *helper.Configuration) *cobra.Command {
-	output := helper.NewOutputConf(nil)
+	output := &helper.OutputConf{}
 	fc := &filesConf{}
 	cmd := &cobra.Command{
 		Use:                   "files batchId",

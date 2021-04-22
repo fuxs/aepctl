@@ -22,7 +22,6 @@ import (
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
-	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
 )
 
@@ -57,24 +56,20 @@ var collectionsTransformation string
 
 // NewCollectionsCommand creates an initialized command object
 func NewCollectionsCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	td, err := util.NewTableDescriptor(collectionsTransformation)
-	helper.CheckErr(err)
 	return NewQueryCommand(
 		conf,
 		ac,
 		od.CollectionSchema,
 		"collections",
-		td)
+		collectionsTransformation, "", nil)
 }
 
 // NewCollectionCommand creates an initialized command object
 func NewCollectionCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	td, err := util.NewTableDescriptor(collectionsTransformation)
-	helper.CheckErr(err)
 	return NewGetCommand(
 		conf,
 		ac,
 		od.CollectionSchema,
 		"collection",
-		td)
+		collectionsTransformation, "", nil)
 }

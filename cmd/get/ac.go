@@ -122,7 +122,7 @@ var effectiveTransformation string
 
 // NewACCommand creates an initialized command object
 func NewACCommand(conf *helper.Configuration) *cobra.Command {
-	output := helper.NewOutputConf(nil)
+	output := &helper.OutputConf{}
 	cmd := &cobra.Command{
 		Use:                   "ac [(RESOURCE | PERMISSION)*]",
 		Short:                 "Display all or effictive permissions",

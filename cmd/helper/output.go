@@ -62,11 +62,6 @@ type Transformer interface {
 	Iterator(*util.JSONCursor) (util.JSONResponse, error)
 }
 
-/*type Pageable interface {
-	InitialCall(context.Context, *api.AuthenticationConfig) (*http.Response, error)
-	NextCall(context.Context, *api.AuthenticationConfig, string) (*http.Response, error)
-}*/
-
 // OutputConf contains all options for the output
 type OutputConf struct {
 	Output    string
@@ -74,21 +69,14 @@ type OutputConf struct {
 	jsonPath  string
 	transPath string
 	tf        Transformer
-	//td        *util.TableDescriptor
-	//PB        Pageable
 }
 
 // NewOutputConf creates an initialized OutputConf object
-func NewOutputConf(tf Transformer) *OutputConf {
+/*func NewOutputConf(tf Transformer) *OutputConf {
 	return &OutputConf{
 		tf: tf,
 	}
-}
-
-// SetTableTransformation changes the Transformer object
-func (o *OutputConf) SetTableTransformation(td *util.TableDescriptor) {
-	o.tf = td
-}
+}*/
 
 // SetTransformation changes the Transformer object
 func (o *OutputConf) SetTransformation(tf Transformer) {

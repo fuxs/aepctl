@@ -22,7 +22,6 @@ import (
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
-	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
 )
 
@@ -31,26 +30,20 @@ var placementsTransformation string
 
 // NewPlacementsCommand creates an initialized command object
 func NewPlacementsCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	td, err := util.NewTableDescriptor(placementsTransformation)
-	helper.CheckErr(err)
-	//pt := &placementTransformer{}
 	return NewQueryCommand(
 		conf,
 		ac,
 		od.PlacementSchema,
 		"placements",
-		td)
+		placementsTransformation, "", nil)
 }
 
 // NewPlacementCommand creates an initialized command object
 func NewPlacementCommand(conf *helper.Configuration, ac *cache.AutoContainer) *cobra.Command {
-	td, err := util.NewTableDescriptor(placementsTransformation)
-	helper.CheckErr(err)
-	//pt := &placementTransformer{}
 	return NewGetCommand(
 		conf,
 		ac,
 		od.PlacementSchema,
 		"placement",
-		td)
+		placementsTransformation, "", nil)
 }

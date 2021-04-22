@@ -73,6 +73,9 @@ func (q *Query) JSONFullPath() string {
 
 // Path queries nested objects, e.g. property a.b.c will be queried with Path("a","b","c")
 func (q *Query) Path(path ...string) *Query {
+	if len(path) == 0 {
+		return q
+	}
 	cur := q.obj
 	jp := q.jp.Clone()
 	for _, p := range path {

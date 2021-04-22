@@ -30,7 +30,7 @@ var datasetsTransformation string
 
 // NewDatasetsCommand creates an initialized command object
 func NewDatasetsCommand(conf *helper.Configuration) *cobra.Command {
-	output := helper.NewOutputConf(nil)
+	output := &helper.OutputConf{}
 	bc := &batchesConf{}
 	cmd := &cobra.Command{
 		Use:                   "datasets",
