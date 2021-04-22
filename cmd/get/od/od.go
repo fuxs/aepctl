@@ -33,30 +33,6 @@ var StatusMapper = util.Mapper{
 	"draft":    "◯ Draft",
 }
 
-const (
-	shortDate = "01/02/2006"
-	longDate  = "01/02/2006, 03:04 PM"
-)
-
-// QueryConf stores the values of the query command
-type QueryConf struct {
-	Query   string
-	QOP     string
-	Field   string
-	OrderBy string
-	Limit   string
-}
-
-// AddQueryFlags adds all flags offered by a query command
-func (q *QueryConf) AddQueryFlags(cmd *cobra.Command) {
-	flags := cmd.PersistentFlags()
-	flags.StringVarP(&q.Query, "query", "q", "", "Query string to search for in selected fields")
-	flags.StringVar(&q.QOP, "qop", "", "Applies AND or OR operator to values in q query string param.")
-	flags.StringVarP(&q.Field, "field", "f", "", "List of fields to limit the search to")
-	flags.StringVarP(&q.OrderBy, "order-by", "b", "", "Sort results by a specific property.")
-	flags.StringVarP(&q.Limit, "limit", "l", "", "Limit the number of decision rules returned.")
-}
-
 // NewGetCommand creates an initialized command object
 func NewGetCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema, use, t, n string, c *cache.MapMemCache) *cobra.Command {
 	output := &helper.OutputConf{}
@@ -96,7 +72,7 @@ func NewGetCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema, 
 // NewQueryCommand creates an initialized command object
 func NewQueryCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema, use, t, n string, c *cache.MapMemCache) *cobra.Command {
 	output := &helper.OutputConf{}
-	qc := &QueryConf{}
+	p := &od.ODQueryParames{Schema: schema}
 	cmd := &cobra.Command{
 		Use:  use,
 		Args: cobra.NoArgs,
@@ -108,13 +84,18 @@ func NewQueryCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema
 				td.AddMapping(n, c.Mapper())
 			}
 			output.SetTransformation(td)
-			cid, err := ac.Get()
+			p.ContainerID, err = ac.Get()
 			helper.CheckErr(err)
-			output.StreamResultRaw(od.QueryRaw(context.Background(), conf.Authentication, cid, schema, qc.Query, qc.QOP, qc.Field, qc.OrderBy, qc.Limit))
+			output.StreamResultRaw(od.QueryRaw(context.Background(), conf.Authentication, p.Params()))
 		},
 	}
 	output.AddOutputFlags(cmd)
-	qc.AddQueryFlags(cmd)
+	flags := cmd.PersistentFlags()
+	flags.StringVarP(&p.Query, "query", "q", "", "Query string to search for in selected fields")
+	flags.StringVar(&p.QOP, "qop", "", "Applies AND or OR operator to values in q query string param.")
+	flags.StringVarP(&p.Field, "field", "f", "", "List of fields to limit the search to")
+	flags.StringVarP(&p.OrderBy, "order-by", "b", "", "Sort results by a specific property.")
+	flags.IntVarP(&p.Limit, "limit", "l", 0, "Limit the number of decision rules returned.")
 	helper.CheckErr(ac.AddContainerFlag(cmd))
 	return cmd
 }

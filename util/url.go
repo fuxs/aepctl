@@ -88,6 +88,14 @@ func (p Params) Set(pairs ...string) {
 	}
 }
 
+func (p Params) Get(key string) string {
+	s := p[key]
+	if len(s) > 0 {
+		return s[0]
+	}
+	return ""
+}
+
 func (p Params) Encode() string {
 	if p == nil {
 		return ""
@@ -100,16 +108,48 @@ func (p Params) Encode() string {
 		i++
 	}
 	sort.Strings(keys)
-	more := false
+	sep := byte('?')
 	for _, k := range keys {
 		vs := p[k]
 		keyEscaped := url.QueryEscape(k)
 		for _, v := range vs {
-			if more {
-				buf.WriteByte('&')
-			} else {
-				more = true
+			buf.WriteByte(sep)
+			sep = byte('&')
+			buf.WriteString(keyEscaped)
+			buf.WriteByte('=')
+			buf.WriteString(url.QueryEscape(v))
+		}
+	}
+	return buf.String()
+}
+
+func (p Params) EncodeWithout(names ...string) string {
+	if p == nil {
+		return ""
+	}
+	var buf strings.Builder
+	keys := make([]string, 0, len(p))
+	var found bool
+	for k := range p {
+		found = false
+		for _, n := range names {
+			if n == k {
+				found = true
+				break
 			}
+		}
+		if !found {
+			keys = append(keys, k)
+		}
+	}
+	sort.Strings(keys)
+	sep := byte('?')
+	for _, k := range keys {
+		vs := p[k]
+		keyEscaped := url.QueryEscape(k)
+		for _, v := range vs {
+			buf.WriteByte(sep)
+			sep = byte('&')
 			buf.WriteString(keyEscaped)
 			buf.WriteByte('=')
 			buf.WriteString(url.QueryEscape(v))
