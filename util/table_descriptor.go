@@ -31,15 +31,14 @@ type TableDescriptor struct {
 	Mappings map[string]Mapper        `json:"mappings,omitempty" yaml:"mappings,omitempty"`
 	Columns  []*TableColumnDescriptor `json:"columns,omitempty" yaml:"columns,omitempty"`
 	//	Wide    []*TableColumnDescriptor `json:"wide,omitempty" yaml:"wide,omitempty"`
-	Path      []string          `json:"path,omitempty" yaml:"path,omitempty"`
-	Select    []string          `json:"select,omitempty" yaml:"select,omitempty"`
-	Iter      string            `json:"iterator,omitempty" yaml:"iterator,omitempty"`
-	Filter    []string          `json:"filter,omitempty" yaml:"filter,omitempty"`
-	Vars      []*DescriptorVars `json:"vars,omitempty" yaml:"vars,omitempty"`
-	Range     *DescriptorRange  `json:"range,omitempty" yaml:"range,omitempty"`
-	ValuePath []string          `json:"valuePath,omitempty" yaml:"valuePath,omitempty"` // used by JSONFinder
-	thin      []*TableColumnDescriptor
-	wide      []*TableColumnDescriptor
+	Path   []string          `json:"path,omitempty" yaml:"path,omitempty"`
+	Select []string          `json:"select,omitempty" yaml:"select,omitempty"`
+	Iter   string            `json:"iterator,omitempty" yaml:"iterator,omitempty"`
+	Filter []string          `json:"filter,omitempty" yaml:"filter,omitempty"`
+	Vars   []*DescriptorVars `json:"vars,omitempty" yaml:"vars,omitempty"`
+	Range  *DescriptorRange  `json:"range,omitempty" yaml:"range,omitempty"`
+	thin   []*TableColumnDescriptor
+	wide   []*TableColumnDescriptor
 }
 
 // NewTableDescriptor creates an initialzed TableDescriptor. It accpets a

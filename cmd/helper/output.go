@@ -71,13 +71,6 @@ type OutputConf struct {
 	tf        Transformer
 }
 
-// NewOutputConf creates an initialized OutputConf object
-/*func NewOutputConf(tf Transformer) *OutputConf {
-	return &OutputConf{
-		tf: tf,
-	}
-}*/
-
 // SetTransformation changes the Transformer object
 func (o *OutputConf) SetTransformation(tf Transformer) {
 	o.tf = tf
@@ -241,9 +234,16 @@ func (o *OutputConf) streamTableBody(i util.JSONResponse, w *util.RowWriter) err
 	return nil
 }
 
-func (o *OutputConf) PrintPaged(f api.Func, auth *api.AuthenticationConfig, v util.Params) error {
-	pager := NewPager(f, auth, v)
+func (o *OutputConf) PrintPaged(pager *Pager) error {
+	pager.Prepare()
 	switch o.Type {
+	case JSONOut:
+		res, err := pager.SingleCall()
+		if err != nil {
+			return err
+		}
+		c := util.NewJSONCursor(res.Body)
+		return c.PrintPretty()
 	case WideOut, TableOut:
 		return o.PrintTable(pager)
 	}
@@ -254,8 +254,8 @@ func (o *OutputConf) PrintPaged(f api.Func, auth *api.AuthenticationConfig, v ut
 func (o *OutputConf) PrintTable(pager *Pager) error {
 	w := util.NewTableWriter(os.Stdout)
 	defer w.Flush()
-	// add payload handler
-	pager.Add(func(j util.JSONResponse) error {
+	// add JSON object handler
+	pager.SetObjectHandler(func(j util.JSONResponse) error {
 		// copy a reseted cursor
 		c, err := j.Cursor().New()
 		if err != nil {
@@ -270,8 +270,7 @@ func (o *OutputConf) PrintTable(pager *Pager) error {
 		}
 		// print table body
 		return o.streamTableBody(i, w)
-		// TODO Nur temporär!!
-	}) //,o.td.ValuePath...)
+	})
 	// print the header
 	if err := o.streamTableHeader(w); err != nil {
 		return err

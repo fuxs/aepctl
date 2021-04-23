@@ -2,7 +2,6 @@ mappings:
   status:
     approved: ● Approved
     draft: ◯ Draft
-path: [_embedded, results]
 columns:
   - name: ID
     path: [_instance, "@id"]

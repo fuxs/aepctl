@@ -17,9 +17,7 @@ specific language governing permissions and limitations under the License.
 package flow
 
 import (
-	"context"
 	_ "embed"
-	"net/http"
 
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
@@ -32,7 +30,7 @@ var connectionsTransformation string
 // NewDatasetsCommand creates an initialized command object
 func NewConnectionsCommand(conf *helper.Configuration) *cobra.Command {
 	output := &helper.OutputConf{}
-	cc := NewConnectionsConf()
+	p := &api.FlowGetConnectionsParams{}
 	cmd := &cobra.Command{
 		Use:                   "connections",
 		Short:                 "Display all connectionss",
@@ -43,46 +41,16 @@ func NewConnectionsCommand(conf *helper.Configuration) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErrs(output.SetTransformationDesc(connectionsTransformation))
-
-			helper.CheckErr(output.PrintPaged(api.FlowGetConnections, conf.Authentication, cc.p.Params()))
-			//output.PB = cc
-			//fp := api.NewFlowPaged(context.Background(), conf.Authentication, cc.p)
-			//helper.CheckErr(output.Print(fp))
-			/*r, err := api.NewRestreamable(api.FlowGetConnections(context.Background(), conf.Authentication, params))
-			helper.CheckErr(err)
-			q, err := util.NewQueryStream(r.Reader())
-			href := q.Str("_links", "next", "href")
-
-			helper.CheckErr(err)
-			output.StreamResultRaw()*/
+			pager := helper.NewPager(api.FlowGetConnections, conf.Authentication, p.Params())
+			helper.CheckErr(output.PrintPaged(pager))
 		},
 	}
 	output.AddOutputFlags(cmd)
-	cc.AddFlags(cmd)
-	return cmd
-}
-
-type connectionsConf struct {
-	p *api.FlowGetConnectionsParams
-}
-
-func NewConnectionsConf() *connectionsConf {
-	return &connectionsConf{p: &api.FlowGetConnectionsParams{}}
-}
-
-func (c *connectionsConf) AddFlags(cmd *cobra.Command) {
 	f := cmd.Flags()
-	f.StringVar(&c.p.ContinuationToken, "token", "", "a token for fetching records for next page")
-	f.BoolVar(&c.p.Count, "count", false, "boolean value specifying if the count of resources should be returned (true|false)")
-	f.StringVar(&c.p.Property, "property", "", "comma separated list of top-level object properties to be returned")
-	f.IntVar(&c.p.Limit, "limit", 0, "max number of objects to be returned")
-	f.StringVar(&c.p.OrderBy, "order", "", "results will be sorted")
-}
-
-func (c *connectionsConf) InitialCall(ctx context.Context, auth *api.AuthenticationConfig) (*http.Response, error) {
-	return api.FlowGetConnections(ctx, auth, c.p.Params())
-}
-
-func (c *connectionsConf) NextCall(ctx context.Context, auth *api.AuthenticationConfig, url string) (*http.Response, error) {
-	return api.FlowGetNext(ctx, auth, url)
+	f.StringVar(&p.ContinuationToken, "token", "", "a token for fetching records for next page")
+	f.BoolVar(&p.Count, "count", false, "boolean value specifying if the count of resources should be returned (true|false)")
+	f.StringVar(&p.Property, "property", "", "comma separated list of top-level object properties to be returned")
+	f.IntVar(&p.Limit, "limit", 0, "max number of objects to be returned")
+	f.StringVar(&p.OrderBy, "order", "", "results will be sorted")
+	return cmd
 }

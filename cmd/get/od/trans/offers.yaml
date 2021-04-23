@@ -2,7 +2,6 @@ mappings:
   status:
     approved: ● Approved
     draft: ◯ Draft
-path: [_embedded, results]
 vars:
   - name: sc
     path: [_instance, xdm:selectionConstraint]

@@ -18,7 +18,9 @@ package helper
 
 import (
 	"context"
+	"errors"
 	"io"
+	"net/http"
 
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/util"
@@ -27,36 +29,57 @@ import (
 // Pager executes a REST function and handles automatically the subsequent calls
 // to get paged responses
 type Pager struct {
-	Func      api.Func
-	Auth      *api.AuthenticationConfig
-	Values    util.Params
-	Context   context.Context
-	Filter    []string
-	Path      []string
-	Parameter string
-	nextToken string
-	calls     int
-	jf        *util.JSONFinder
+	Func         api.Func
+	Auth         *api.AuthenticationConfig
+	Values       util.Params
+	Context      context.Context
+	PageFilter   []string
+	ObjectFilter []string
+	PagePath     []string
+	PageParams   []string
+	nextParams   []string
+	calls        int
+	jf           *util.JSONFinder
 }
 
 // NewPager creates an initialzed Pager object. It uses JSONFilter to process
 // payload and paging data.
 func NewPager(f api.Func, auth *api.AuthenticationConfig, v util.Params) *Pager {
 	result := &Pager{
-		Func:      f,
-		Auth:      auth,
-		Values:    v,
-		Filter:    []string{"_links"},
-		Path:      []string{"next", "href"},
-		Parameter: "continuationToken",
+		Func:         f,
+		Auth:         auth,
+		Values:       v,
+		PageFilter:   []string{"_links"},
+		ObjectFilter: []string{"items"},
+		PagePath:     []string{"next", "href"},
+		PageParams:   []string{"continuationToken"},
 	}
-	result.initJF()
 	return result
+}
+
+func (p *Pager) O(path ...string) *Pager {
+	p.ObjectFilter = path
+	return p
+}
+
+func (p *Pager) P(params ...string) *Pager {
+	p.PageParams = params
+	return p
 }
 
 // Next returns true, if a REST call can be executed
 func (p *Pager) Next() bool {
-	return p.calls == 0 || p.nextToken != ""
+	return p.calls == 0 || len(p.nextParams) > 0
+}
+
+func (p *Pager) SingleCall() (*http.Response, error) {
+	if p.calls > 0 {
+		return nil, errors.New("not the first call")
+	}
+	if p.Context == nil {
+		p.Context = context.Background()
+	}
+	return api.HandleStatusCode(p.Func(p.Context, p.Auth, p.Values))
 }
 
 // Call executes the REST function
@@ -71,8 +94,10 @@ func (p *Pager) Call() error {
 		}
 	} else {
 		// subsequent call
-		p.Values[p.Parameter] = []string{p.nextToken}
-		p.nextToken = ""
+		for i, n := range p.PageParams {
+			p.Values[n] = []string{p.nextParams[i]}
+		}
+		p.nextParams = p.nextParams[:0]
 	}
 	res, err := api.HandleStatusCode(p.Func(p.Context, p.Auth, p.Values))
 	if err != nil {
@@ -96,24 +121,32 @@ func (p *Pager) Run() error {
 }
 
 // Add adds the handler for the payload with the passed path
-func (p *Pager) Add(f func(util.JSONResponse) error, path ...string) {
-	p.jf.Add(f, path...)
+func (p *Pager) SetObjectHandler(f func(util.JSONResponse) error) {
+	p.jf.Add(f, p.ObjectFilter...)
 }
 
-func (p *Pager) initJF() {
+func (p *Pager) Prepare() {
+	if p.nextParams == nil {
+		p.nextParams = make([]string, 0, len(p.PageParams))
+	}
 	jf := util.NewJSONFinder()
 	jf.Add(func(j util.JSONResponse) error {
 		q, err := j.Query()
 		if err != nil {
 			return err
 		}
-		url := q.Str(p.Path...)
-		token, err := util.GetParam(url, p.Parameter)
-		if err != nil {
-			return err
+		qu := q.Path(p.PagePath...)
+		if !qu.Nil() {
+			url := qu.String()
+			for _, name := range p.PageParams {
+				value, err := util.GetParam(url, name)
+				if err != nil {
+					return err
+				}
+				p.nextParams = append(p.nextParams, value)
+			}
 		}
-		p.nextToken = token
 		return nil
-	}, p.Filter...)
+	}, p.PageFilter...)
 	p.jf = jf
 }

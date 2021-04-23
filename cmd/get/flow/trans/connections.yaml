@@ -1,4 +1,3 @@
-valuePath: [items]
 columns:
   - name: ID
     path: [id]

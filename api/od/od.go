@@ -22,7 +22,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/util"
@@ -110,44 +109,6 @@ func Query(ctx context.Context, p *api.AuthenticationConfig, containerID, schema
 		"https://platform.adobe.io/data/core/xcore/%s/queries/core/search%s",
 		containerID,
 		util.Par("schema", schema, "q", q, "qop", qop, "field", field, "orderBy", orderBy, "limit", limit),
-	)
-}
-
-type ODQueryParames struct {
-	ContainerID string
-	Schema      string
-	Query       string
-	QOP         string
-	Field       string
-	OrderBy     string
-	Limit       int
-}
-
-func (p *ODQueryParames) Params() util.Params {
-	var limit string
-	if p.Limit > 0 {
-		limit = strconv.FormatInt(int64(p.Limit), 10)
-	}
-	return util.NewParams(
-		"containerID", p.ContainerID,
-		"schema", p.Schema,
-		"q", p.Query,
-		"qop", p.QOP,
-		"field", p.Field,
-		"oderBy", p.OrderBy,
-		"limit", limit,
-	)
-}
-
-func QueryRaw(ctx context.Context, p *api.AuthenticationConfig, params util.Params) (*http.Response, error) {
-	containerID := params.Get("containerID")
-	if containerID == "" {
-		return nil, errors.New("container-id is empty")
-	}
-	return p.GetRequestRaw(ctx,
-		"https://platform.adobe.io/data/core/xcore/%s/queries/core/search%s",
-		containerID,
-		params.EncodeWithout("containerID"),
 	)
 }
 

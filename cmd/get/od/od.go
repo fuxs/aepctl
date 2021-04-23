@@ -19,6 +19,7 @@ package od
 import (
 	"context"
 
+	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
@@ -72,7 +73,7 @@ func NewGetCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema, 
 // NewQueryCommand creates an initialized command object
 func NewQueryCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema, use, t, n string, c *cache.MapMemCache) *cobra.Command {
 	output := &helper.OutputConf{}
-	p := &od.ODQueryParames{Schema: schema}
+	p := &api.ODQueryParames{Schema: schema}
 	cmd := &cobra.Command{
 		Use:  use,
 		Args: cobra.NoArgs,
@@ -86,7 +87,9 @@ func NewQueryCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema
 			output.SetTransformation(td)
 			p.ContainerID, err = ac.Get()
 			helper.CheckErr(err)
-			output.StreamResultRaw(od.QueryRaw(context.Background(), conf.Authentication, p.Params()))
+			pager := helper.NewPager(api.ODQuery, conf.Authentication, p.Params()).
+				O("_embedded", "results").P("start", "orderby")
+			helper.CheckErr(output.PrintPaged(pager))
 		},
 	}
 	output.AddOutputFlags(cmd)

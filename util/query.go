@@ -89,6 +89,10 @@ func (q *Query) Path(path ...string) *Query {
 	return NewQueryM(cur, jp)
 }
 
+func (q *Query) Nil() bool {
+	return q == nil || q.obj == nil
+}
+
 // Interface returns the current object
 func (q *Query) Interface() interface{} {
 	return q.obj

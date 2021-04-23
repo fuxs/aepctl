@@ -1,4 +1,3 @@
-path: [_embedded, results]
 columns:
   - name: ID
     path: [_instance, "@id"]

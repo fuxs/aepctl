@@ -142,6 +142,7 @@ func (j *JSONFinder) Run() error {
 				if err = i.EnterObject(); err != nil {
 					return err
 				}
+				j.depth++
 			}
 		} else {
 			if err = i.Skip(); err != nil {
