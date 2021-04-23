@@ -113,11 +113,13 @@ func (p Params) Encode() string {
 		vs := p[k]
 		keyEscaped := url.QueryEscape(k)
 		for _, v := range vs {
-			buf.WriteByte(sep)
-			sep = byte('&')
-			buf.WriteString(keyEscaped)
-			buf.WriteByte('=')
-			buf.WriteString(url.QueryEscape(v))
+			if v != "" {
+				buf.WriteByte(sep)
+				sep = byte('&')
+				buf.WriteString(keyEscaped)
+				buf.WriteByte('=')
+				buf.WriteString(url.QueryEscape(v))
+			}
 		}
 	}
 	return buf.String()
@@ -148,11 +150,13 @@ func (p Params) EncodeWithout(names ...string) string {
 		vs := p[k]
 		keyEscaped := url.QueryEscape(k)
 		for _, v := range vs {
-			buf.WriteByte(sep)
-			sep = byte('&')
-			buf.WriteString(keyEscaped)
-			buf.WriteByte('=')
-			buf.WriteString(url.QueryEscape(v))
+			if v != "" {
+				buf.WriteByte(sep)
+				sep = byte('&')
+				buf.WriteString(keyEscaped)
+				buf.WriteByte('=')
+				buf.WriteString(url.QueryEscape(v))
+			}
 		}
 	}
 	return buf.String()
