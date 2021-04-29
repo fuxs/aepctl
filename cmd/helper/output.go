@@ -163,10 +163,10 @@ func (o *OutputConf) StreamResultRaw(res *http.Response, err error) {
 }
 
 // StreamResult prints the object in the desired output format
-func (o *OutputConf) StreamResult(i util.JSONResponse, err error) {
+/*func (o *OutputConf) StreamResult(i util.JSONResponse, err error) {
 	CheckErr(err)
 	CheckErr(o.streamResult(i))
-}
+}*/
 
 func (o *OutputConf) streamResult(i util.JSONResponse) error {
 	switch o.Type {
@@ -237,14 +237,22 @@ func (o *OutputConf) streamTableBody(i util.JSONResponse, w *util.RowWriter) err
 func (o *OutputConf) PrintPaged(pager *Pager) error {
 	pager.Prepare()
 	switch o.Type {
-	case JSONOut:
+	// single calls returning JSON
+	case RawOut, JSONOut:
 		res, err := pager.SingleCall()
 		if err != nil {
 			return err
 		}
 		c := util.NewJSONCursor(res.Body)
+		if o.Type == RawOut {
+			return c.PrintRaw()
+		}
 		return c.PrintPretty()
-	case WideOut, TableOut:
+	// table formats
+	case NVPOUT, PVOut, WideOut, TableOut:
+		if o.tf == nil || o.Type == NVPOUT || o.Type == PVOut {
+			o.tf = &util.NVPTransformer{}
+		}
 		return o.PrintTable(pager)
 	}
 	return nil
@@ -262,7 +270,9 @@ func (o *OutputConf) PrintTable(pager *Pager) error {
 			return err
 		}
 		// complete JSON document must be processed
-		defer c.End()
+		defer func() {
+			_ = c.End()
+		}()
 		// create the new iterator for the copied cursor
 		i, err := o.tf.Iterator(c)
 		if err != nil {

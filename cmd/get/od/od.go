@@ -20,19 +20,11 @@ import (
 	"context"
 
 	"github.com/fuxs/aepctl/api"
-	"github.com/fuxs/aepctl/api/od"
 	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
 )
-
-// StatusMapper maps status values to a pretty representation
-var StatusMapper = util.Mapper{
-	"live":     "● Live",
-	"approved": "● Approved",
-	"draft":    "◯ Draft",
-}
 
 // NewGetCommand creates an initialized command object
 func NewGetCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema, use, t, n string, c *cache.MapMemCache) *cobra.Command {
@@ -61,7 +53,7 @@ func NewGetCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema, 
 			cid, err := ac.Get()
 			helper.CheckErr(err)
 			for _, name := range args {
-				output.StreamResultRaw(od.GetRaw(context.Background(), conf.Authentication, cid, schema, idc.Lookup(name)))
+				output.StreamResultRaw(api.ODGet(context.Background(), conf.Authentication, cid, schema, idc.Lookup(name)))
 			}
 		},
 	}
@@ -87,7 +79,7 @@ func NewQueryCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema
 			output.SetTransformation(td)
 			p.ContainerID, err = ac.Get()
 			helper.CheckErr(err)
-			pager := helper.NewPager(api.ODQuery, conf.Authentication, p.Params()).
+			pager := helper.NewPager(api.ODQueryP, conf.Authentication, p.Params()).
 				O("_embedded", "results").P("start", "orderby")
 			helper.CheckErr(output.PrintPaged(pager))
 		},

@@ -96,6 +96,11 @@ func (p Params) Get(key string) string {
 	return ""
 }
 
+func (p Params) GetForPath(key string) string {
+	return url.PathEscape(p.Get(key))
+}
+
+// Encode builds an URL query
 func (p Params) Encode() string {
 	if p == nil {
 		return ""
@@ -125,6 +130,7 @@ func (p Params) Encode() string {
 	return buf.String()
 }
 
+// EncodeWithout builds an URL query without the passed parameters
 func (p Params) EncodeWithout(names ...string) string {
 	if p == nil {
 		return ""

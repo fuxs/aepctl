@@ -30,5 +30,6 @@ func NewSRCommand(conf *helper.Configuration) *cobra.Command {
 	}
 	cmd.AddCommand(sr.NewStatsCommand(conf))
 	cmd.AddCommand(sr.NewSchemasCommand(conf))
+	cmd.AddCommand(sr.NewSchemaCommand(conf))
 	return cmd
 }

@@ -52,7 +52,7 @@ func NewStatsCommand(conf *helper.Configuration) *cobra.Command {
 				}
 			}
 			helper.CheckErr(output.SetTransformationDesc(desc))
-			output.StreamResultRaw(api.SRGetStatsRaw(context.Background(), conf.Authentication))
+			output.StreamResultRaw(api.SRGetStats(context.Background(), conf.Authentication))
 		},
 	}
 	output.AddOutputFlags(cmd)

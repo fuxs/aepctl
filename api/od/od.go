@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/util"
@@ -62,56 +61,6 @@ func ListContainer(ctx context.Context, p *api.AuthenticationConfig) (interface{
 	return p.GetRequest(ctx, "https://platform.adobe.io/data/core/xcore/?product=acp&property=_instance.containerType==decisioning")
 }
 
-// ListContainerRaw returns a list of container
-func ListContainerRaw(ctx context.Context, p *api.AuthenticationConfig) (*http.Response, error) {
-	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/core/xcore/?product=acp&property=_instance.containerType==decisioning")
-}
-
-// Get returns a collection by name (wild cards are supported) or id (exact match)
-func Get(ctx context.Context, p *api.AuthenticationConfig, containerID, schema, id string) (interface{}, error) {
-	if containerID == "" {
-		return nil, errors.New("container-id is empty")
-	}
-	if schema == "" {
-		return nil, errors.New("schema is empty")
-	}
-	return p.GetRequest(ctx,
-		"https://platform.adobe.io/data/core/xcore/%s/instances%s",
-		containerID,
-		util.Par("schema", schema, "id", id),
-	)
-}
-
-// GetRaw returns a collection by name (wild cards are supported) or id (exact match)
-func GetRaw(ctx context.Context, p *api.AuthenticationConfig, containerID, schema, id string) (*http.Response, error) {
-	if containerID == "" {
-		return nil, errors.New("container-id is empty")
-	}
-	if schema == "" {
-		return nil, errors.New("schema is empty")
-	}
-	return p.GetRequestRaw(ctx,
-		"https://platform.adobe.io/data/core/xcore/%s/instances%s",
-		containerID,
-		util.Par("schema", schema, "id", id),
-	)
-}
-
-// Query queries all objects
-func Query(ctx context.Context, p *api.AuthenticationConfig, containerID, schema, q, qop, field, orderBy, limit string) (interface{}, error) {
-	if containerID == "" {
-		return nil, errors.New("container-id is empty")
-	}
-	if schema == "" {
-		return nil, errors.New("schema is empty")
-	}
-	return p.GetRequest(ctx,
-		"https://platform.adobe.io/data/core/xcore/%s/queries/core/search%s",
-		containerID,
-		util.Par("schema", schema, "q", q, "qop", qop, "field", field, "orderBy", orderBy, "limit", limit),
-	)
-}
-
 // List lists all objects
 func List(ctx context.Context, p *api.AuthenticationConfig, containerID, schema string) (interface{}, error) {
 	if containerID == "" {
@@ -121,21 +70,6 @@ func List(ctx context.Context, p *api.AuthenticationConfig, containerID, schema 
 		return nil, errors.New("schema is empty")
 	}
 	return p.GetRequest(ctx,
-		"https://platform.adobe.io/data/core/xcore/%s/queries/core/search%s",
-		containerID,
-		util.Par("schema", schema),
-	)
-}
-
-// ListRaw lists all objects
-func ListRaw(ctx context.Context, p *api.AuthenticationConfig, containerID, schema string) (*http.Response, error) {
-	if containerID == "" {
-		return nil, errors.New("container-id is empty")
-	}
-	if schema == "" {
-		return nil, errors.New("schema is empty")
-	}
-	return p.GetRequestRaw(ctx,
 		"https://platform.adobe.io/data/core/xcore/%s/queries/core/search%s",
 		containerID,
 		util.Par("schema", schema),

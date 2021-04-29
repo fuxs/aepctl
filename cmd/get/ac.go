@@ -20,7 +20,7 @@ import (
 	"context"
 	_ "embed"
 
-	"github.com/fuxs/aepctl/api/acl"
+	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
@@ -137,10 +137,10 @@ func NewACCommand(conf *helper.Configuration) *cobra.Command {
 			ctx := context.Background()
 			if len(args) == 0 {
 				helper.CheckErr(output.SetTransformationDesc(permissionsTransformation))
-				output.StreamResultRaw(acl.GetPermissionsAndResourcesRaw(ctx, conf.Authentication))
+				output.StreamResultRaw(api.ACGetPermissionsAndResources(ctx, conf.Authentication))
 			} else {
 				helper.CheckErr(output.SetTransformationDesc(effectiveTransformation))
-				output.StreamResultRaw(acl.GetEffecticeACLPoliciesRaw(ctx, conf.Authentication, args))
+				output.StreamResultRaw(api.ACGetEffecticeACLPolicies(ctx, conf.Authentication, args))
 			}
 		},
 	}

@@ -27,7 +27,7 @@ import (
 // NewDatasetsCommand creates an initialized command object
 func NewFileCommand(conf *helper.Configuration) *cobra.Command {
 	output := &helper.OutputConf{}
-	fc := &fileConf{}
+	fc := &api.DAOptions{}
 	cmd := &cobra.Command{
 		Use:                   "file fileId",
 		Short:                 "Display all datasets",
@@ -37,21 +37,11 @@ func NewFileCommand(conf *helper.Configuration) *cobra.Command {
 		Args:                  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			output.StreamResultRaw(api.DAGetFile(context.Background(), conf.Authentication, args[0], "", ""))
+			fc.ID = args[0]
+			output.StreamResultRaw(api.DAGetFile(context.Background(), conf.Authentication, fc))
 		},
 	}
 	output.AddOutputFlags(cmd)
-	fc.AddQueryFlags(cmd)
+	addFlags(cmd, fc)
 	return cmd
-}
-
-type fileConf struct {
-	start int
-	limit int
-}
-
-func (b *fileConf) AddQueryFlags(cmd *cobra.Command) {
-	flags := cmd.Flags()
-	flags.IntVarP(&b.start, "start", "s", 0, "paging parameter")
-	flags.IntVarP(&b.limit, "limit", "l", 0, "limits the number of results")
 }

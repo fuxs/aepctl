@@ -187,9 +187,9 @@ func (t *TableDescriptor) WriteRow(q *Query, w *RowWriter, wide bool) error {
 	}
 	r := t.Range
 
-	return q.RangeAttributesE(func(name string, q *Query) error {
-		ss := NewScope(s, r.Vars, nil, q)
-		out := processColumns(ss, cols, q)
+	return q.RangeAttributesE(func(name string, qs *Query) error {
+		ss := NewScope(s, r.Vars, nil, qs)
+		out := processColumns(ss, cols, qs)
 		if r.Post != nil {
 			for _, v := range r.Post.Vars {
 				ss.Set(v.Name, v.Value)
@@ -217,17 +217,6 @@ func (t *TableDescriptor) Iterator(c *JSONCursor) (JSONResponse, error) {
 
 func (t *TableDescriptor) AddMapping(name string, m Mapper) {
 	t.Mappings[name] = m
-}
-
-// StatusMapper maps status values to a pretty representation
-var statusMapper = Mapper{
-	"live":     "● Live",
-	"approved": "● Approved",
-	"draft":    "◯ Draft",
-}
-
-var stateMapper = Mapper{
-	"enabled": "● Enabled",
 }
 
 // TableColumnDescriptor contains all information to extract a column value
@@ -274,14 +263,6 @@ func (t *TableColumnDescriptor) assignFunc() {
 				t.o = func(_ *Scope, q *Query) string {
 					return LocalTimeStr(q.String())
 				}
-			}
-		case "status":
-			t.o = func(_ *Scope, q *Query) string {
-				return statusMapper.Lookup(q.String())
-			}
-		case "state":
-			t.o = func(_ *Scope, q *Query) string {
-				return stateMapper.Lookup(q.String())
 			}
 		case "map":
 			if len(t.Parameters) == 0 {
@@ -514,6 +495,7 @@ func NewScope(parent *Scope, vars []*DescriptorVars, mappings map[string]Mapper,
 				continue
 			}
 		}
+		// cast the current object to a value
 		if v.Cast != "" {
 			switch v.Cast {
 			case "strings":
@@ -521,6 +503,7 @@ func NewScope(parent *Scope, vars []*DescriptorVars, mappings map[string]Mapper,
 				continue
 			}
 		}
+		result[v.Name] = q
 	}
 	return &Scope{
 		parent:   parent,

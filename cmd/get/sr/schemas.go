@@ -34,7 +34,7 @@ var schemasFullTransformation string
 // NewStatsCommand creates an initialized command object
 func NewSchemasCommand(conf *helper.Configuration) *cobra.Command {
 	output := &helper.OutputConf{}
-	p := &api.SRGetSchemasParam{}
+	p := &api.SRGetSchemasParams{}
 	cmd := &cobra.Command{
 		Use:                   "schemas",
 		Short:                 "Display schemas",
@@ -49,7 +49,7 @@ func NewSchemasCommand(conf *helper.Configuration) *cobra.Command {
 				desc = schemasFullTransformation
 			}
 			helper.CheckErr(output.SetTransformationDesc(desc))
-			output.StreamResultRaw(api.SRGetSchemasRaw(context.Background(), conf.Authentication, p))
+			output.StreamResultRaw(api.SRGetSchemas(context.Background(), conf.Authentication, p))
 		},
 	}
 	output.AddOutputFlags(cmd)
@@ -66,32 +66,32 @@ func NewSchemasCommand(conf *helper.Configuration) *cobra.Command {
 // NewStatsCommand creates an initialized command object
 func NewSchemaCommand(conf *helper.Configuration) *cobra.Command {
 	output := &helper.OutputConf{}
-	p := &api.SRGetSchemasParam{}
+	p := &api.SRGetSchemaParams{}
 	cmd := &cobra.Command{
 		Use:                   "schema",
 		Short:                 "Display schema",
 		Long:                  "long",
 		Example:               "example",
 		DisableFlagsInUseLine: true,
-		Args:                  cobra.ExactArgs(1),
+		Args:                  cobra.RangeArgs(1, 2),
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-
 			desc := schemasSumTransformation
 			if p.Full {
 				desc = schemasFullTransformation
 			}
+			p.ID = args[0]
+			if len(args) == 2 {
+				p.Version = args[1]
+			}
 			helper.CheckErr(output.SetTransformationDesc(desc))
-			output.StreamResultRaw(api.SRGetSchemasRaw(context.Background(), conf.Authentication, p))
+			output.StreamResultRaw(api.SRGetSchema(context.Background(), conf.Authentication, p))
 		},
 	}
 	output.AddOutputFlags(cmd)
 	flags := cmd.Flags()
-	flags.StringVar(&p.Properties, "properties", "", "Comma separated list of top-level object properties to be returned in the response")
-	flags.StringVar(&p.OrderBy, "order", "", "Sort response by specified fields separated by \",\"")
-	flags.StringVar(&p.Start, "start", "", "The start value of the first orderBy field")
-	flags.UintVar(&p.Limit, "limit", 0, "Specify a limit for the number of results to be displayed")
 	flags.BoolVar(&p.Global, "global", false, "Return core resources instead of custom resources")
 	flags.BoolVar(&p.Full, "full", false, "Returns full JSON for each resource")
+	flags.BoolVar(&p.NoText, "no-text", false, "No titles or descriptions")
 	return cmd
 }

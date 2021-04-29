@@ -38,7 +38,7 @@ func NewFilesCommand(conf *helper.Configuration) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd))
 			fid := args[0]
-			q, err := api.NewQuery(api.DAGetFile(context.Background(), conf.Authentication, fid, "", ""))
+			q, err := api.NewQuery(api.DAGetFile(context.Background(), conf.Authentication, &api.DAOptions{ID: fid}))
 			helper.CheckErr(err)
 			q.Path("data").Range(func(q *util.Query) {
 				name := q.Str("name")

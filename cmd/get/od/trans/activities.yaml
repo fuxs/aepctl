@@ -4,6 +4,10 @@ mappings:
     https://ns.adobe.com/xdm/channel-types/offline: offline
     https://ns.adobe.com/xdm/channel-types/social: social
     https://ns.adobe.com/xdm/channel-types/web: web
+  status:
+    live: ● Live
+    approved: ● Approved
+    draft: ◯ Draft
 columns:
   - name: ID
     path: [_instance, "@id"]
@@ -13,6 +17,18 @@ columns:
     mode: wide
   - name: NAME
     path: [_instance, xdm:name]
+  - name: STATUS
+    path: [_instance, xdm:status]
+    format: map
+    parameters: [status]
+  - name: START DATE
+    path: [_instance, xdm:startDate]
+    format: localTime
+    parameters: [01/02/2006]
+  - name: END DATE
+    path: [_instance, xdm:endDate]
+    format: localTime
+    parameters: [01/02/2006]
   - name: CHANNEL TYPE
     path: [_instance, xdm:criteria]
     type: list

@@ -32,17 +32,18 @@ func (*NVPTransformer) Preprocess(i JSONResponse) error {
 }
 
 // WriteRow writes name, value and path
+// TODO make Truncate configurable
 func (t *NVPTransformer) WriteRow(q *Query, w *RowWriter, wide bool) error {
 	if wide {
 		return w.Write(
 			q.JSONName(),
-			q.String(),
+			Truncate(q.String(), 128),
 			q.JSONPath(),
 		)
 	}
 	return w.Write(
 		q.JSONFullPath(),
-		q.String(),
+		Truncate(q.String(), 128),
 	)
 }
 

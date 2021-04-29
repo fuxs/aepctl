@@ -4,10 +4,11 @@ vars:
   - name: operationName
     meta: name
 range:
+  # ranges all sub-elements of current iterator object
+  # cast converts object to list of strings
   vars:
     - name: permissions
       type: list
-      cast: strings
   columns:
     - name: OPERATION
       var: operationName

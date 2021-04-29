@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/fuxs/aepctl/api"
-	"github.com/fuxs/aepctl/api/catalog"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
@@ -45,7 +44,7 @@ func NewCreateUnionProfileDatasetCommand(conf *helper.Configuration) *cobra.Comm
 		Args:                  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErr(conf.Validate(cmd))
-			q, err := api.NewQuery(catalog.CreateProfileUnionDataset(context.Background(), conf.Authentication, args[0], format))
+			q, err := api.NewQuery(api.CatalogCreateProfileUnionDataset(context.Background(), conf.Authentication, args[0], format))
 			helper.CheckErr(err)
 			q.Range(func(q *util.Query) {
 				fmt.Println(q.String())

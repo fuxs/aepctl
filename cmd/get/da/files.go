@@ -19,7 +19,6 @@ package da
 import (
 	"context"
 	_ "embed"
-	"strconv"
 
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
@@ -32,7 +31,7 @@ var filesTransformation string
 // NewDatasetsCommand creates an initialized command object
 func NewFilesCommand(conf *helper.Configuration) *cobra.Command {
 	output := &helper.OutputConf{}
-	fc := &filesConf{}
+	fc := &api.DAOptions{}
 	cmd := &cobra.Command{
 		Use:                   "files batchId",
 		Short:                 "Display all datasets",
@@ -43,32 +42,17 @@ func NewFilesCommand(conf *helper.Configuration) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErrs(output.SetTransformationDesc(filesTransformation))
-			start, limit := fc.Strings()
-			output.StreamResultRaw(api.DAGetFiles(context.Background(), conf.Authentication, args[0], start, limit))
+			fc.ID = args[0]
+			output.StreamResultRaw(api.DAGetFiles(context.Background(), conf.Authentication, fc))
 		},
 	}
 	output.AddOutputFlags(cmd)
-	fc.AddQueryFlags(cmd)
+	addFlags(cmd, fc)
 	return cmd
 }
 
-type filesConf struct {
-	start int
-	limit int
-}
-
-func (b *filesConf) AddQueryFlags(cmd *cobra.Command) {
+func addFlags(cmd *cobra.Command, da *api.DAOptions) {
 	flags := cmd.Flags()
-	flags.IntVarP(&b.start, "start", "s", 0, "paging parameter")
-	flags.IntVarP(&b.limit, "limit", "l", 0, "limits the number of results")
-}
-
-func (b *filesConf) Strings() (start string, limit string) {
-	if b.start > 0 {
-		start = strconv.FormatInt(int64(b.start), 10)
-	}
-	if b.limit > 0 {
-		limit = strconv.FormatInt(int64(b.limit), 10)
-	}
-	return start, limit
+	flags.IntVarP(&da.Start, "start", "s", 0, "paging parameter")
+	flags.IntVarP(&da.Limit, "limit", "l", 0, "limits the number of results")
 }

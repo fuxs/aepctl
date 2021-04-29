@@ -57,11 +57,14 @@ func NewPager(f api.Func, auth *api.AuthenticationConfig, v util.Params) *Pager 
 	return result
 }
 
+// O sets the object filter. The object is the payload of the JSON document
 func (p *Pager) O(path ...string) *Pager {
 	p.ObjectFilter = path
 	return p
 }
 
+// P sets the page parameters. These are the URL query parameters which are
+// necessary for the following paging requests
 func (p *Pager) P(params ...string) *Pager {
 	p.PageParams = params
 	return p

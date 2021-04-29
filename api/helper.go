@@ -51,12 +51,14 @@ func HandleStatusCode(res *http.Response, err error) (*http.Response, error) {
 	if err != nil || (res.StatusCode >= 200 && res.StatusCode < 300) {
 		return res, err
 	}
-	data, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-	if len(data) > 0 {
-		return nil, errors.New(string(data))
+	if res.ContentLength > 0 {
+		data, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return nil, err
+		}
+		if len(data) > 0 {
+			return nil, errors.New(string(data))
+		}
 	}
 	return nil, fmt.Errorf("http error with no message, status code: %v", res.StatusCode)
 }

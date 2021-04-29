@@ -50,7 +50,7 @@ func (p *FlowGetConnectionsParams) Params() util.Params {
 }
 
 // DAGetFile returns a list of files for the passed fileId
-func FlowGetConnections(ctx context.Context, auth *AuthenticationConfig, params util.Params) (*http.Response, error) {
+func FlowGetConnectionsP(ctx context.Context, auth *AuthenticationConfig, params util.Params) (*http.Response, error) {
 	return auth.GetRequestRaw(ctx,
 		"https://platform.adobe.io/data/foundation/flowservice/connections%s",
 		params.Encode())

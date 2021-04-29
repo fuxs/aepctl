@@ -284,3 +284,14 @@ func IsNumeric(value string) bool {
 	}
 	return true
 }
+
+func Truncate(value string, max int) string {
+	l := len(value)
+	if l <= max {
+		return value
+	}
+	var sb strings.Builder
+	sb.WriteString(value[:max])
+	sb.WriteString("...")
+	return sb.String()
+}

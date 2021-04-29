@@ -1,6 +1,5 @@
 /*
-Package od contains offer decisiong related functions.
-
+Package api is the base for all aep rest functions.
 Copyright 2021 Michael Bungenstock
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -43,7 +42,7 @@ type UPSEntitiesParams struct {
 	TimeFormat    string
 }
 
-func (p *UPSEntitiesParams) toParams() (string, error) {
+func (p *UPSEntitiesParams) Params() (util.Params, error) {
 	var start, end, limit, ca string
 	tf := p.TimeFormat
 	if tf == "" {
@@ -55,7 +54,7 @@ func (p *UPSEntitiesParams) toParams() (string, error) {
 		} else {
 			t, err := time.Parse(tf, p.Start)
 			if err != nil {
-				return "", err
+				return nil, err
 			}
 			start = strconv.FormatInt(t.Unix()*1000, 10)
 		}
@@ -66,7 +65,7 @@ func (p *UPSEntitiesParams) toParams() (string, error) {
 		} else {
 			t, err := time.Parse(tf, p.End)
 			if err != nil {
-				return "", err
+				return nil, err
 			}
 			start = strconv.FormatInt(t.Unix()*1000, 10)
 		}
@@ -77,7 +76,7 @@ func (p *UPSEntitiesParams) toParams() (string, error) {
 	if p.CA {
 		ca = "true"
 	}
-	return util.Par(
+	return util.NewParams(
 		"schema.name", p.Schema,
 		"relatedSchema.name", p.RelatedSchema,
 		"entityId", p.ID,
@@ -96,12 +95,19 @@ func (p *UPSEntitiesParams) toParams() (string, error) {
 }
 
 func UPSGetEntities(ctx context.Context, auth *AuthenticationConfig, p *UPSEntitiesParams) (*http.Response, error) {
-	params, err := p.toParams()
+	params, err := p.Params()
 	if err != nil {
 		return nil, err
 	}
 	return auth.GetRequestRaw(ctx,
 		"https://platform.adobe.io/data/core/ups/access/entities%s",
-		params,
+		params.Encode(),
+	)
+}
+
+func UPSGetEntitiesP(ctx context.Context, auth *AuthenticationConfig, p util.Params) (*http.Response, error) {
+	return auth.GetRequestRaw(ctx,
+		"https://platform.adobe.io/data/core/ups/access/entities%s",
+		p.Encode(),
 	)
 }

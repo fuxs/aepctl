@@ -20,7 +20,6 @@ import (
 	"context"
 
 	"github.com/fuxs/aepctl/api"
-	"github.com/fuxs/aepctl/api/catalog"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
@@ -38,16 +37,15 @@ func NewDatasetsCommand(conf *helper.Configuration) *cobra.Command {
 		Args:                  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd))
-			options := &catalog.BatchesOptions{Dataset: args[0]}
-			q, err := api.NewQuery(catalog.GetBatches(context.Background(), conf.Authentication, options))
+			q, err := api.NewQuery(api.CatalogGetBatches(context.Background(), conf.Authentication, &api.BatchesOptions{Dataset: args[0]}))
 			helper.CheckErr(err)
 			q.RangeAttributes(func(bid string, q *util.Query) {
 				if q.Str("status") == "success" {
-					q, err := api.NewQuery(api.DAGetFiles(context.Background(), conf.Authentication, bid, "", ""))
+					q, err := api.NewQuery(api.DAGetFiles(context.Background(), conf.Authentication, &api.DAOptions{ID: bid}))
 					helper.CheckErr(err)
 					q.Path("data").Range(func(q *util.Query) {
 						fid := q.Str("dataSetFileId")
-						q, err := api.NewQuery(api.DAGetFile(context.Background(), conf.Authentication, fid, "", ""))
+						q, err := api.NewQuery(api.DAGetFile(context.Background(), conf.Authentication, &api.DAOptions{ID: fid}))
 						helper.CheckErr(err)
 						q.Path("data").Range(func(q *util.Query) {
 							name := q.Str("name")

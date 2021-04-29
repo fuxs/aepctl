@@ -19,7 +19,6 @@ package get
 import (
 	_ "embed"
 
-	"github.com/fuxs/aepctl/api/token"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
@@ -39,7 +38,7 @@ func NewTokenCommand(conf *helper.Configuration) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErr(output.SetTransformationDesc(transformation))
-			output.StreamResultRaw(token.GetRaw(conf.Authentication))
+			output.StreamResultRaw(conf.Authentication.GetTokenRaw())
 		},
 	}
 	output.AddOutputFlags(cmd)

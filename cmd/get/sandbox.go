@@ -20,7 +20,7 @@ import (
 	"context"
 	_ "embed"
 
-	"github.com/fuxs/aepctl/api/sandbox"
+	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
@@ -53,10 +53,10 @@ func NewSandboxCommand(conf *helper.Configuration) *cobra.Command {
 			switch len(args) {
 			case 0:
 				helper.CheckErr(output.SetTransformationDesc(sandboxesTransformation))
-				output.StreamResultRaw(sandbox.ListRaw(context.Background(), conf.Authentication))
+				output.StreamResultRaw(api.SBListSandboxes(context.Background(), conf.Authentication))
 			case 1:
 				helper.CheckErr(output.SetTransformationDesc(detailsTransformation))
-				output.StreamResultRaw(sandbox.GetRaw(context.Background(), conf.Authentication, args[0]))
+				output.StreamResultRaw(api.SBGetSandbox(context.Background(), conf.Authentication, args[0]))
 			}
 		},
 	}
@@ -76,15 +76,15 @@ func NewSandboxesCommand(conf *helper.Configuration) *cobra.Command {
 			switch len(args) {
 			case 0:
 				helper.CheckErr(output.SetTransformationDesc(sandboxesTransformation))
-				output.StreamResultRaw(sandbox.ListRaw(context.Background(), conf.Authentication))
+				output.StreamResultRaw(api.SBListSandboxes(context.Background(), conf.Authentication))
 			case 1:
 				switch args[0] {
 				case "all":
 					helper.CheckErr(output.SetTransformationDesc(sandboxesTransformation))
-					output.StreamResultRaw(sandbox.ListAllRaw(context.Background(), conf.Authentication))
+					output.StreamResultRaw(api.SBListAllSandboxes(context.Background(), conf.Authentication))
 				case "types":
 					helper.CheckErr(output.SetTransformationDesc(typesTransformation))
-					output.StreamResultRaw(sandbox.ListTypesRaw(context.Background(), conf.Authentication))
+					output.StreamResultRaw(api.SBListSandboxTypes(context.Background(), conf.Authentication))
 				}
 			}
 		},

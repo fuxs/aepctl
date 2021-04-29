@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/fuxs/aepctl/api"
-	"github.com/fuxs/aepctl/api/sandbox"
 	"github.com/fuxs/aepctl/util"
 )
 
@@ -37,7 +36,7 @@ func NewSandboxCall(auth *api.AuthenticationConfig) APICall {
 
 // Call is the entry point
 func (c *SandboxCall) Call() (interface{}, error) {
-	return sandbox.List(context.Background(), c.auth)
+	return api.List(context.Background(), c.auth)
 }
 
 // NewSandboxCache creates an initilzed ListFileCache object for lists of sandboxes

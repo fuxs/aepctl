@@ -37,12 +37,11 @@ func NewBatchesCommand(conf *helper.Configuration) *cobra.Command {
 		Args:                  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd))
-			bid := args[0]
-			q, err := api.NewQuery(api.DAGetFiles(context.Background(), conf.Authentication, bid, "", ""))
+			q, err := api.NewQuery(api.DAGetFiles(context.Background(), conf.Authentication, &api.DAOptions{ID: args[0]}))
 			helper.CheckErr(err)
 			q.Path("data").Range(func(q *util.Query) {
 				fid := q.Str("dataSetFileId")
-				q, err := api.NewQuery(api.DAGetFile(context.Background(), conf.Authentication, fid, "", ""))
+				q, err := api.NewQuery(api.DAGetFile(context.Background(), conf.Authentication, &api.DAOptions{ID: fid}))
 				helper.CheckErr(err)
 				q.Path("data").Range(func(q *util.Query) {
 					name := q.Str("name")

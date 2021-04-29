@@ -1,5 +1,5 @@
 /*
-Package token contains all token related functions.
+Package api is the base for all aep rest functions.
 
 Copyright 2021 Michael Bungenstock
 
@@ -20,21 +20,22 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/fuxs/aepctl/util"
 )
 
 // GetStats returns schema registry informations
-func SRGetStatsRaw(ctx context.Context, p *AuthenticationConfig) (*http.Response, error) {
+func SRGetStats(ctx context.Context, p *AuthenticationConfig) (*http.Response, error) {
+	return SRGetStatsP(ctx, p, nil)
+}
+
+// GetStatsP returns schema registry informations
+func SRGetStatsP(ctx context.Context, p *AuthenticationConfig, _ util.Params) (*http.Response, error) {
 	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/schemaregistry/stats")
 }
 
-// SRGetStats returns schema registry informations
-func SRGetStats(ctx context.Context, p *AuthenticationConfig) (util.JSONResponse, error) {
-	return NewJSONIterator(p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/schemaregistry/stats"))
-}
-
-type SRGetSchemasParam struct {
+type SRGetSchemasParams struct {
 	Properties string
 	OrderBy    string
 	Start      string
@@ -43,40 +44,91 @@ type SRGetSchemasParam struct {
 	Full       bool
 }
 
-func (p *SRGetSchemasParam) toParams() string {
-	var limit string
+func (p *SRGetSchemasParams) Params() util.Params {
+	var (
+		limit  string
+		cid    string
+		accept string
+	)
 	if p.Limit > 0 {
 		limit = strconv.FormatUint(uint64(p.Limit), 10)
 	}
-	return util.Par("properties", p.Properties, "orderby", p.OrderBy, "start", p.Start, "limit", limit)
-}
-
-func SRGetSchemasRaw(ctx context.Context, a *AuthenticationConfig, p *SRGetSchemasParam) (*http.Response, error) {
-	var cid string
 	if p.Global {
 		cid = "global"
 	} else {
 		cid = "tenant"
 	}
-	accept := "application/vnd.adobe.xed-id+json"
 	if p.Full {
 		accept = "application/vnd.adobe.xed+json"
+	} else {
+		accept = "application/vnd.adobe.xed-id+json"
 	}
-	header := map[string]string{"Accept": accept}
-	return a.GetRequestHRaw(ctx, header, "https://platform.adobe.io/data/foundation/schemaregistry/%s/schemas%s", cid, p.toParams())
+	return util.NewParams(
+		"properties", p.Properties,
+		"orderby", p.OrderBy,
+		"start", p.Start,
+		"limit", limit,
+		"-cid", cid,
+		"-accept", accept,
+	)
 }
 
-func SRGetSchemaRaw(ctx context.Context, a *AuthenticationConfig, p *SRGetSchemasParam, id string) (*http.Response, error) {
-	var cid string
+func SRGetSchemas(ctx context.Context, a *AuthenticationConfig, p *SRGetSchemasParams) (*http.Response, error) {
+	return SRGetSchemasP(ctx, a, p.Params())
+}
+
+func SRGetSchemasP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+	header := map[string]string{"Accept": p.Get("-accept")}
+	return a.GetRequestHRaw(ctx, header, "https://platform.adobe.io/data/foundation/schemaregistry/%s/schemas%s", p.Get("-cid"), p.EncodeWithout("-cid", "-accept"))
+}
+
+type SRGetSchemaParams struct {
+	ID          string
+	Version     string
+	Global      bool
+	Full        bool
+	NoText      bool
+	Descriptors bool
+}
+
+func (p *SRGetSchemaParams) Params() util.Params {
+	var (
+		cid string
+		sb  strings.Builder
+	)
 	if p.Global {
 		cid = "global"
 	} else {
 		cid = "tenant"
 	}
-	accept := "application/vnd.adobe.xed-id+json"
+	sb.WriteString("application/vnd.adobe.xed")
 	if p.Full {
-		accept = "application/vnd.adobe.xed+json"
+		sb.WriteString("-full")
 	}
-	header := map[string]string{"Accept": accept}
-	return a.GetRequestHRaw(ctx, header, "https://platform.adobe.io/data/foundation/schemaregistry/%s/schemas/%s", cid, id)
+	if p.NoText {
+		sb.WriteString("-notext")
+	} else if p.Full && p.Descriptors {
+		sb.WriteString("-desc")
+	}
+	sb.WriteString("+json; version=")
+	if p.Version != "" {
+		sb.WriteString(p.Version)
+	} else {
+		sb.WriteString("1")
+	}
+
+	return util.NewParams(
+		"id", p.ID,
+		"cid", cid,
+		"accept", sb.String(),
+	)
+}
+
+func SRGetSchema(ctx context.Context, a *AuthenticationConfig, p *SRGetSchemaParams) (*http.Response, error) {
+	return SRGetSchemaP(ctx, a, p.Params())
+}
+
+func SRGetSchemaP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+	header := map[string]string{"Accept": p.Get("accept")}
+	return a.GetRequestHRaw(ctx, header, "https://platform.adobe.io/data/foundation/schemaregistry/%s/schemas/%s", p.GetForPath("cid"), p.GetForPath("id"))
 }
