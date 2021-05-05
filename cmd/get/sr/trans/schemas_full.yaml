@@ -1,5 +1,4 @@
 iterator: value
-select: [results]
 columns:
   - name: ATTRIBUTE
     meta: name

@@ -49,7 +49,9 @@ func NewSchemasCommand(conf *helper.Configuration) *cobra.Command {
 				desc = schemasFullTransformation
 			}
 			helper.CheckErr(output.SetTransformationDesc(desc))
-			output.StreamResultRaw(api.SRGetSchemas(context.Background(), conf.Authentication, p))
+			pager := helper.NewPager(api.SRGetSchemasP, conf.Authentication, p.Params()).
+				OF("results").PP("next").P("start", "orderby")
+			helper.CheckErr(output.PrintPaged(pager))
 		},
 	}
 	output.AddOutputFlags(cmd)

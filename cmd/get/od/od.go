@@ -80,7 +80,7 @@ func NewQueryCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema
 			p.ContainerID, err = ac.Get()
 			helper.CheckErr(err)
 			pager := helper.NewPager(api.ODQueryP, conf.Authentication, p.Params()).
-				O("_embedded", "results").P("start", "orderby")
+				OF("_embedded", "results").P("start", "orderby")
 			helper.CheckErr(output.PrintPaged(pager))
 		},
 	}
