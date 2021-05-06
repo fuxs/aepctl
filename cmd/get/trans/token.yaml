@@ -1,7 +1,6 @@
 #
 # aepctl get token
-iterator: filter
-filter: [access_token, expires_in]
+path: [$]
 columns:
   - name: TOKEN
     path: [access_token]

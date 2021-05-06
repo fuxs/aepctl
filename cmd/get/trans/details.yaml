@@ -1,7 +1,6 @@
 #
 # aepctl get sandbox [name of sandbox]
-iterator: filter
-filter: [name, title, type, state, region]
+path: [$]
 columns:
   - name: NAME
     path: [name]

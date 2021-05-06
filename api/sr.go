@@ -132,3 +132,69 @@ func SRGetSchemaP(ctx context.Context, a *AuthenticationConfig, p util.Params) (
 	header := map[string]string{"Accept": p.Get("accept")}
 	return a.GetRequestHRaw(ctx, header, "https://platform.adobe.io/data/foundation/schemaregistry/%s/schemas/%s", p.GetForPath("cid"), p.GetForPath("id"))
 }
+
+type SRFormat struct {
+	Short   bool
+	Full    bool
+	NoText  bool
+	Version string
+}
+
+// accept builds the accept string
+func (s *SRFormat) Accept() string {
+	if s.Short {
+		return "application/vnd.adobe.xed-id+json"
+	}
+	var sb strings.Builder
+	sb.WriteString("application/vnd.adobe.xed")
+	if s.Full {
+		sb.WriteString("-full")
+	}
+	if s.NoText {
+		sb.WriteString("-notext")
+	}
+
+	sb.WriteString("+json")
+	if s.Version != "" {
+		sb.WriteString("; version=")
+		sb.WriteString(s.Version)
+	}
+
+	return sb.String()
+}
+
+func (s *SRFormat) Params() util.Params {
+	return util.NewParams(
+		"accept", s.Accept(),
+	)
+}
+
+func SRGetBehaviors(ctx context.Context, a *AuthenticationConfig, format SRFormat) (*http.Response, error) {
+	return SRGetBehaviorsP(ctx, a, format.Params())
+}
+
+func SRGetBehaviorsP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+	header := map[string]string{"Accept": p.Get("accept")}
+	return a.GetRequestHRaw(ctx, header, "https://platform.adobe.io/data/foundation/schemaregistry/global/behaviors")
+}
+
+type SRBehaviorParams struct {
+	SRFormat
+	ID string
+}
+
+func (p *SRBehaviorParams) Params() util.Params {
+	return util.NewParams(
+		"id", p.ID,
+		"accept", p.Accept(),
+	)
+}
+
+func SRGetBehavior(ctx context.Context, a *AuthenticationConfig, p *SRBehaviorParams) (*http.Response, error) {
+	return SRGetBehaviorP(ctx, a, p.Params())
+}
+
+func SRGetBehaviorP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+	header := map[string]string{"Accept": p.Get("accept")}
+	return a.GetRequestHRaw(ctx, header, "https://platform.adobe.io/data/foundation/schemaregistry/global/behaviors/%s", p.GetForPath("id"))
+}

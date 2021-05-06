@@ -1,7 +1,6 @@
 #
 # aepctl get sr stats
-iterator: filter
-filter: [imsOrg, tenantId, counts]
+path: [$]
 columns:
   - name: ORG
     type: str

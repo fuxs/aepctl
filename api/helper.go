@@ -32,13 +32,6 @@ func NewJSONIterator(res *http.Response, err error) (*util.JSONIterator, error) 
 	return util.NewJSONIterator(util.NewJSONCursor(res.Body)), nil
 }
 
-func NewJSONFilterIterator(filter []string, res *http.Response, err error) (*util.JSONFilterIterator, error) {
-	if err != nil {
-		return nil, err
-	}
-	return util.NewJSONFilterIterator(filter, util.NewJSONCursor(res.Body)), nil
-}
-
 func NewQuery(res *http.Response, err error) (*util.Query, error) {
 	i, err := NewJSONIterator(HandleStatusCode(res, err))
 	if err != nil {

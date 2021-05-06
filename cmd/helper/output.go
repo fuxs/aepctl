@@ -18,6 +18,7 @@ package helper
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -116,7 +117,7 @@ func (o *OutputConf) ValidateFlags() error {
 		o.Type = TableOut
 	case "json":
 		o.Type = JSONOut
-	case "vp":
+	case "pv":
 		o.Type = PVOut
 	case "nvp":
 		o.Type = NVPOUT
@@ -199,9 +200,7 @@ func (o *OutputConf) streamResult(i util.JSONResponse) error {
 		if err := o.streamTableHeader(w); err != nil {
 			return err
 		}
-		if err := o.streamTableBody(i, w); err != nil {
-			return err
-		}
+		return o.streamTableBody(i, w)
 	}
 	return nil
 }
@@ -254,6 +253,54 @@ func (o *OutputConf) PrintPaged(pager *Pager) error {
 			o.tf = &util.NVPTransformer{}
 		}
 		return o.PrintTable(pager)
+	}
+	return nil
+}
+
+func (o *OutputConf) Print(f api.Func, auth *api.AuthenticationConfig, params util.Params) error {
+	res, err := api.HandleStatusCode(f(context.Background(), auth, params))
+	if err != nil {
+		return err
+	}
+	// check transformer
+	if o.tf == nil || o.Type == NVPOUT || o.Type == PVOut {
+		o.tf = &util.NVPTransformer{}
+	}
+	// create iterator
+	defer res.Body.Close()
+	i, err := o.tf.Iterator(util.NewJSONCursor(res.Body))
+	if err != nil {
+		return err
+	}
+	// select mode
+	switch o.Type {
+	case RawOut:
+		return i.PrintRaw()
+	case JSONOut:
+		return i.PrintPretty()
+	case JSONPathOut:
+		// unmarshall complete response
+		q, err := i.Next()
+		if err != nil {
+			return err
+		}
+		v := q.Interface()
+		value, err := jsonpath.Get(o.jsonPath, v)
+		if err != nil {
+			return err
+		}
+		bout := bufio.NewWriter(os.Stdout)
+		defer bout.Flush()
+		enc := json.NewEncoder(bout)
+		enc.SetIndent("", "  ")
+		return enc.Encode(value)
+	case NVPOUT, PVOut, WideOut, TableOut:
+		w := util.NewTableWriter(os.Stdout)
+		defer w.Flush()
+		if err := o.streamTableHeader(w); err != nil {
+			return err
+		}
+		return o.streamTableBody(i, w)
 	}
 	return nil
 }

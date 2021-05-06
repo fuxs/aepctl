@@ -149,6 +149,9 @@ func (t *TableDescriptor) Header(wide bool) []string {
 
 // Preprocess goes down the path and enters the list or object
 func (t *TableDescriptor) Preprocess(i JSONResponse) error {
+	if len(t.Path) == 1 && t.Path[0] == "$" {
+		return nil
+	}
 	if len(t.Path) > 0 {
 		if err := i.Path(t.Path...); err != nil {
 			return err
@@ -204,8 +207,6 @@ func (t *TableDescriptor) Iterator(c *JSONCursor) (JSONResponse, error) {
 	switch t.Iter {
 	case "array":
 		return NewJSONIterator(c), nil
-	case "filter":
-		return NewJSONFilterIterator(t.Filter, c), nil
 	case "object":
 		return NewJSONMapIterator(c), nil
 	case "value":

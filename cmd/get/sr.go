@@ -28,6 +28,8 @@ func NewSRCommand(conf *helper.Configuration) *cobra.Command {
 		Use:   "sr",
 		Short: "Schema Registry",
 	}
+	cmd.AddCommand(sr.NewBehaviorsCommand(conf))
+	cmd.AddCommand(sr.NewBehaviorCommand(conf))
 	cmd.AddCommand(sr.NewStatsCommand(conf))
 	cmd.AddCommand(sr.NewSchemasCommand(conf))
 	cmd.AddCommand(sr.NewSchemaCommand(conf))

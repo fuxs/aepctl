@@ -41,6 +41,8 @@ var All = map[string]Func{
 	"SBListAllSandboxes":           SBListAllSandboxesP,
 	"SBListSandboxes":              SBListSandboxesP,
 	"SBListSandboxTypes":           SBListSandboxTypesP,
+	"SRGetBehaviorsP":              SRGetBehaviorsP,
+	"SRGetBehaviorP":               SRGetBehaviorP,
 	"SRGetStats":                   SRGetStatsP,
 	"SRGetSchemas":                 SRGetSchemasP,
 	"SRGetSchema":                  SRGetSchemaP,
