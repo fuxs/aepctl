@@ -67,9 +67,20 @@ func ODQueryP(ctx context.Context, p *AuthenticationConfig, params util.Params) 
 	)
 }
 
+type ODGetParams struct {
+	ID          string
+	ContainerID string
+	Schema      string
+}
+
+// Params returns the parameters in generic util.Params format
+func (p *ODGetParams) Params() util.Params {
+	return util.NewParams("-containerID", p.ContainerID, "schema", p.Schema, "id", p.ID)
+}
+
 // ODGet returns a collection by name (wild cards are supported) or id (exact match)
-func ODGet(ctx context.Context, p *AuthenticationConfig, containerID, schema, id string) (*http.Response, error) {
-	return ODGetP(ctx, p, util.NewParams("-containerID", containerID, "schema", schema, "id", id))
+func ODGet(ctx context.Context, p *AuthenticationConfig, params *ODGetParams) (*http.Response, error) {
+	return ODGetP(ctx, p, params.Params())
 }
 
 // ODGetP returns a collection by name (wild cards are supported) or id (exact match)

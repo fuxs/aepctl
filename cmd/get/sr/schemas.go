@@ -17,7 +17,6 @@ specific language governing permissions and limitations under the License.
 package sr
 
 import (
-	"context"
 	_ "embed"
 
 	"github.com/fuxs/aepctl/api"
@@ -87,7 +86,7 @@ func NewSchemaCommand(conf *helper.Configuration) *cobra.Command {
 				p.Version = args[1]
 			}
 			helper.CheckErr(output.SetTransformationDesc(desc))
-			output.StreamResultRaw(api.SRGetSchema(context.Background(), conf.Authentication, p))
+			helper.CheckErr(output.Print(api.SRGetSchemaP, conf.Authentication, p.Params()))
 		},
 	}
 	output.AddOutputFlags(cmd)

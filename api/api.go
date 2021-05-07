@@ -26,6 +26,13 @@ import (
 
 type Func func(context.Context, *AuthenticationConfig, util.Params) (*http.Response, error)
 type FuncTable map[string]Func
+type Parameters interface {
+	Params() util.Params
+}
+
+type ParametersE interface {
+	Params() (util.Params, error)
+}
 
 var All = map[string]Func{
 	"ACGetPermissionsAndResources": ACGetPermissionsAndResourcesP,
@@ -38,6 +45,7 @@ var All = map[string]Func{
 	"ODGet":                        ODGetP,
 	"ODQuery":                      ODQueryP,
 	"FlowGetConnections":           FlowGetConnectionsP,
+	"SBGetSandbox":                 SBGetSandboxP,
 	"SBListAllSandboxes":           SBListAllSandboxesP,
 	"SBListSandboxes":              SBListSandboxesP,
 	"SBListSandboxTypes":           SBListSandboxTypesP,

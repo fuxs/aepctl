@@ -93,7 +93,6 @@ func (o *OutputConf) SetTransformationDesc(def string) error {
 		yaml = string(d)
 	}
 	td, err := util.NewTableDescriptor(yaml)
-	//o.td = td
 	o.tf = td
 	return err
 }
@@ -145,62 +144,6 @@ func (o *OutputConf) ValidateFlags() error {
 		default:
 			return fmt.Errorf("unknown output format %s", o.Output)
 		}
-	}
-	return nil
-}
-
-func (o *OutputConf) StreamResultRaw(res *http.Response, err error) {
-	res, err = api.HandleStatusCode(res, err)
-	CheckErr(err)
-	var (
-		i util.JSONResponse
-	)
-	if o.tf == nil || o.Type == NVPOUT || o.Type == PVOut {
-		o.tf = &util.NVPTransformer{}
-	}
-	i, err = o.tf.Iterator(util.NewJSONCursor(res.Body))
-	CheckErr(err)
-	CheckErr(o.streamResult(i))
-}
-
-// StreamResult prints the object in the desired output format
-/*func (o *OutputConf) StreamResult(i util.JSONResponse, err error) {
-	CheckErr(err)
-	CheckErr(o.streamResult(i))
-}*/
-
-func (o *OutputConf) streamResult(i util.JSONResponse) error {
-	switch o.Type {
-	case RawOut:
-		return i.PrintRaw()
-	case JSONOut:
-		return i.PrintPretty()
-	case JSONPathOut:
-		// unmarshall complete response
-		q, err := i.Next()
-		if err != nil {
-			return err
-		}
-		v := q.Interface()
-		value, err := jsonpath.Get(o.jsonPath, v)
-		if err != nil {
-			return err
-		}
-		bout := bufio.NewWriter(os.Stdout)
-		defer bout.Flush()
-		enc := json.NewEncoder(bout)
-		enc.SetIndent("", "  ")
-		return enc.Encode(value)
-	case NVPOUT, PVOut, WideOut, TableOut:
-		w := util.NewTableWriter(os.Stdout)
-		defer func() {
-			w.Flush()
-			i.Close()
-		}()
-		if err := o.streamTableHeader(w); err != nil {
-			return err
-		}
-		return o.streamTableBody(i, w)
 	}
 	return nil
 }
@@ -258,7 +201,11 @@ func (o *OutputConf) PrintPaged(pager *Pager) error {
 }
 
 func (o *OutputConf) Print(f api.Func, auth *api.AuthenticationConfig, params util.Params) error {
-	res, err := api.HandleStatusCode(f(context.Background(), auth, params))
+	return o.PrintResponse(f(context.Background(), auth, params))
+}
+
+func (o *OutputConf) PrintResponse(res *http.Response, err error) error {
+	res, err = api.HandleStatusCode(res, err)
 	if err != nil {
 		return err
 	}

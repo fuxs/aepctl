@@ -17,8 +17,6 @@ specific language governing permissions and limitations under the License.
 package da
 
 import (
-	"context"
-
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
@@ -38,7 +36,7 @@ func NewFileCommand(conf *helper.Configuration) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			fc.ID = args[0]
-			output.StreamResultRaw(api.DAGetFile(context.Background(), conf.Authentication, fc))
+			helper.CheckErr(output.Print(api.DAGetFileP, conf.Authentication, fc.Params()))
 		},
 	}
 	output.AddOutputFlags(cmd)

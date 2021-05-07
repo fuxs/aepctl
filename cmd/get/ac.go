@@ -17,7 +17,6 @@ specific language governing permissions and limitations under the License.
 package get
 
 import (
-	"context"
 	_ "embed"
 
 	"github.com/fuxs/aepctl/api"
@@ -134,13 +133,12 @@ func NewACCommand(conf *helper.Configuration) *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			ctx := context.Background()
 			if len(args) == 0 {
 				helper.CheckErr(output.SetTransformationDesc(permissionsTransformation))
-				output.StreamResultRaw(api.ACGetPermissionsAndResources(ctx, conf.Authentication))
+				helper.CheckErr(output.Print(api.ACGetPermissionsAndResourcesP, conf.Authentication, nil))
 			} else {
 				helper.CheckErr(output.SetTransformationDesc(effectiveTransformation))
-				output.StreamResultRaw(api.ACGetEffecticeACLPolicies(ctx, conf.Authentication, args))
+				helper.CheckErr(output.Print(api.ACGetEffecticeACLPoliciesP, conf.Authentication, api.ACGetEffecticeACLPoliciesParams(args).Params()))
 			}
 		},
 	}

@@ -17,7 +17,6 @@ specific language governing permissions and limitations under the License.
 package catalog
 
 import (
-	"context"
 	_ "embed"
 
 	"github.com/fuxs/aepctl/api"
@@ -42,7 +41,8 @@ func NewDatasetsCommand(conf *helper.Configuration) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErr(output.SetTransformationDesc(datasetsTransformation))
-			output.StreamResultRaw(api.CatalogGetDatasets(context.Background(), conf.Authentication, bc))
+			p := helper.CheckErrParams(bc)
+			helper.CheckErr(output.Print(api.CatalogGetDatasetsP, conf.Authentication, p))
 		},
 	}
 	output.AddOutputFlags(cmd)

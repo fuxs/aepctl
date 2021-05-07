@@ -21,11 +21,22 @@ import (
 	"io"
 	"os"
 	"strings"
+
+	"github.com/fuxs/aepctl/api"
+	"github.com/fuxs/aepctl/util"
 )
 
 // CheckErr prints a user friendly error message to stderr
 func CheckErr(err error) {
 	formatError(err, fatal)
+}
+
+func CheckErrParams(params api.ParametersE) util.Params {
+	p, err := params.Params()
+	if err != nil {
+		formatError(err, fatal)
+	}
+	return p
 }
 
 // CheckErrEOF prints a user friendly error message to stderr but ignores EOF

@@ -17,7 +17,6 @@ specific language governing permissions and limitations under the License.
 package ups
 
 import (
-	"context"
 	_ "embed"
 	"time"
 
@@ -32,7 +31,7 @@ var profileTransformation string
 // NewEntitiesCommand creates an initialized command object
 func NewEntitiesCommand(conf *helper.Configuration) *cobra.Command {
 	output := &helper.OutputConf{}
-	p := &api.UPSEntitiesParams{}
+	ep := &api.UPSEntitiesParams{}
 	cmd := &cobra.Command{
 		Use:                   "entities",
 		Short:                 "Display all entities",
@@ -43,32 +42,33 @@ func NewEntitiesCommand(conf *helper.Configuration) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErrs(output.SetTransformationDesc(profileTransformation))
-			output.StreamResultRaw(api.UPSGetEntities(context.Background(), conf.Authentication, p))
+			p := helper.CheckErrParams(ep)
+			helper.CheckErr(output.Print(api.UPSGetEntitiesP, conf.Authentication, p))
 		},
 	}
 	output.AddOutputFlags(cmd)
 	flags := cmd.Flags()
-	flags.StringVar(&p.TimeFormat, "time-format", time.RFC3339, "format for date parsing, default is '2006-01-02T15:04:05Z07:00' (RFC3339)")
-	flags.StringVar(&p.Schema, "schema", "_xdm.context.profile", "XED schema class name, default is _xdm.context.profile")
-	flags.StringVar(&p.RelatedSchema, "related-schema", "", "Must be set if schema is _xdm.context.experienceevent")
-	flags.StringVarP(&p.ID, "id", "i", "", "ID of the entity. For Native XID lookup, use <XID> and leave ns empty")
-	flags.StringVarP(&p.NS, "ns", "n", "", "Identity namespace code")
-	flags.StringVar(&p.RelatedID, "related-id", "", "ID of the entity that the ExperienceEvents are associated with.")
-	flags.StringVar(&p.RelatedNS, "related-ns", "", "Identity namespace code")
-	flags.StringVar(&p.Fields, "fields", "", "Fields for the model object. By default, all fields will be fetched")
-	flags.StringVar(&p.MP, "mp", "", "ID of the merge policy")
-	flags.StringVar(&p.Start, "start", "", "Start time of Time range filter for ExperienceEvents")
-	flags.StringVar(&p.End, "end", "", "End time of Time range filter for ExperienceEvents")
-	flags.IntVar(&p.Limit, "limit", 0, "Number of records to return from the result")
-	flags.StringVar(&p.Order, "order", "", "The sort order of retrieved ExperienceEvents by timestamp")
-	flags.StringVar(&p.Property, "property", "", "End time of Time range filter for ExperienceEvents")
-	flags.BoolVar(&p.CA, "ca", false, "Feature flag for enabling computed attributes for lookup")
+	flags.StringVar(&ep.TimeFormat, "time-format", time.RFC3339, "format for date parsing, default is '2006-01-02T15:04:05Z07:00' (RFC3339)")
+	flags.StringVar(&ep.Schema, "schema", "_xdm.context.profile", "XED schema class name, default is _xdm.context.profile")
+	flags.StringVar(&ep.RelatedSchema, "related-schema", "", "Must be set if schema is _xdm.context.experienceevent")
+	flags.StringVarP(&ep.ID, "id", "i", "", "ID of the entity. For Native XID lookup, use <XID> and leave ns empty")
+	flags.StringVarP(&ep.NS, "ns", "n", "", "Identity namespace code")
+	flags.StringVar(&ep.RelatedID, "related-id", "", "ID of the entity that the ExperienceEvents are associated with.")
+	flags.StringVar(&ep.RelatedNS, "related-ns", "", "Identity namespace code")
+	flags.StringVar(&ep.Fields, "fields", "", "Fields for the model object. By default, all fields will be fetched")
+	flags.StringVar(&ep.MP, "mp", "", "ID of the merge policy")
+	flags.StringVar(&ep.Start, "start", "", "Start time of Time range filter for ExperienceEvents")
+	flags.StringVar(&ep.End, "end", "", "End time of Time range filter for ExperienceEvents")
+	flags.IntVar(&ep.Limit, "limit", 0, "Number of records to return from the result")
+	flags.StringVar(&ep.Order, "order", "", "The sort order of retrieved ExperienceEvents by timestamp")
+	flags.StringVar(&ep.Property, "property", "", "End time of Time range filter for ExperienceEvents")
+	flags.BoolVar(&ep.CA, "ca", false, "Feature flag for enabling computed attributes for lookup")
 	return cmd
 }
 
 func NewProfileCommand(conf *helper.Configuration) *cobra.Command {
 	output := &helper.OutputConf{}
-	p := &api.UPSEntitiesParams{Schema: "_xdm.context.profile"}
+	ep := &api.UPSEntitiesParams{Schema: "_xdm.context.profile"}
 	cmd := &cobra.Command{
 		Use:                   "profile",
 		Short:                 "Display a profile",
@@ -79,8 +79,9 @@ func NewProfileCommand(conf *helper.Configuration) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErrs(output.SetTransformationDesc(profileTransformation))
-			p.ID = args[0]
-			output.StreamResultRaw(api.UPSGetEntities(context.Background(), conf.Authentication, p))
+			ep.ID = args[0]
+			p := helper.CheckErrParams(ep)
+			helper.CheckErr(output.Print(api.UPSGetEntitiesP, conf.Authentication, p))
 		},
 	}
 	output.AddOutputFlags(cmd)
@@ -88,23 +89,23 @@ func NewProfileCommand(conf *helper.Configuration) *cobra.Command {
 	// flags.StringVar(&p.Schema, "schema", "_xdm.context.profile", "XED schema class name, default is _xdm.context.profile")
 	// flags.StringVar(&p.RelatedSchema, "related-schema", "", "Must be set if schema is _xdm.context.experienceevent")
 	// flags.StringVarP(&p.ID, "id", "i", "", "ID of the entity. For Native XID lookup, use <XID> and leave ns empty")
-	flags.StringVarP(&p.NS, "ns", "n", "", "Identity namespace code")
+	flags.StringVarP(&ep.NS, "ns", "n", "", "Identity namespace code")
 	// flags.StringVar(&p.RelatedID, "related-id", "", "ID of the entity that the ExperienceEvents are associated with.")
 	// flags.StringVar(&p.RelatedNS, "related-ns", "", "Identity namespace code")
-	flags.StringVar(&p.Fields, "fields", "", "Fields for the model object. By default, all fields will be fetched")
-	flags.StringVar(&p.MP, "mp", "", "ID of the merge policy")
+	flags.StringVar(&ep.Fields, "fields", "", "Fields for the model object. By default, all fields will be fetched")
+	flags.StringVar(&ep.MP, "mp", "", "ID of the merge policy")
 	// flags.StringVar(&p.Start, "start", "", "Start time of Time range filter for ExperienceEvents")
 	// flags.StringVar(&p.End, "end", "", "End time of Time range filter for ExperienceEvents")
 	// flags.IntVar(&p.Limit, "limit", 0, "Number of records to return from the result")
 	// flags.StringVar(&p.Order, "order", "", "The sort order of retrieved ExperienceEvents by timestamp")
 	// flags.StringVar(&p.Property, "property", "", "End time of Time range filter for ExperienceEvents")
-	flags.BoolVar(&p.CA, "ca", false, "Feature flag for enabling computed attributes for lookup")
+	flags.BoolVar(&ep.CA, "ca", false, "Feature flag for enabling computed attributes for lookup")
 	return cmd
 }
 
 func NewEventsCommand(conf *helper.Configuration) *cobra.Command {
 	output := &helper.OutputConf{}
-	p := &api.UPSEntitiesParams{Schema: "_xdm.context.experienceevent", RelatedSchema: "_xdm.context.profile"}
+	ep := &api.UPSEntitiesParams{Schema: "_xdm.context.experienceevent", RelatedSchema: "_xdm.context.profile"}
 	cmd := &cobra.Command{
 		Use:                   "events",
 		Short:                 "Display events for a profile",
@@ -115,8 +116,9 @@ func NewEventsCommand(conf *helper.Configuration) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErrs(output.SetTransformationDesc(profileTransformation))
-			p.RelatedID = args[0]
-			output.StreamResultRaw(api.UPSGetEntities(context.Background(), conf.Authentication, p))
+			ep.RelatedID = args[0]
+			p := helper.CheckErrParams(ep)
+			helper.CheckErr(output.Print(api.UPSGetEntitiesP, conf.Authentication, p))
 		},
 	}
 	output.AddOutputFlags(cmd)
@@ -126,14 +128,14 @@ func NewEventsCommand(conf *helper.Configuration) *cobra.Command {
 	// flags.StringVarP(&p.ID, "id", "i", "", "ID of the entity. For Native XID lookup, use <XID> and leave ns empty")
 	//flags.StringVarP(&p.NS, "ns", "n", "", "Identity namespace code")
 	// flags.StringVar(&p.RelatedID, "related-id", "", "ID of the entity that the ExperienceEvents are associated with.")
-	flags.StringVar(&p.RelatedNS, "related-ns", "", "Identity namespace code")
-	flags.StringVar(&p.Fields, "fields", "", "Fields for the model object. By default, all fields will be fetched")
-	flags.StringVar(&p.MP, "mp", "", "ID of the merge policy")
-	flags.StringVar(&p.Start, "start", "", "Start time of Time range filter for ExperienceEvents")
-	flags.StringVar(&p.End, "end", "", "End time of Time range filter for ExperienceEvents")
-	flags.IntVar(&p.Limit, "limit", 0, "Number of records to return from the result")
-	flags.StringVar(&p.Order, "order", "", "The sort order of retrieved ExperienceEvents by timestamp")
-	flags.StringVar(&p.Property, "property", "", "End time of Time range filter for ExperienceEvents")
-	flags.BoolVar(&p.CA, "ca", false, "Feature flag for enabling computed attributes for lookup")
+	flags.StringVar(&ep.RelatedNS, "related-ns", "", "Identity namespace code")
+	flags.StringVar(&ep.Fields, "fields", "", "Fields for the model object. By default, all fields will be fetched")
+	flags.StringVar(&ep.MP, "mp", "", "ID of the merge policy")
+	flags.StringVar(&ep.Start, "start", "", "Start time of Time range filter for ExperienceEvents")
+	flags.StringVar(&ep.End, "end", "", "End time of Time range filter for ExperienceEvents")
+	flags.IntVar(&ep.Limit, "limit", 0, "Number of records to return from the result")
+	flags.StringVar(&ep.Order, "order", "", "The sort order of retrieved ExperienceEvents by timestamp")
+	flags.StringVar(&ep.Property, "property", "", "End time of Time range filter for ExperienceEvents")
+	flags.BoolVar(&ep.CA, "ca", false, "Feature flag for enabling computed attributes for lookup")
 	return cmd
 }

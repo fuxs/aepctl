@@ -38,7 +38,7 @@ func NewTokenCommand(conf *helper.Configuration) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErr(output.SetTransformationDesc(transformation))
-			output.StreamResultRaw(conf.Authentication.GetTokenRaw())
+			helper.CheckErr(output.PrintResponse(conf.Authentication.GetTokenRaw()))
 		},
 	}
 	output.AddOutputFlags(cmd)

@@ -17,7 +17,6 @@ specific language governing permissions and limitations under the License.
 package get
 
 import (
-	"context"
 	_ "embed"
 
 	"github.com/fuxs/aepctl/api"
@@ -53,10 +52,10 @@ func NewSandboxCommand(conf *helper.Configuration) *cobra.Command {
 			switch len(args) {
 			case 0:
 				helper.CheckErr(output.SetTransformationDesc(sandboxesTransformation))
-				output.StreamResultRaw(api.SBListSandboxes(context.Background(), conf.Authentication))
+				helper.CheckErr(output.Print(api.SBListSandboxesP, conf.Authentication, nil))
 			case 1:
 				helper.CheckErr(output.SetTransformationDesc(detailsTransformation))
-				output.StreamResultRaw(api.SBGetSandbox(context.Background(), conf.Authentication, args[0]))
+				helper.CheckErr(output.Print(api.SBGetSandboxP, conf.Authentication, api.SBGetSandboxParams(args[0]).Params()))
 			}
 		},
 	}
@@ -76,15 +75,15 @@ func NewSandboxesCommand(conf *helper.Configuration) *cobra.Command {
 			switch len(args) {
 			case 0:
 				helper.CheckErr(output.SetTransformationDesc(sandboxesTransformation))
-				output.StreamResultRaw(api.SBListSandboxes(context.Background(), conf.Authentication))
+				helper.CheckErr(output.Print(api.SBListSandboxesP, conf.Authentication, nil))
 			case 1:
 				switch args[0] {
 				case "all":
 					helper.CheckErr(output.SetTransformationDesc(sandboxesTransformation))
-					output.StreamResultRaw(api.SBListAllSandboxes(context.Background(), conf.Authentication))
+					helper.CheckErr(output.Print(api.SBListAllSandboxesP, conf.Authentication, nil))
 				case "types":
 					helper.CheckErr(output.SetTransformationDesc(typesTransformation))
-					output.StreamResultRaw(api.SBListSandboxTypes(context.Background(), conf.Authentication))
+					helper.CheckErr(output.Print(api.SBListSandboxTypesP, conf.Authentication, nil))
 				}
 			}
 		},

@@ -17,8 +17,6 @@ specific language governing permissions and limitations under the License.
 package od
 
 import (
-	"context"
-
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
@@ -52,8 +50,13 @@ func NewGetCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema, 
 			output.SetTransformation(td)
 			cid, err := ac.Get()
 			helper.CheckErr(err)
+			gp := &api.ODGetParams{
+				ContainerID: cid,
+				Schema:      schema,
+			}
 			for _, name := range args {
-				output.StreamResultRaw(api.ODGet(context.Background(), conf.Authentication, cid, schema, idc.Lookup(name)))
+				gp.ID = idc.Lookup(name)
+				helper.CheckErr(output.Print(api.ODGetP, conf.Authentication, gp.Params()))
 			}
 		},
 	}

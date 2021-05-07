@@ -33,9 +33,15 @@ func ACGetPermissionsAndResourcesP(ctx context.Context, p *AuthenticationConfig,
 	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/access-control/acl/reference")
 }
 
+type ACGetEffecticeACLPoliciesParams []string
+
+func (p ACGetEffecticeACLPoliciesParams) Params() util.Params {
+	return util.Params{"urls": []string(p)}
+}
+
 // ACGetEffecticeACLPolicies returns the effective acl policies
-func ACGetEffecticeACLPolicies(ctx context.Context, p *AuthenticationConfig, urls []string) (*http.Response, error) {
-	return ACGetEffecticeACLPoliciesP(ctx, p, util.Params{"urls": urls})
+func ACGetEffecticeACLPolicies(ctx context.Context, p *AuthenticationConfig, params ACGetEffecticeACLPoliciesParams) (*http.Response, error) {
+	return ACGetEffecticeACLPoliciesP(ctx, p, params.Params())
 }
 
 // ACGetEffecticeACLPolicies returns the effective acl policies
