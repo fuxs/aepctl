@@ -30,6 +30,10 @@ func NewSRCommand(conf *helper.Configuration) *cobra.Command {
 	}
 	cmd.AddCommand(sr.NewBehaviorsCommand(conf))
 	cmd.AddCommand(sr.NewBehaviorCommand(conf))
+	cmd.AddCommand(sr.NewClassesCommand(conf))
+	cmd.AddCommand(sr.NewDataTypesCommand(conf))
+	cmd.AddCommand(sr.NewDescriptorsCommand(conf))
+	cmd.AddCommand(sr.NewMixinsCommand(conf))
 	cmd.AddCommand(sr.NewStatsCommand(conf))
 	cmd.AddCommand(sr.NewSchemasCommand(conf))
 	cmd.AddCommand(sr.NewSchemaCommand(conf))

@@ -33,7 +33,7 @@ var behaviorTransformation string
 // NewStatsCommand creates an initialized command object
 func NewBehaviorsCommand(conf *helper.Configuration) *cobra.Command {
 	output := &helper.OutputConf{}
-	p := api.SRFormat{}
+	p := &api.SRFormat{}
 	cmd := &cobra.Command{
 		Use:                   "behaviors",
 		Short:                 "Display behaviors",
@@ -50,17 +50,14 @@ func NewBehaviorsCommand(conf *helper.Configuration) *cobra.Command {
 		},
 	}
 	output.AddOutputFlags(cmd)
-	flags := cmd.Flags()
-	flags.BoolVar(&p.Short, "short", false, "returns s list of ids only")
-	flags.BoolVar(&p.Full, "full", false, "$ref attributes and allOf will be resolved")
-	flags.BoolVar(&p.NoText, "notext", false, "no titles or descriptions")
+	addAcceptFlags(cmd, p)
 	return cmd
 }
 
 // NewStatsCommand creates an initialized command object
 func NewBehaviorCommand(conf *helper.Configuration) *cobra.Command {
 	output := &helper.OutputConf{}
-	p := api.SRBehaviorParams{}
+	p := &api.SRGetGlobalParams{}
 	cmd := &cobra.Command{
 		Use:                   "behavior",
 		Short:                 "Display behavior",
@@ -72,16 +69,10 @@ func NewBehaviorCommand(conf *helper.Configuration) *cobra.Command {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErr(output.SetTransformationDesc(behaviorTransformation))
 			p.ID = args[0]
-			/*pager := helper.NewPager(api.SRGetBehaviorP, conf.Authentication, p.Params()).
-			OF("results").PP("next").P("start", "orderby")*/
 			helper.CheckErr(output.Print(api.SRGetBehaviorP, conf.Authentication, p.Params()))
 		},
 	}
 	output.AddOutputFlags(cmd)
-	flags := cmd.Flags()
-	flags.BoolVar(&p.Short, "short", false, "returns s list of ids only")
-	flags.BoolVar(&p.Full, "full", false, "$ref attributes and allOf will be resolved")
-	flags.BoolVar(&p.NoText, "notext", false, "no titles or descriptions")
-	flags.StringVar(&p.Version, "version", "1", "major version of resource")
+	addAcceptVersionedFlags(cmd, &p.SRFormat)
 	return cmd
 }

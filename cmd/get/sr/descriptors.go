@@ -17,53 +17,35 @@ specific language governing permissions and limitations under the License.
 package sr
 
 import (
-	_ "embed"
-
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
-//go:embed trans/schemas_sum.yaml
-var schemasSumTransformation string
-
-//go:embed trans/schemas_full.yaml
-var schemasFullTransformation string
-
 // NewStatsCommand creates an initialized command object
-func NewSchemasCommand(conf *helper.Configuration) *cobra.Command {
-	return newQueryCommand(
-		conf,
-		"schemas",
-		"Display schemas",
-		"long",
-		"example",
-		api.SRGetSchemasP)
-}
-
-// NewStatsCommand creates an initialized command object
-func NewSchemaCommand(conf *helper.Configuration) *cobra.Command {
+func NewDescriptorsCommand(conf *helper.Configuration) *cobra.Command {
 	output := &helper.OutputConf{}
-	p := &api.SRGetParams{}
+	p := &api.SRListDescriptorsParams{}
 	cmd := &cobra.Command{
-		Use:                   "schema",
-		Short:                 "Display schema",
+		Use:                   "descriptors",
+		Short:                 "Display descriptors",
 		Long:                  "long",
 		Example:               "example",
 		DisableFlagsInUseLine: true,
-		Args:                  cobra.ExactValidArgs(1),
+		Args:                  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			desc := schemasSumTransformation
 			if p.Full {
 				desc = schemasFullTransformation
 			}
-			p.ID = args[0]
 			helper.CheckErr(output.SetTransformationDesc(desc))
-			helper.CheckErr(output.Print(api.SRGetSchemaP, conf.Authentication, p.Params()))
+			pager := helper.NewPager(api.SRGetDescriptorsP, conf.Authentication, p.Params()).
+				OF("results").PP("next").P("start", "orderby")
+			helper.CheckErr(output.PrintPaged(pager))
 		},
 	}
 	output.AddOutputFlags(cmd)
-	addAcceptVersionedFlags(cmd, &p.SRFormat)
+	addGetDescriptorsFlags(cmd, p)
 	return cmd
 }
