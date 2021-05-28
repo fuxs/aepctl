@@ -213,6 +213,11 @@ func (o *AuthenticationConfig) PostRequest(ctx context.Context, header map[strin
 	return o.FullRequest(ctx, "POST", header, bytes.NewBuffer(data), url, a...)
 }
 
+// PostRequestRaw sends a http post request to the passed url
+func (o *AuthenticationConfig) PostRequestRaw(ctx context.Context, header map[string]string, data []byte, url string, a ...interface{}) (*http.Response, error) {
+	return o.FullRequestRaw(ctx, "POST", header, bytes.NewBuffer(data), url, a...)
+}
+
 // GetRequest sends a http get request to the passed url
 func (o *AuthenticationConfig) GetRequest(ctx context.Context, url string, a ...interface{}) (interface{}, error) {
 	return o.Request(ctx, "GET", url, a...)

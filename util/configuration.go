@@ -34,6 +34,7 @@ type RootConfig struct {
 	Name    string
 	Version string
 	Config  string
+	Tenant  string
 	Home    string
 	Debug   bool
 	Human   bool
@@ -47,7 +48,8 @@ func NewRootConfig(name, version string, cmd *cobra.Command) *RootConfig {
 	}
 	flags := cmd.PersistentFlags()
 
-	flags.StringVar(&o.Config, "config", "", "path to configuration file")
+	flags.StringVar(&o.Config, "path", "", "path to configuration file")
+	flags.StringVar(&o.Tenant, "config", "config", "name of configuration file")
 	flags.BoolVar(&o.Debug, "debug", false, "sets log level to debug")
 	flags.BoolVar(&o.Human, "human", false, "human readable logging to console")
 	return o
@@ -78,7 +80,7 @@ func (o *RootConfig) Configure(cmd *cobra.Command) error {
 			return err
 		}
 	} else {
-		viper.SetConfigName("config")
+		viper.SetConfigName(o.Tenant)
 		viper.SetConfigType("yaml")
 		viper.AddConfigPath(".")
 		viper.AddConfigPath(o.JoinPath())
@@ -186,7 +188,7 @@ func (f *ConfigFile) SetSandbox(sandbox string) {
 func LoadConfigFile(cfg *RootConfig) (*ConfigFile, error) {
 	path := cfg.Config
 	if path == "" {
-		path = cfg.JoinPath("config.yaml")
+		path = cfg.JoinPath(cfg.Tenant + ".yaml")
 	}
 	_, err := os.Stat(path)
 	if err == nil {

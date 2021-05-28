@@ -469,11 +469,6 @@ func (j *JSONCursor) Decode(v interface{}) error {
 	return nil
 }
 
-// Close closes the underlying ReaderCloser stream
-func (j *JSONCursor) Close() error {
-	return j.stream.Close()
-}
-
 // PrintRaw copies the raw data to standard out
 func (j *JSONCursor) PrintRaw() error {
 	bout := bufio.NewWriter(os.Stdout)

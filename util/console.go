@@ -1,5 +1,5 @@
 /*
-Package sr contains schema registry related functions.
+Package util util consists of general utility functions and structures.
 
 Copyright 2021 Michael Bungenstock
 
@@ -14,21 +14,30 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 */
-package sr
+package util
 
 import (
-	"github.com/fuxs/aepctl/api"
-	"github.com/fuxs/aepctl/cmd/helper"
-	"github.com/spf13/cobra"
+	"errors"
+	"os"
+	"os/exec"
+	"strconv"
+	"strings"
 )
 
-// NewClassesCommand creates an initialized command object
-func NewMixinCommand(conf *helper.Configuration) *cobra.Command {
-	return newGetCommand(
-		conf,
-		"mixin",
-		"Display a mixin",
-		"long",
-		"example",
-		api.SRGetMixinP)
+func ConsoleWidth() (int, error) {
+	cmd := exec.Command("stty", "size")
+	cmd.Stdin = os.Stdin
+	out, err := cmd.Output()
+	if err != nil {
+		return 0, err
+	}
+	a := strings.Split(strings.TrimSpace(string(out)), " ")
+	if len(a) != 2 {
+		return 0, errors.New("could not extract width")
+	}
+	i, err := strconv.Atoi(a[1])
+	if err != nil {
+		return 0, err
+	}
+	return i, nil
 }

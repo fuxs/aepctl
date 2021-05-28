@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"io"
 	"runtime"
+	"sort"
 )
 
 // Query supports queries on raw json objects
@@ -71,6 +72,10 @@ func (q *Query) JSONFullPath() string {
 	return q.jp.String()
 }
 
+func (q *Query) ResetPath() *Query {
+	return &Query{obj: q.obj}
+}
+
 // Path queries nested objects, e.g. property a.b.c will be queried with Path("a","b","c")
 func (q *Query) Path(path ...string) *Query {
 	if len(path) == 0 {
@@ -101,6 +106,14 @@ func (q *Query) Interface() interface{} {
 // Value returns the object of the referenced path
 func (q *Query) Value(path ...string) interface{} {
 	return q.Path(path...).obj
+}
+
+func (q *Query) Bool(path ...string) bool {
+	value, ok := q.Path(path...).obj.(bool)
+	if ok {
+		return value
+	}
+	return false
 }
 
 // Int returns the integer of the referenced path
@@ -194,6 +207,20 @@ func (q *Query) RangeI(rf func(int, *Query)) {
 	}
 }
 
+// RangeIE executes the passed function on all children of the current object. It provides the index of the object.
+func (q *Query) RangeIE(rf func(int, *Query) error) error {
+	if ar, ok := q.obj.([]interface{}); ok {
+		for index, obj := range ar {
+			jp := q.jp.Clone()
+			jp.Push(NewJSONPathIndex(index))
+			if err := rf(index, &Query{obj: obj, jp: jp}); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // Concat calls the passed function on all children and concatenates the results separated by the passed separator.
 func (q *Query) Concat(separator string, rf func(*Query) string) string {
 	var buffer bytes.Buffer
@@ -237,6 +264,62 @@ func (q *Query) RangeAttributes(rf func(string, *Query)) {
 	}
 }
 
+func (q *Query) RangeAttributesRich(rf func(name string, q *Query, index, size int)) {
+	if ar, ok := q.obj.(map[string]interface{}); ok {
+		l := len(ar)
+		i := 0
+		for k, v := range ar {
+			jp := q.jp.Clone()
+			jp.Push(NewJSONPathAttribute(k))
+			rf(k, &Query{obj: v, jp: jp}, i, l)
+			i++
+		}
+	}
+}
+
+func (q *Query) RangeSortedAttributesRich(rf func(name string, q *Query, index, size int)) {
+	if ar, ok := q.obj.(map[string]interface{}); ok {
+		l := len(ar)
+		keys := make([]string, l)
+		i := 0
+		for k := range ar {
+			keys[i] = k
+			i++
+		}
+		sort.Strings(keys)
+		i = 0
+		for _, k := range keys {
+			jp := q.jp.Clone()
+			jp.Push(NewJSONPathAttribute(k))
+			rf(k, &Query{obj: ar[k], jp: jp}, i, l)
+			i++
+		}
+	}
+}
+
+func (q *Query) RangeSortedAttributesRichE(rf func(name string, q *Query, index, size int) error) error {
+	if ar, ok := q.obj.(map[string]interface{}); ok {
+		l := len(ar)
+		keys := make([]string, l)
+		i := 0
+		for k := range ar {
+			keys[i] = k
+			i++
+		}
+		sort.Strings(keys)
+		i = 0
+		for _, k := range keys {
+			jp := q.jp.Clone()
+			jp.Push(NewJSONPathAttribute(k))
+			if err := rf(k, &Query{obj: ar[k], jp: jp}, i, l); err != nil {
+				return err
+			}
+			i++
+		}
+	}
+	return nil
+}
+
 // RangeAttributesE executes the passed function on all children of the current object
 func (q *Query) RangeAttributesE(rf func(string, *Query) error) error {
 	if ar, ok := q.obj.(map[string]interface{}); ok {
@@ -249,4 +332,72 @@ func (q *Query) RangeAttributesE(rf func(string, *Query) error) error {
 		}
 	}
 	return nil
+}
+
+func (q *Query) RangeValues(rf func(*Query), exclude ...string) {
+	if ar, ok := q.obj.(map[string]interface{}); ok {
+		l := len(ar)
+		keys := make([]string, l)
+		i := 0
+		for k := range ar {
+			keys[i] = k
+			i++
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			if !q.jp.Matches(exclude) {
+				jp := q.jp.Clone()
+				jp.Push(NewJSONPathAttribute(k))
+				value := &Query{obj: ar[k], jp: jp}
+				value.RangeValues(rf, exclude...)
+			}
+		}
+		return
+	}
+	if ar, ok := q.obj.([]interface{}); ok {
+		for index, obj := range ar {
+			jp := q.jp.Clone()
+			jp.Push(NewJSONPathIndex(index))
+			value := &Query{obj: obj, jp: jp}
+			value.RangeValues(rf)
+		}
+		return
+	}
+	rf(q)
+}
+
+func (q *Query) RangeValuesE(rf func(*Query) error, exclude ...string) error {
+	if ar, ok := q.obj.(map[string]interface{}); ok {
+		l := len(ar)
+		keys := make([]string, l)
+		i := 0
+		for k := range ar {
+			keys[i] = k
+			i++
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			if !q.jp.Matches(exclude) {
+				jp := q.jp.Clone()
+				jp.Push(NewJSONPathAttribute(k))
+				value := &Query{obj: ar[k], jp: jp}
+				if err := value.RangeValuesE(rf, exclude...); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+	if ar, ok := q.obj.([]interface{}); ok {
+		for index, obj := range ar {
+			jp := q.jp.Clone()
+			jp.Push(NewJSONPathIndex(index))
+			value := &Query{obj: obj, jp: jp}
+			if err := value.RangeValuesE(rf); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	return rf(q)
 }

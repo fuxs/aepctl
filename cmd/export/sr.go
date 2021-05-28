@@ -1,5 +1,5 @@
 /*
-Package sr contains schema registry related functions.
+Package export contains export command related functions.
 
 Copyright 2021 Michael Bungenstock
 
@@ -14,33 +14,35 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 */
-package sr
+package export
 
 import (
+	"context"
+	"io"
+	"os"
+
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
-// NewDescriptorCommand creates an initialized command object
-func NewDescriptorCommand(conf *helper.Configuration) *cobra.Command {
-	output := &helper.OutputConf{}
-	p := &api.SRListDescriptorsParams{}
+// NewStatsCommand creates an initialized command object
+func NewSRCommand(conf *helper.Configuration) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:                   "descriptor",
-		Short:                 "Display a descriptor",
+		Use:                   "sr",
+		Short:                 "export schema registry resource",
 		Long:                  "long",
 		Example:               "example",
 		DisableFlagsInUseLine: true,
-		Args:                  cobra.MaximumNArgs(1),
-		ValidArgs:             []string{"created"},
+		Args:                  cobra.ExactValidArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-
-			//helper.CheckErr(output.SetTransformationDesc(desc))
-			helper.CheckErr(output.Print(api.SRGetDescriptorP, conf.Authentication, p.Params()))
+			helper.CheckErr(conf.Validate(cmd))
+			res, err := api.HandleStatusCode(api.SRExport(context.Background(), conf.Authentication, args[0]))
+			helper.CheckErr(err)
+			defer res.Body.Close()
+			_, err = io.Copy(os.Stdout, res.Body)
+			helper.CheckErr(err)
 		},
 	}
-	output.AddOutputFlags(cmd)
 	return cmd
 }

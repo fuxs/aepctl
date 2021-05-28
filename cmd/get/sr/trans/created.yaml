@@ -3,11 +3,8 @@
 path: [recentlyCreatedResources]
 columns:
   - name: NAME
-    type: str
     path: [title]
   - name: TYPE
-    type: str
     path: [meta:resourceType]
   - name: CREATED
-    type: str
     path: [meta:created]

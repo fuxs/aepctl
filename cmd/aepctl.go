@@ -22,8 +22,11 @@ import (
 	"github.com/fuxs/aepctl/cmd/create"
 	"github.com/fuxs/aepctl/cmd/delete"
 	"github.com/fuxs/aepctl/cmd/download"
+	"github.com/fuxs/aepctl/cmd/export"
 	"github.com/fuxs/aepctl/cmd/get"
 	"github.com/fuxs/aepctl/cmd/helper"
+	imp "github.com/fuxs/aepctl/cmd/import"
+	"github.com/fuxs/aepctl/cmd/list"
 	"github.com/fuxs/aepctl/cmd/update"
 	"github.com/fuxs/aepctl/cmd/version"
 	"github.com/fuxs/aepctl/util"
@@ -55,11 +58,14 @@ func NewCommand() *cobra.Command {
 	cmd.AddCommand(create.NewCommand(conf))
 	cmd.AddCommand(get.NewCommand(conf))
 	cmd.AddCommand(delete.NewCommand(conf))
+	cmd.AddCommand(list.NewCommand(conf))
 	cmd.AddCommand(update.NewCommand(conf))
 	cmd.AddCommand(completion.NewCommand())
 	cmd.AddCommand(completion.NewZSHCommand(gcfg))
 	cmd.AddCommand(configure.NewConfigureCommand(gcfg))
 	cmd.AddCommand(download.NewCommand(conf))
+	cmd.AddCommand(export.NewCommand(conf))
+	cmd.AddCommand(imp.NewCommand(conf))
 	cmd.AddCommand(version.NewCommand(Version))
 	return cmd
 }

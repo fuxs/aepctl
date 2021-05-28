@@ -120,7 +120,7 @@ func (p *Pager) Call() error {
 	}
 	p.calls++
 	i := util.NewJSONIterator(util.NewJSONCursor(res.Body))
-	defer i.Close()
+	defer res.Body.Close()
 	p.jf.SetIterator(i)
 	return p.jf.Run()
 }

@@ -17,30 +17,38 @@ specific language governing permissions and limitations under the License.
 package sr
 
 import (
+	_ "embed"
+
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
-// NewDescriptorCommand creates an initialized command object
-func NewDescriptorCommand(conf *helper.Configuration) *cobra.Command {
+//go:embed trans/descriptors.yaml
+var descriptorsTransformation string
+
+// NewDescriptorsCommand creates an initialized command object
+func NewDescriptorsCommand(conf *helper.Configuration) *cobra.Command {
 	output := &helper.OutputConf{}
 	p := &api.SRListDescriptorsParams{}
 	cmd := &cobra.Command{
-		Use:                   "descriptor",
-		Short:                 "Display a descriptor",
+		Use:                   "descriptors",
+		Short:                 "Display descriptors",
 		Long:                  "long",
 		Example:               "example",
 		DisableFlagsInUseLine: true,
-		Args:                  cobra.MaximumNArgs(1),
-		ValidArgs:             []string{"created"},
+		Args:                  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-
-			//helper.CheckErr(output.SetTransformationDesc(desc))
-			helper.CheckErr(output.Print(api.SRGetDescriptorP, conf.Authentication, p.Params()))
+			p.SRDescriptorFormat = api.AcceptObjects
+			helper.CheckErr(output.SetTransformationDesc(descriptorsTransformation))
+			pager := helper.NewPager(api.SRGetDescriptorsP, conf.Authentication, p.Params()).
+				OF("results").PP("next").P("start", "orderby")
+			helper.CheckErr(output.PrintPaged(pager))
 		},
 	}
 	output.AddOutputFlags(cmd)
+	flags := cmd.Flags()
+	addFlags(flags, &p.SRBaseParams)
 	return cmd
 }

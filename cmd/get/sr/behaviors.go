@@ -24,55 +24,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//go:embed trans/behaviors.yaml
-var behaviorsTransformation string
-
-//go:embed trans/behavior.yaml
-var behaviorTransformation string
-
-// NewStatsCommand creates an initialized command object
-func NewBehaviorsCommand(conf *helper.Configuration) *cobra.Command {
-	output := &helper.OutputConf{}
-	p := &api.SRFormat{}
-	cmd := &cobra.Command{
-		Use:                   "behaviors",
-		Short:                 "Display behaviors",
-		Long:                  "long",
-		Example:               "example",
-		DisableFlagsInUseLine: true,
-		Args:                  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			helper.CheckErr(output.SetTransformationDesc(behaviorsTransformation))
-			pager := helper.NewPager(api.SRGetBehaviorsP, conf.Authentication, p.Params()).
-				OF("results").PP("next").P("start", "orderby")
-			helper.CheckErr(output.PrintPaged(pager))
-		},
-	}
-	output.AddOutputFlags(cmd)
-	addAcceptFlags(cmd, p)
-	return cmd
-}
-
-// NewStatsCommand creates an initialized command object
+// NewBehaviorCommand creates an initialized command object
 func NewBehaviorCommand(conf *helper.Configuration) *cobra.Command {
-	output := &helper.OutputConf{}
-	p := &api.SRGetGlobalParams{}
-	cmd := &cobra.Command{
-		Use:                   "behavior",
-		Short:                 "Display behavior",
-		Long:                  "long",
-		Example:               "example",
-		DisableFlagsInUseLine: true,
-		Args:                  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			helper.CheckErr(output.SetTransformationDesc(behaviorTransformation))
-			p.ID = args[0]
-			helper.CheckErr(output.Print(api.SRGetBehaviorP, conf.Authentication, p.Params()))
-		},
-	}
-	output.AddOutputFlags(cmd)
-	addAcceptVersionedFlags(cmd, &p.SRFormat)
-	return cmd
+	return newGetCommand(
+		conf,
+		"behavior",
+		"Display a behavior",
+		"long",
+		"example",
+		api.SRGetBehaviorP)
 }

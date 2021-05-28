@@ -1,5 +1,5 @@
 /*
-Package get contains get command related functions.
+Package export contains export command related functions.
 
 Copyright 2021 Michael Bungenstock
 
@@ -14,28 +14,20 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 */
-package get
+package export
 
 import (
-	"github.com/fuxs/aepctl/cmd/get/sr"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
-// NewSRCommand creates an initialized command object
-func NewSRCommand(conf *helper.Configuration) *cobra.Command {
+// NewCommand creates an initialized command object
+func NewCommand(conf *helper.Configuration) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "sr",
-		Short: "Schema Registry",
+		Use:   "export",
+		Short: "export a resource",
 	}
-	cmd.AddCommand(sr.NewBehaviorsCommand(conf))
-	cmd.AddCommand(sr.NewBehaviorCommand(conf))
-	cmd.AddCommand(sr.NewClassesCommand(conf))
-	cmd.AddCommand(sr.NewDataTypesCommand(conf))
-	cmd.AddCommand(sr.NewDescriptorsCommand(conf))
-	cmd.AddCommand(sr.NewMixinsCommand(conf))
-	cmd.AddCommand(sr.NewStatsCommand(conf))
-	cmd.AddCommand(sr.NewSchemasCommand(conf))
-	cmd.AddCommand(sr.NewSchemaCommand(conf))
+	conf.AddAuthenticationFlags(cmd)
+	cmd.AddCommand(NewSRCommand(conf))
 	return cmd
 }

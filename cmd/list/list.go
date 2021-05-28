@@ -1,5 +1,5 @@
 /*
-Package get contains get command related functions.
+Package list contains list command related functions.
 
 Copyright 2021 Michael Bungenstock
 
@@ -14,39 +14,29 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 */
-package get
+package list
 
 import (
-	"github.com/fuxs/aepctl/cmd/get/sr"
 	"github.com/fuxs/aepctl/cmd/helper"
-
+	"github.com/fuxs/aepctl/cmd/list/sr"
 	"github.com/spf13/cobra"
 )
 
 // NewCommand creates an initialized command object
 func NewCommand(conf *helper.Configuration) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get",
-		Short: "Display one or many resources",
+		Use:     "ls",
+		Aliases: []string{"list"},
+		Short:   "List resources",
 	}
 	conf.AddAuthenticationFlags(cmd)
-	cmd.AddCommand(NewACCommand(conf))
-	cmd.AddCommand(NewTokenCommand(conf))
-	cmd.AddCommand(NewODCommand(conf))
-	cmd.AddCommand(NewSandboxCommand(conf))
-	cmd.AddCommand(NewSandboxesCommand(conf))
-	cmd.AddCommand(NewCatalogCommand(conf))
 	//
 	// schema registry commands
-	cmd.AddCommand(sr.NewBehaviorCommand(conf))
-	cmd.AddCommand(sr.NewClassCommand(conf))
-	cmd.AddCommand(sr.NewDataTypeCommand(conf))
-	cmd.AddCommand(sr.NewDescriptorCommand(conf))
-	cmd.AddCommand(sr.NewMixinCommand(conf))
-	cmd.AddCommand(sr.NewStatsCommand(conf))
-	cmd.AddCommand(sr.NewSchemaCommand(conf))
-	cmd.AddCommand(NewDataAccessCommand(conf))
-	cmd.AddCommand(NewFlowCommand(conf))
-	cmd.AddCommand(NewUPSCommand(conf))
+	cmd.AddCommand(sr.NewBehaviorsCommand(conf))
+	cmd.AddCommand(sr.NewClassesCommand(conf))
+	cmd.AddCommand(sr.NewDataTypesCommand(conf))
+	cmd.AddCommand(sr.NewDescriptorsCommand(conf))
+	cmd.AddCommand(sr.NewMixinsCommand(conf))
+	cmd.AddCommand(sr.NewSchemasCommand(conf))
 	return cmd
 }

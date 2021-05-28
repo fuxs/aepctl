@@ -24,12 +24,12 @@ import (
 // JSONResponse is the interface for streaming JSON objects
 // TODO remove this interface
 type JSONResponse interface {
-	Close() error
+	//Close() error
 	//Delim() (json.Delim, error)
 	Enter() error
-	EnterArray() error
+	//EnterArray() error
 	EnterObject() error
-	Leave() error
+	//Leave() error
 	More() bool
 	Next() (*Query, error)
 	//Obj() (map[string]interface{}, error)
@@ -38,7 +38,7 @@ type JSONResponse interface {
 	PrintRaw() error
 	PrintPretty() error
 	Query() (*Query, error)
-	Range(func(*Query) error) error
+	//Range(func(*Query) error) error
 	Skip() error
 	Token() (json.Token, error)
 	Cursor() *JSONCursor
@@ -284,9 +284,9 @@ func (j *JSONIterator) Next() (*Query, error) {
 }
 
 // Close closes the underlying ReaderCloser stream
-func (j *JSONIterator) Close() error {
+/*func (j *JSONIterator) Close() error {
 	return j.c.Close()
-}
+}*/
 
 // PrintRaw copies the raw data to standard out
 func (j *JSONIterator) PrintRaw() error {

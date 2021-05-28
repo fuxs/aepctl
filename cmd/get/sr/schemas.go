@@ -24,46 +24,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//go:embed trans/schemas_sum.yaml
-var schemasSumTransformation string
-
-//go:embed trans/schemas_full.yaml
-var schemasFullTransformation string
-
-// NewStatsCommand creates an initialized command object
-func NewSchemasCommand(conf *helper.Configuration) *cobra.Command {
-	return newQueryCommand(
+func NewSchemaCommand(conf *helper.Configuration) *cobra.Command {
+	return newGetCommand(
 		conf,
-		"schemas",
-		"Display schemas",
+		"schema",
+		"Display a schema",
 		"long",
 		"example",
-		api.SRGetSchemasP)
-}
-
-// NewStatsCommand creates an initialized command object
-func NewSchemaCommand(conf *helper.Configuration) *cobra.Command {
-	output := &helper.OutputConf{}
-	p := &api.SRGetParams{}
-	cmd := &cobra.Command{
-		Use:                   "schema",
-		Short:                 "Display schema",
-		Long:                  "long",
-		Example:               "example",
-		DisableFlagsInUseLine: true,
-		Args:                  cobra.ExactValidArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			desc := schemasSumTransformation
-			if p.Full {
-				desc = schemasFullTransformation
-			}
-			p.ID = args[0]
-			helper.CheckErr(output.SetTransformationDesc(desc))
-			helper.CheckErr(output.Print(api.SRGetSchemaP, conf.Authentication, p.Params()))
-		},
-	}
-	output.AddOutputFlags(cmd)
-	addAcceptVersionedFlags(cmd, &p.SRFormat)
-	return cmd
+		api.SRGetSchemaP)
 }

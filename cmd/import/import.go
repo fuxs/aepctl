@@ -1,5 +1,5 @@
 /*
-Package sr contains schema registry related functions.
+Package imp contains import command related functions.
 
 Copyright 2021 Michael Bungenstock
 
@@ -14,21 +14,20 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 */
-package sr
+package imp
 
 import (
-	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
-// NewClassesCommand creates an initialized command object
-func NewMixinCommand(conf *helper.Configuration) *cobra.Command {
-	return newGetCommand(
-		conf,
-		"mixin",
-		"Display a mixin",
-		"long",
-		"example",
-		api.SRGetMixinP)
+// NewCommand creates an initialized command object
+func NewCommand(conf *helper.Configuration) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "import",
+		Short: "import a resource",
+	}
+	conf.AddAuthenticationFlags(cmd)
+	cmd.AddCommand(NewSRCommand(conf))
+	return cmd
 }

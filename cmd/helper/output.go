@@ -67,6 +67,7 @@ type Transformer interface {
 type OutputConf struct {
 	Output    string
 	Type      OutputType
+	Truncate  bool
 	jsonPath  string
 	transPath string
 	tf        Transformer
@@ -101,6 +102,7 @@ func (o *OutputConf) SetTransformationDesc(def string) error {
 func (o *OutputConf) AddOutputFlags(cmd *cobra.Command) {
 	flags := cmd.PersistentFlags()
 	flags.StringVarP(&o.Output, "output", "o", "", "Output format (json|jsonpath=''|nvp|pv|raw|table|wide)")
+	flags.BoolVarP(&o.Truncate, "truncate", "t", false, "Truncate output to terminal width")
 	if err := cmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 
 		return []string{"json", "jsonpath=", "nvp", "pv", "raw", "table", "wide"}, cobra.ShellCompDirectiveNoFileComp
@@ -242,7 +244,7 @@ func (o *OutputConf) PrintResponse(res *http.Response, err error) error {
 		enc.SetIndent("", "  ")
 		return enc.Encode(value)
 	case NVPOUT, PVOut, WideOut, TableOut:
-		w := util.NewTableWriter(os.Stdout)
+		w := o.getWriter()
 		defer w.Flush()
 		if err := o.streamTableHeader(w); err != nil {
 			return err
@@ -254,7 +256,7 @@ func (o *OutputConf) PrintResponse(res *http.Response, err error) error {
 
 // PrintTable prints out multiple JSON responses into one table
 func (o *OutputConf) PrintTable(pager *Pager) error {
-	w := util.NewTableWriter(os.Stdout)
+	w := o.getWriter()
 	defer w.Flush()
 	// add JSON object handler
 	pager.SetObjectHandler(func(j util.JSONResponse) error {
@@ -281,4 +283,18 @@ func (o *OutputConf) PrintTable(pager *Pager) error {
 	}
 	// print the table body
 	return pager.Run()
+}
+
+func (o *OutputConf) getWriter() *util.RowWriter {
+	var out io.Writer
+	if o.Truncate {
+		if width, err := util.ConsoleWidth(); err == nil {
+			out = util.NewTruncateWriter(os.Stdout, width)
+		} else {
+			out = os.Stdout
+		}
+	} else {
+		out = os.Stdout
+	}
+	return util.NewTableWriter(out)
 }

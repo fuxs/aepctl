@@ -1,48 +1,43 @@
 # Schema Registry
 
-The Schema Regsitry manages the schema library of the AEP. The general aeptctl
-command invocation uses the following pattern:
+The Schema Registry manages the schema library of the AEP. The command
+invocation uses the following pattern:
 
 ```terminal
-aepctl (verb) sr (noun)
+aepctl (verb) (noun)
 ```
 
-E.g., if you want to list the custom schems 
+E.g., if you want to list the custom schemas 
 
 ```terminal
-aepctl get sr schemas
+aepctl get schemas
 ```
+
+Flags change and control the execution, e.g. use `--predefined` to show all
+resources provided by Adobe:
+
+```terminal
+aepctl get schemas --predefined
+```
+
+## List Resources
+
+The Schema Registry supports
 
 ## Stats
 
-The default table view returns the tenant ID with some additional information.
+Get the tenant ID with some additional information:
 
-Command
 ```terminal
-aepctl get sr stats
-```
+aepctl get stats
 
-Output
-```terminal
 ORG                               TENANT             # SCHEMAS # MIXINS # DATATYPES # CLASSES # UNIONS
 B06A75B93BF479EC1A495A73@AdobeOrg experienceplatform 46        21       25          3         6
 ```
 
-### Show All Data
+See [Output](output.md) for other output formats.
 
-Use the `--output=nvp` flag for the complete response in a generice Name/Value/Path view 
-
-```terminal
-aepctl get sr stats --output=nvp
-```
-or `--output=json` for pretty printed JSON.
-
-```terminal
-aepctl get sr stats --output=json
-```
-### REST API
-
-Implements the [GET /stats](https://www.adobe.io/apis/experienceplatform/home/api-reference.html#/Stats/ims_org_stats) command.
+Implements [GET /stats](https://www.adobe.io/apis/experienceplatform/home/api-reference.html#/Stats/ims_org_stats)
 
 ## Schemas
 

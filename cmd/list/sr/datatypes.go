@@ -22,13 +22,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewClassesCommand creates an initialized command object
-func NewMixinCommand(conf *helper.Configuration) *cobra.Command {
-	return newGetCommand(
+// NewDataTypesCommand creates an initialized command object
+func NewDataTypesCommand(conf *helper.Configuration) *cobra.Command {
+	return newListCommand(
 		conf,
-		"mixin",
-		"Display a mixin",
+		"data-types",
+		"Display data types",
 		"long",
 		"example",
-		api.SRGetMixinP)
+		api.SRGetDataTypesP)
 }

@@ -1,0 +1,20 @@
+#
+# aepctl ls descriptors
+mappings:
+  state:
+    "xdm:alternateDisplayInfo": Display
+    "xdm:descriptorIdentity": Identity
+    "xdm:descriptorOneToOne": Relationship
+    "xdm:descriptorReferenceIdentity": Referenceable
+columns:
+  - name: ID
+    path: ["@id"]
+    mode: wide
+  - name: TYPE
+    path: ["@type"]
+    format: map
+    parameters: [state]
+  - name: SOURCE SCHEMA
+    path: [xdm:sourceSchema]
+  - name: SOURCE PROPERTY
+    path: [xdm:sourceProperty]

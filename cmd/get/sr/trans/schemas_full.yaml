@@ -1,7 +1,0 @@
-iterator: value
-columns:
-  - name: ATTRIBUTE
-    meta: name
-  - name: VALUE
-  - name: PATH
-    meta: path

@@ -68,7 +68,7 @@ func (t *RowWriter) Write(v ...string) error {
 			}
 		}
 		// trim values, we have seen tabs in content
-		if _, err := t.w.Write([]byte(strings.Trim(w, " \t"))); err != nil {
+		if _, err := t.w.Write([]byte(strings.Trim(w, "\t"))); err != nil {
 			return err
 		}
 	}

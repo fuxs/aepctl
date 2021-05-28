@@ -23,12 +23,12 @@ import (
 )
 
 // NewClassesCommand creates an initialized command object
-func NewMixinCommand(conf *helper.Configuration) *cobra.Command {
-	return newGetCommand(
+func NewClassesCommand(conf *helper.Configuration) *cobra.Command {
+	return newListCommand(
 		conf,
-		"mixin",
-		"Display a mixin",
+		"classes",
+		"Display classes",
 		"long",
 		"example",
-		api.SRGetMixinP)
+		api.SRGetClassesP)
 }

@@ -3,10 +3,8 @@
 path: [$]
 columns:
   - name: ORG
-    type: str
     path: [imsOrg]
   - name: TENANT
-    type: str
     path: [tenantId]
   - name: "# SCHEMAS"
     type: num

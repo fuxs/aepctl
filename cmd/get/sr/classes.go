@@ -22,13 +22,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewStatsCommand creates an initialized command object
-func NewClassesCommand(conf *helper.Configuration) *cobra.Command {
-	return newQueryCommand(
+// NewClassesCommand creates an initialized command object
+func NewClassCommand(conf *helper.Configuration) *cobra.Command {
+	return newGetCommand(
 		conf,
-		"classes",
-		"Display classes",
+		"class",
+		"Display a class",
 		"long",
 		"example",
-		api.SRGetClassesP)
+		api.SRGetClassP)
 }
