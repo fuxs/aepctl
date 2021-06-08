@@ -26,9 +26,11 @@ import (
 func NewDataTypesCommand(conf *helper.Configuration) *cobra.Command {
 	return newListCommand(
 		conf,
-		"data-types",
+		"datatypes",
 		"Display data types",
 		"long",
 		"example",
-		api.SRGetDataTypesP)
+		api.SRListDataTypesP,
+		ListSelect,
+	)
 }

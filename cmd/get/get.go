@@ -42,9 +42,12 @@ func NewCommand(conf *helper.Configuration) *cobra.Command {
 	cmd.AddCommand(sr.NewClassCommand(conf))
 	cmd.AddCommand(sr.NewDataTypeCommand(conf))
 	cmd.AddCommand(sr.NewDescriptorCommand(conf))
-	cmd.AddCommand(sr.NewMixinCommand(conf))
+	cmd.AddCommand(sr.NewFieldGroupCommand(conf))
+	cmd.AddCommand(sr.NewSampleCommand(conf))
 	cmd.AddCommand(sr.NewStatsCommand(conf))
 	cmd.AddCommand(sr.NewSchemaCommand(conf))
+	cmd.AddCommand(sr.NewUnionCommand(conf))
+
 	cmd.AddCommand(NewDataAccessCommand(conf))
 	cmd.AddCommand(NewFlowCommand(conf))
 	cmd.AddCommand(NewUPSCommand(conf))

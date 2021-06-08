@@ -18,7 +18,9 @@ package api
 
 import (
 	"context"
+	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -152,52 +154,60 @@ func srList(ctx context.Context, a *AuthenticationConfig, p util.Params, res str
 	return a.GetRequestHRaw(ctx, header, "https://platform.adobe.io/data/foundation/schemaregistry/%s/%s%s", p.Get("-cid"), res, p.EncodeWithout("-cid", "-accept"))
 }
 
-func SRGetBehaviors(ctx context.Context, a *AuthenticationConfig, p *SRListParams) (*http.Response, error) {
+func SRListBehaviors(ctx context.Context, a *AuthenticationConfig, p *SRListParams) (*http.Response, error) {
 	return srList(ctx, a, p.Params(), "behaviors")
 }
 
-func SRGetBehaviorsP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+func SRListBehaviorsP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
 	return srList(ctx, a, p, "behaviors")
 }
 
-func SRGetClasses(ctx context.Context, a *AuthenticationConfig, p *SRListParams) (*http.Response, error) {
+func SRListClasses(ctx context.Context, a *AuthenticationConfig, p *SRListParams) (*http.Response, error) {
 	return srList(ctx, a, p.Params(), "classes")
 }
 
-func SRGetClassesP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+func SRListClassesP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
 	return srList(ctx, a, p, "classes")
 }
 
-func SRGetDataTypes(ctx context.Context, a *AuthenticationConfig, p *SRListParams) (*http.Response, error) {
+func SRListDataTypes(ctx context.Context, a *AuthenticationConfig, p *SRListParams) (*http.Response, error) {
 	return srList(ctx, a, p.Params(), "datatypes")
 }
 
-func SRGetDataTypesP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+func SRListDataTypesP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
 	return srList(ctx, a, p, "datatypes")
 }
 
-func SRGetDescriptors(ctx context.Context, a *AuthenticationConfig, p *SRListDescriptorsParams) (*http.Response, error) {
+func SRListDescriptors(ctx context.Context, a *AuthenticationConfig, p *SRListDescriptorsParams) (*http.Response, error) {
 	return srList(ctx, a, p.Params(), "descriptors")
 }
 
-func SRGetDescriptorsP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+func SRListDescriptorsP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
 	return srList(ctx, a, p, "descriptors")
 }
 
-func SRGetMixins(ctx context.Context, a *AuthenticationConfig, p *SRListParams) (*http.Response, error) {
-	return srList(ctx, a, p.Params(), "mixins")
+func SRListFieldGroups(ctx context.Context, a *AuthenticationConfig, p *SRListParams) (*http.Response, error) {
+	return srList(ctx, a, p.Params(), "fieldgroups")
 }
 
-func SRGetMixinsP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
-	return srList(ctx, a, p, "mixins")
+func SRListFieldGroupsP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+	return srList(ctx, a, p, "fieldgroups")
 }
 
-func SRGetSchemas(ctx context.Context, a *AuthenticationConfig, p *SRListParams) (*http.Response, error) {
+func SRListSchemas(ctx context.Context, a *AuthenticationConfig, p *SRListParams) (*http.Response, error) {
 	return srList(ctx, a, p.Params(), "schemas")
 }
 
-func SRGetSchemasP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+func SRListSchemasP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
 	return srList(ctx, a, p, "schemas")
+}
+
+func SRListUnions(ctx context.Context, a *AuthenticationConfig, p *SRListParams) (*http.Response, error) {
+	return srList(ctx, a, p.Params(), "unions")
+}
+
+func SRListUnionsP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+	return srList(ctx, a, p, "unions")
 }
 
 type SRGetBaseParams struct {
@@ -253,12 +263,12 @@ func SRGetClassP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*
 	return srGet(ctx, a, p, "classes")
 }
 
-func SRGetMixin(ctx context.Context, a *AuthenticationConfig, p *SRGetParams) (*http.Response, error) {
-	return srGet(ctx, a, p.Params(), "mixins")
+func SRGetFieldGroup(ctx context.Context, a *AuthenticationConfig, p *SRGetParams) (*http.Response, error) {
+	return srGet(ctx, a, p.Params(), "fieldgroups")
 }
 
-func SRGetMixinP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
-	return srGet(ctx, a, p, "mixins")
+func SRGetFieldGroupP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+	return srGet(ctx, a, p, "fieldgroups")
 }
 
 func SRGetDataType(ctx context.Context, a *AuthenticationConfig, p *SRGetParams) (*http.Response, error) {
@@ -283,6 +293,23 @@ func SRGetSchema(ctx context.Context, a *AuthenticationConfig, p *SRGetParams) (
 
 func SRGetSchemaP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
 	return srGet(ctx, a, p, "schemas")
+}
+
+func SRGetUnion(ctx context.Context, a *AuthenticationConfig, p *SRGetParams) (*http.Response, error) {
+	return srGet(ctx, a, p.Params(), "unions")
+}
+
+func SRGetUnionP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+	return srGet(ctx, a, p, "unions")
+}
+
+func SRGetSample(ctx context.Context, a *AuthenticationConfig, schemaID string) (*http.Response, error) {
+	header := map[string]string{"Accept": "application/vnd.adobe.xed+json; version=1"}
+	return a.GetRequestHRaw(ctx, header, "https://platform.adobe.io/data/foundation/schemaregistry/rpc/sampledata/%s", url.PathEscape(schemaID))
+}
+
+func SRGetAuditLog(ctx context.Context, a *AuthenticationConfig, schemaID string) (*http.Response, error) {
+	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/schemaregistry/rpc/auditlog/%s", url.PathEscape(schemaID))
 }
 
 type SRGetGlobalParams struct {
@@ -319,4 +346,38 @@ func SRImport(ctx context.Context, a *AuthenticationConfig, resource []byte) (*h
 	header := map[string]string{"Content-Type": "application/vnd.adobe.xed-full+json; version=1"}
 	return a.PostRequestRaw(ctx, header, resource,
 		"https://platform.adobe.io/data/foundation/schemaregistry/rpc/import")
+}
+
+func SRImportStream(ctx context.Context, a *AuthenticationConfig, r io.Reader) (*http.Response, error) {
+	header := map[string]string{"Content-Type": "application/vnd.adobe.xed-full+json; version=1"}
+	return a.PostRequestStream(ctx, header, r,
+		"https://platform.adobe.io/data/foundation/schemaregistry/rpc/import")
+}
+
+func srDelete(ctx context.Context, a *AuthenticationConfig, resource, id string) (*http.Response, error) {
+	url.PathEscape(resource)
+	return a.DeleteRequestRaw(ctx,
+		"https://platform.adobe.io/data/foundation/schemaregistry/tenant/%s/%s",
+		url.PathEscape(resource),
+		url.PathEscape(id))
+}
+
+func SRDeleteClass(ctx context.Context, a *AuthenticationConfig, id string) (*http.Response, error) {
+	return srDelete(ctx, a, "classes", id)
+}
+
+func SRDeleteDataType(ctx context.Context, a *AuthenticationConfig, id string) (*http.Response, error) {
+	return srDelete(ctx, a, "datatypes", id)
+}
+
+func SRDeleteDescriptor(ctx context.Context, a *AuthenticationConfig, id string) (*http.Response, error) {
+	return srDelete(ctx, a, "descriptors", id)
+}
+
+func SRDeleteFieldGroup(ctx context.Context, a *AuthenticationConfig, id string) (*http.Response, error) {
+	return srDelete(ctx, a, "fieldgroups", id)
+}
+
+func SRDeleteSchema(ctx context.Context, a *AuthenticationConfig, id string) (*http.Response, error) {
+	return srDelete(ctx, a, "schemas", id)
 }

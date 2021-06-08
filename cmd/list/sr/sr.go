@@ -21,6 +21,7 @@ import (
 
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
+	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -28,10 +29,20 @@ import (
 //go:embed trans/short.yaml
 var shortTransformation string
 
+type listOption int
+
+const (
+	// JSONOut is used for JSON
+	ListPredefined listOption = iota
+	ListCustom
+	ListSelect
+)
+
 // NewStatsCommand creates an initialized command object
-func newListCommand(conf *helper.Configuration, use, short, long, example string, f api.Func) *cobra.Command {
+func newListCommand(conf *helper.Configuration, use, short, long, example string, f api.Func, o listOption) *cobra.Command {
 	output := &helper.OutputConf{}
 	p := &api.SRListParams{}
+	all := false
 	var (
 		show bool
 	)
@@ -50,7 +61,13 @@ func newListCommand(conf *helper.Configuration, use, short, long, example string
 				p.Short = true
 				helper.CheckErr(output.SetTransformationDesc(shortTransformation))
 			}
-			pager := helper.NewPager(f, conf.Authentication, p.Params()).
+			params := make([]util.Params, 1, 2)
+			params[0] = p.Params()
+			if all {
+				p.SRBaseParams.Global = !p.SRBaseParams.Global
+				params = append(params, p.Params())
+			}
+			pager := helper.NewPager(f, conf.Authentication, params...).
 				OF("results").PP("next").P("start", "orderby")
 			helper.CheckErr(output.PrintPaged(pager))
 		},
@@ -58,13 +75,18 @@ func newListCommand(conf *helper.Configuration, use, short, long, example string
 	output.AddOutputFlags(cmd)
 	flags := cmd.Flags()
 	flags.BoolVar(&show, "show", false, "Show resource definition")
-	addTenantFlags(flags, &p.SRBaseParams)
+	bp := &p.SRBaseParams
+	addFlags(flags, bp)
+	switch o {
+	case ListPredefined:
+		bp.Global = true
+	case ListCustom:
+		bp.Global = false
+	case ListSelect:
+		flags.BoolVar(&bp.Global, "predefined", false, "return resources defined by Adobe")
+		flags.BoolVar(&all, "all", false, "return resources defined by Adobe and custom resurces")
+	}
 	return cmd
-}
-
-func addTenantFlags(flags *pflag.FlagSet, p *api.SRBaseParams) {
-	addFlags(flags, p)
-	flags.BoolVar(&p.Global, "predefined", false, "return resources defined by Adobe")
 }
 
 func addFlags(flags *pflag.FlagSet, p *api.SRBaseParams) {

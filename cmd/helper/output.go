@@ -66,6 +66,7 @@ type Transformer interface {
 // OutputConf contains all options for the output
 type OutputConf struct {
 	Output    string
+	Default   string
 	Type      OutputType
 	Truncate  bool
 	jsonPath  string
@@ -101,7 +102,7 @@ func (o *OutputConf) SetTransformationDesc(def string) error {
 // AddOutputFlags extends the passed command with flags for output
 func (o *OutputConf) AddOutputFlags(cmd *cobra.Command) {
 	flags := cmd.PersistentFlags()
-	flags.StringVarP(&o.Output, "output", "o", "", "Output format (json|jsonpath=''|nvp|pv|raw|table|wide)")
+	flags.StringVarP(&o.Output, "output", "o", o.Default, "Output format (json|jsonpath=''|nvp|pv|raw|table|wide)")
 	flags.BoolVarP(&o.Truncate, "truncate", "t", false, "Truncate output to terminal width")
 	if err := cmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 

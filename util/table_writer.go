@@ -28,6 +28,7 @@ type RowWriter struct {
 	w io.Writer    // writer
 	f func() error // flush
 	d string       // delimiter
+	e string       // escaped delimiter
 	c int          // counter
 	l int          // limit
 }
@@ -39,6 +40,7 @@ func NewTableWriter(out io.Writer) *RowWriter {
 		w: tw,
 		f: tw.Flush,
 		d: "\t",
+		e: "    ",
 	}
 	return result
 }
@@ -48,6 +50,7 @@ func NewCSVWriter(out io.Writer) *RowWriter {
 	result := &RowWriter{
 		w: out,
 		d: ",",
+		e: ";",
 	}
 	return result
 }
@@ -59,7 +62,7 @@ func (t *RowWriter) AutoFlush(l int) *RowWriter {
 }
 
 // Write writes one row and terminates it with a newline
-func (t *RowWriter) Write(v ...string) error {
+func (t *RowWriter) WriteSingle(v ...string) error {
 	for i, w := range v {
 		if i > 0 {
 			// write delimiter
@@ -79,6 +82,69 @@ func (t *RowWriter) Write(v ...string) error {
 			return err
 		}
 	}
+	return nil
+}
+
+// WriteMulti writes one row with mutliple lines and terminates it with a
+// newline
+func (t *RowWriter) Write(v ...string) error {
+	l := len(v)
+	values := make([]string, l)
+	lengths := make([]int, l)
+	for i, w := range v {
+		// replace
+		values[i] = strings.ReplaceAll(w, t.d, t.e)
+		lengths[i] = len(values[i])
+	}
+	offsets := make([]int, l)
+	done := 0
+	for done < l {
+		for i, w := range v {
+			if i > 0 {
+				// write delimiter
+				if _, err := t.w.Write([]byte(t.d)); err != nil {
+					return err
+				}
+			}
+			length := lengths[i]
+			if length == 0 {
+				done++
+				continue
+			}
+			offset := offsets[i]
+			if offset < length {
+				var str string
+				current := w[offset:]
+				index := strings.IndexByte(current, '\n')
+				if index >= 0 {
+					skip := 1
+					if index > 0 {
+						if w[index-1] == '\r' {
+							index--
+							skip++
+						}
+					}
+					str = current[:index]
+					offsets[i] = offset + index + skip
+				} else {
+					str = current
+					offsets[i] = length
+					done++
+				}
+				if _, err := t.w.Write([]byte(str)); err != nil {
+					return err
+				}
+			}
+		}
+		fmt.Fprintln(t.w)
+		t.c++
+		if t.l > 0 && t.c > t.l {
+			if err := t.Flush(); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 

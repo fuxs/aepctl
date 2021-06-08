@@ -1,5 +1,5 @@
 /*
-Package list contains list command related functions.
+Package copy is the base for all copy commands.
 
 Copyright 2021 Michael Bungenstock
 
@@ -14,30 +14,34 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 */
-package list
+package copy
 
 import (
 	"github.com/fuxs/aepctl/cmd/helper"
-	"github.com/fuxs/aepctl/cmd/list/sr"
+	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
+)
+
+var (
+	longDesc = util.LongDesc(`
+	A longer description that spans multiple lines and likely contains
+	examples and usage of using your application. For example:
+	
+	Cobra is a CLI library for Go that empowers applications.
+	This application is a tool to generate the needed files
+	to quickly create a Cobra application.`)
 )
 
 // NewCommand creates an initialized command object
 func NewCommand(conf *helper.Configuration) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "ls",
-		Aliases: []string{"list"},
-		Short:   "List resources",
+		Use:                   "cp",
+		Aliases:               []string{"copy"},
+		Short:                 "Copy one or many resources",
+		Long:                  longDesc,
+		DisableFlagsInUseLine: true,
 	}
 	conf.AddAuthenticationFlags(cmd)
-	//
-	// schema registry commands
-	cmd.AddCommand(sr.NewBehaviorsCommand(conf))
-	cmd.AddCommand(sr.NewClassesCommand(conf))
-	cmd.AddCommand(sr.NewDataTypesCommand(conf))
-	cmd.AddCommand(sr.NewDescriptorsCommand(conf))
-	cmd.AddCommand(sr.NewFieldGroupsCommand(conf))
-	cmd.AddCommand(sr.NewSchemasCommand(conf))
-	cmd.AddCommand(sr.NewUnionsCommand(conf))
+
 	return cmd
 }

@@ -1,5 +1,5 @@
 /*
-Package export contains export command related functions.
+Package audit contains audit command related functions.
 
 Copyright 2021 Michael Bungenstock
 
@@ -14,29 +14,33 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 */
-package export
+package audit
 
 import (
 	"context"
+	_ "embed"
 
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
-// NewStatsCommand creates an initialized command object
-func NewSRCommand(conf *helper.Configuration) *cobra.Command {
-	output := &helper.OutputConf{Default: "raw"}
+//go:embed trans/audit.yaml
+var auditTransformation string
+
+func NewCommand(conf *helper.Configuration) *cobra.Command {
+	output := &helper.OutputConf{}
 	cmd := &cobra.Command{
-		Use:                   "export resource_id",
-		Short:                 "export schema registry resource",
+		Use:                   "audit resource_id",
+		Short:                 "get audit log for schema registry resource",
 		Long:                  "long",
 		Example:               "example",
 		DisableFlagsInUseLine: true,
 		Args:                  cobra.ExactValidArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			helper.CheckErr(output.PrintResponse(api.SRExport(context.Background(), conf.Authentication, args[0])))
+			helper.CheckErr(output.SetTransformationDesc(auditTransformation))
+			helper.CheckErr(output.PrintResponse(api.SRGetAuditLog(context.Background(), conf.Authentication, args[0])))
 		},
 	}
 	conf.AddAuthenticationFlags(cmd)

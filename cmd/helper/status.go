@@ -1,5 +1,5 @@
 /*
-Package sr contains schema registry related functions.
+Package helper consists of helping functions.
 
 Copyright 2021 Michael Bungenstock
 
@@ -14,23 +14,18 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 */
-package sr
+package helper
 
 import (
+	"net/http"
+
 	"github.com/fuxs/aepctl/api"
-	"github.com/fuxs/aepctl/cmd/helper"
-	"github.com/spf13/cobra"
 )
 
-// NewBehaviorsCommand creates an initialized command object
-func NewBehaviorsCommand(conf *helper.Configuration) *cobra.Command {
-	return newListCommand(
-		conf,
-		"behaviors",
-		"Display behaviors",
-		"long",
-		"example",
-		api.SRListBehaviorsP,
-		ListPredefined,
-	)
+type StatusConf struct {
+}
+
+func (s *StatusConf) PrintResponse(res *http.Response, err error) error {
+	_, err = api.HandleStatusCode(res, err)
+	return err
 }

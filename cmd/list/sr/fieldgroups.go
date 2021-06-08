@@ -22,15 +22,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewBehaviorsCommand creates an initialized command object
-func NewBehaviorsCommand(conf *helper.Configuration) *cobra.Command {
+// NewFieldGroupsCommand creates an initialized command object
+func NewFieldGroupsCommand(conf *helper.Configuration) *cobra.Command {
 	return newListCommand(
 		conf,
-		"behaviors",
-		"Display behaviors",
+		"fieldgroups",
+		"Display field groups",
 		"long",
 		"example",
-		api.SRListBehaviorsP,
-		ListPredefined,
+		api.SRListFieldGroupsP,
+		ListSelect,
 	)
 }

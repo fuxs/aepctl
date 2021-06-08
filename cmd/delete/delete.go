@@ -17,6 +17,7 @@ specific language governing permissions and limitations under the License.
 package delete
 
 import (
+	"github.com/fuxs/aepctl/cmd/delete/sr"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
@@ -42,5 +43,10 @@ func NewCommand(conf *helper.Configuration) *cobra.Command {
 	}
 	conf.AddAuthenticationFlags(cmd)
 	cmd.AddCommand(NewODCommand(conf))
+	cmd.AddCommand(sr.NewDeleteClassCommand(conf))
+	cmd.AddCommand(sr.NewDeleteDataTypeCommand(conf))
+	cmd.AddCommand(sr.NewDeleteDescriptorCommand(conf))
+	cmd.AddCommand(sr.NewDeleteFieldGroupCommand(conf))
+	cmd.AddCommand(sr.NewDeleteSchemaCommand(conf))
 	return cmd
 }

@@ -18,6 +18,7 @@ package imp
 
 import (
 	"context"
+	"io/ioutil"
 	"os"
 
 	"github.com/fuxs/aepctl/api"
@@ -25,10 +26,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewStatsCommand creates an initialized command object
+// NewSRCommand creates an initialized command object
 func NewSRCommand(conf *helper.Configuration) *cobra.Command {
+	out := &helper.StatusConf{}
 	cmd := &cobra.Command{
-		Use:                   "sr",
+		Use:                   "import resource_id",
 		Short:                 "import schema registry resource",
 		Long:                  "long",
 		Example:               "example",
@@ -37,12 +39,20 @@ func NewSRCommand(conf *helper.Configuration) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErr(conf.Validate(cmd))
 			for _, file := range args {
-				resource, err := os.ReadFile(file)
+				var (
+					err      error
+					resource []byte
+				)
+				if file == "-" {
+					resource, err = ioutil.ReadAll(os.Stdin)
+				} else {
+					resource, err = os.ReadFile(file)
+				}
 				helper.CheckErr(err)
-				_, err = api.HandleStatusCode(api.SRImport(context.Background(), conf.Authentication, resource))
-				helper.CheckErr(err)
+				helper.CheckErr(out.PrintResponse(api.SRImport(context.Background(), conf.Authentication, resource)))
 			}
 		},
 	}
+	conf.AddAuthenticationFlags(cmd)
 	return cmd
 }

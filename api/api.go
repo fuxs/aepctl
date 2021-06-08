@@ -24,6 +24,7 @@ import (
 	"github.com/fuxs/aepctl/util"
 )
 
+type FuncID func(context.Context, *AuthenticationConfig, string) (*http.Response, error)
 type Func func(context.Context, *AuthenticationConfig, util.Params) (*http.Response, error)
 type FuncTable map[string]Func
 type Parameters interface {
@@ -49,10 +50,10 @@ var All = map[string]Func{
 	"SBListAllSandboxes":           SBListAllSandboxesP,
 	"SBListSandboxes":              SBListSandboxesP,
 	"SBListSandboxTypes":           SBListSandboxTypesP,
-	"SRGetBehaviorsP":              SRGetBehaviorsP,
+	"SRGetBehaviorsP":              SRListBehaviorsP,
 	"SRGetBehaviorP":               SRGetBehaviorP,
 	"SRGetStats":                   SRGetStatsP,
-	"SRGetSchemas":                 SRGetSchemasP,
+	"SRGetSchemas":                 SRListSchemasP,
 	"SRGetSchema":                  SRGetSchemaP,
 	"UPSGetEntities":               UPSGetEntitiesP,
 }

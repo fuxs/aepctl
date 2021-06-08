@@ -22,15 +22,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewBehaviorsCommand creates an initialized command object
-func NewBehaviorsCommand(conf *helper.Configuration) *cobra.Command {
-	return newListCommand(
-		conf,
-		"behaviors",
-		"Display behaviors",
-		"long",
-		"example",
-		api.SRListBehaviorsP,
-		ListPredefined,
-	)
+// NewDeleteActivitiesCommand creates an initialized command object
+func NewDeleteFieldGroupCommand(conf *helper.Configuration) *cobra.Command {
+	return NewDeleteCommand(conf, api.SRDeleteFieldGroup, "fieldgroup", "field-group", "fieldgroups", "field-groups")
 }

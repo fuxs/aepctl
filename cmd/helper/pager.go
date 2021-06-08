@@ -31,20 +31,21 @@ import (
 type Pager struct {
 	Func         api.Func
 	Auth         *api.AuthenticationConfig
-	Values       util.Params
+	Values       []util.Params
 	Context      context.Context
 	PageFilter   []string
 	ObjectFilter []string
 	PagePath     []string
 	PageParams   []string
 	nextParams   []string
+	valuesi      int
 	calls        int
 	jf           *util.JSONFinder
 }
 
 // NewPager creates an initialzed Pager object. It uses JSONFilter to process
 // payload and paging data.
-func NewPager(f api.Func, auth *api.AuthenticationConfig, v util.Params) *Pager {
+func NewPager(f api.Func, auth *api.AuthenticationConfig, v ...util.Params) *Pager {
 	result := &Pager{
 		Func:         f,
 		Auth:         auth,
@@ -69,7 +70,7 @@ func (p *Pager) PF(path ...string) *Pager {
 	return p
 }
 
-// PF sets the page path
+// PP sets the page path
 func (p *Pager) PP(path ...string) *Pager {
 	p.PagePath = path
 	return p
@@ -84,7 +85,7 @@ func (p *Pager) P(params ...string) *Pager {
 
 // Next returns true, if a REST call can be executed
 func (p *Pager) Next() bool {
-	return p.calls == 0 || len(p.nextParams) > 0
+	return p.calls == 0 || len(p.nextParams) > 0 || p.valuesi < (len(p.Values)-1)
 }
 
 func (p *Pager) SingleCall() (*http.Response, error) {
@@ -94,7 +95,7 @@ func (p *Pager) SingleCall() (*http.Response, error) {
 	if p.Context == nil {
 		p.Context = context.Background()
 	}
-	return api.HandleStatusCode(p.Func(p.Context, p.Auth, p.Values))
+	return api.HandleStatusCode(p.Func(p.Context, p.Auth, p.Values[0]))
 }
 
 // Call executes the REST function
@@ -102,19 +103,27 @@ func (p *Pager) Call() error {
 	if !p.Next() {
 		return io.EOF
 	}
+	var params util.Params
 	if p.calls == 0 {
 		// first call
 		if p.Context == nil {
 			p.Context = context.Background()
 		}
+		params = p.Values[0]
 	} else {
 		// subsequent call
-		for i, n := range p.PageParams {
-			p.Values[n] = []string{p.nextParams[i]}
+		if len(p.nextParams) > 0 {
+			params = p.Values[p.valuesi]
+			for i, n := range p.PageParams {
+				params[n] = []string{p.nextParams[i]}
+			}
+			p.nextParams = p.nextParams[:0]
+		} else {
+			p.valuesi++
+			params = p.Values[p.valuesi]
 		}
-		p.nextParams = p.nextParams[:0]
 	}
-	res, err := api.HandleStatusCode(p.Func(p.Context, p.Auth, p.Values))
+	res, err := api.HandleStatusCode(p.Func(p.Context, p.Auth, params))
 	if err != nil {
 		return err
 	}

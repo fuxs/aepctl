@@ -22,13 +22,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewClassesCommand creates an initialized command object
-func NewDataTypeCommand(conf *helper.Configuration) *cobra.Command {
-	return newGetCommand(
+// NewStatsCommand creates an initialized command object
+func NewUnionsCommand(conf *helper.Configuration) *cobra.Command {
+	return newListCommand(
 		conf,
-		"data-type",
-		"Display a data-type",
+		"unions",
+		"Display union schemas",
 		"long",
 		"example",
-		api.SRGetDataTypeP)
+		api.SRListUnionsP,
+		ListCustom,
+	)
 }

@@ -10,19 +10,52 @@ aepctl (verb) (noun)
 E.g., if you want to list the custom schemas 
 
 ```terminal
-aepctl get schemas
+aepctl list schemas
+```
+
+Some commands support a preferred short notation, e.g. `ls` for `list`:
+
+```terminal
+aepctl ls schemas
 ```
 
 Flags change and control the execution, e.g. use `--predefined` to show all
 resources provided by Adobe:
 
 ```terminal
-aepctl get schemas --predefined
+aepctl ls schemas --predefined
 ```
 
 ## List Resources
 
-The Schema Registry supports
+The Schema Registry `ls` command supports the following resources:
+
+* Behaviors
+```terminal
+ aepctl ls behaviors
+ ```
+* Classes
+```terminal
+aepctl ls classes
+```
+* Field Groups
+```terminal
+aepctl ls fieldgroups
+```
+* Data types
+```terminal
+aepctl ls data-types
+```
+* Descriptors
+```terminal
+aepctl ls descriptors
+```
+* Unions
+```terminal
+aepctl ls unions
+```
+
+The resources classes, field groups, 
 
 ## Stats
 

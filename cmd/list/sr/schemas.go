@@ -30,5 +30,7 @@ func NewSchemasCommand(conf *helper.Configuration) *cobra.Command {
 		"Display schemas",
 		"long",
 		"example",
-		api.SRGetSchemasP)
+		api.SRListSchemasP,
+		ListSelect,
+	)
 }

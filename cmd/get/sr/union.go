@@ -17,20 +17,19 @@ specific language governing permissions and limitations under the License.
 package sr
 
 import (
+	_ "embed"
+
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
-// NewBehaviorsCommand creates an initialized command object
-func NewBehaviorsCommand(conf *helper.Configuration) *cobra.Command {
-	return newListCommand(
+func NewUnionCommand(conf *helper.Configuration) *cobra.Command {
+	return newGetCommand(
 		conf,
-		"behaviors",
-		"Display behaviors",
+		"union",
+		"Display a union schema",
 		"long",
 		"example",
-		api.SRListBehaviorsP,
-		ListPredefined,
-	)
+		api.SRGetUnionP)
 }

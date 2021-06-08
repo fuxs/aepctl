@@ -3,7 +3,7 @@ aepctl provides several output formats:
 
 1. __Table__ view with fixed columns. Usually a summarized output of the
    response and in most cases the default output format.
-2. __Wide__ is like Table but with more columns.   
+2. __Wide__ is like Table but with more columns (or more rows).   
 3. __NVP__ (Name/Value/Path) displays all values in three columns.
 4. __PV__ (Path/Value) displays all values int two columns.
 5. __JSON__ pretty prints the complete response in JSON. This format does not support paging.
@@ -34,7 +34,7 @@ Time-series Schema 1.22.3
 Record Schema      1.22.3
 ```
 
-This long form with dedicated output flag is not necessary:
+The long form with dedicated output flag is not necessary:
 
 ```terminal
 aepctl get behaviors -o table

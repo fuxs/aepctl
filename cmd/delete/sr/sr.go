@@ -17,18 +17,25 @@ specific language governing permissions and limitations under the License.
 package sr
 
 import (
+	"context"
+
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
-// NewStatsCommand creates an initialized command object
-func NewMixinsCommand(conf *helper.Configuration) *cobra.Command {
-	return newListCommand(
-		conf,
-		"mixins",
-		"Display mixins",
-		"long",
-		"example",
-		api.SRGetMixinsP)
+func NewDeleteCommand(conf *helper.Configuration, f api.FuncID, use string, aliases ...string) *cobra.Command {
+	out := &helper.StatusConf{}
+	cmd := &cobra.Command{
+		Use:     use,
+		Aliases: aliases,
+		Run: func(cmd *cobra.Command, args []string) {
+			helper.CheckErr(conf.Validate(cmd))
+			ctx := context.Background()
+			for _, id := range args {
+				helper.CheckErr(out.PrintResponse(f(ctx, conf.Authentication, id)))
+			}
+		},
+	}
+	return cmd
 }

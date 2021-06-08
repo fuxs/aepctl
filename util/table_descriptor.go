@@ -190,7 +190,24 @@ func (t *TableDescriptor) WriteRow(q *Query, w *RowWriter, wide bool) error {
 	}
 	r := t.Range
 
-	return q.RangeAttributesE(func(name string, qs *Query) error {
+	if r.Type == "array" {
+		qp := q
+		if len(r.Path) > 0 {
+			qp = q.Path(r.Path...)
+		}
+		return qp.RangeIE(func(_ int, qs *Query) error {
+			ss := NewScope(s, r.Vars, nil, qs)
+			out := processColumns(ss, cols, qs)
+			if r.Post != nil {
+				for _, v := range r.Post.Vars {
+					ss.Set(v.Name, v.Value)
+				}
+			}
+			return w.Write(out...)
+		})
+	}
+
+	return q.RangeAttributesE(func(_ string, qs *Query) error {
 		ss := NewScope(s, r.Vars, nil, qs)
 		out := processColumns(ss, cols, qs)
 		if r.Post != nil {
@@ -292,6 +309,10 @@ func (t *TableColumnDescriptor) assignFunc() {
 			t.o = func(_ *Scope, q *Query) string {
 				return time.Duration(q.Integer() * int(time.Millisecond)).String()
 			}
+		}
+	case "json":
+		t.o = func(_ *Scope, q *Query) string {
+			return q.Pretty()
 		}
 	case "list":
 		var f func(*Scope, *Query) *Query
@@ -408,6 +429,8 @@ type DescriptorRange struct {
 	Vars    []*DescriptorVars        `json:"vars,omitempty" yaml:"vars,omitempty"`
 	Columns []*TableColumnDescriptor `json:"columns,omitempty" yaml:"columns,omitempty"`
 	Post    *RangePost               `json:"post,omitempty" yaml:"post,omitempty"`
+	Type    string                   `json:"type,omitempty" yaml:"type,omitempty"`
+	Path    []string                 `json:"path,omitempty" yaml:"path,omitempty"`
 }
 
 // RangePost represents the post phase of a range, usually for variable update

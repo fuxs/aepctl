@@ -30,5 +30,7 @@ func NewClassesCommand(conf *helper.Configuration) *cobra.Command {
 		"Display classes",
 		"long",
 		"example",
-		api.SRGetClassesP)
+		api.SRListClassesP,
+		ListSelect,
+	)
 }

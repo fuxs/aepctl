@@ -22,15 +22,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewBehaviorsCommand creates an initialized command object
-func NewBehaviorsCommand(conf *helper.Configuration) *cobra.Command {
-	return newListCommand(
+// NewDataTypeCommand creates an initialized command object
+func NewDataTypeCommand(conf *helper.Configuration) *cobra.Command {
+	return newGetCommand(
 		conf,
-		"behaviors",
-		"Display behaviors",
+		"datatype",
+		"Display a data type",
 		"long",
 		"example",
-		api.SRListBehaviorsP,
-		ListPredefined,
-	)
+		api.SRGetDataTypeP)
 }

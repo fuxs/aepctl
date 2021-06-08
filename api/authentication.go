@@ -218,6 +218,11 @@ func (o *AuthenticationConfig) PostRequestRaw(ctx context.Context, header map[st
 	return o.FullRequestRaw(ctx, "POST", header, bytes.NewBuffer(data), url, a...)
 }
 
+// PostRequestRaw sends a http post request to the passed url
+func (o *AuthenticationConfig) PostRequestStream(ctx context.Context, header map[string]string, r io.Reader, url string, a ...interface{}) (*http.Response, error) {
+	return o.FullRequestRaw(ctx, "POST", header, r, url, a...)
+}
+
 // GetRequest sends a http get request to the passed url
 func (o *AuthenticationConfig) GetRequest(ctx context.Context, url string, a ...interface{}) (interface{}, error) {
 	return o.Request(ctx, "GET", url, a...)
@@ -236,6 +241,11 @@ func (o *AuthenticationConfig) GetRequestHRaw(ctx context.Context, header map[st
 // DeleteRequest sends a http delete request to the passed url
 func (o *AuthenticationConfig) DeleteRequest(ctx context.Context, url string, a ...interface{}) (interface{}, error) {
 	return o.Request(ctx, "DELETE", url, a...)
+}
+
+// DeleteRequestRaw sends a HTTP DELETE request to the passed url
+func (o *AuthenticationConfig) DeleteRequestRaw(ctx context.Context, url string, a ...interface{}) (*http.Response, error) {
+	return o.FullRequestRaw(ctx, "DELETE", nil, nil, url, a...)
 }
 
 // PatchRequest sends a http patch request to the passed url

@@ -17,6 +17,7 @@ specific language governing permissions and limitations under the License.
 package cmd
 
 import (
+	"github.com/fuxs/aepctl/cmd/audit"
 	"github.com/fuxs/aepctl/cmd/completion"
 	"github.com/fuxs/aepctl/cmd/configure"
 	"github.com/fuxs/aepctl/cmd/create"
@@ -64,8 +65,9 @@ func NewCommand() *cobra.Command {
 	cmd.AddCommand(completion.NewZSHCommand(gcfg))
 	cmd.AddCommand(configure.NewConfigureCommand(gcfg))
 	cmd.AddCommand(download.NewCommand(conf))
-	cmd.AddCommand(export.NewCommand(conf))
-	cmd.AddCommand(imp.NewCommand(conf))
+	cmd.AddCommand(export.NewSRCommand(conf))
+	cmd.AddCommand(imp.NewSRCommand(conf))
+	cmd.AddCommand(audit.NewCommand(conf))
 	cmd.AddCommand(version.NewCommand(Version))
 	return cmd
 }

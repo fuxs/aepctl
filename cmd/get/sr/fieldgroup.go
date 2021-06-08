@@ -22,13 +22,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewClassesCommand creates an initialized command object
-func NewMixinCommand(conf *helper.Configuration) *cobra.Command {
+// NewFieldGroupCommand creates an initialized command object
+func NewFieldGroupCommand(conf *helper.Configuration) *cobra.Command {
 	return newGetCommand(
 		conf,
-		"mixin",
-		"Display a mixin",
+		"fieldgroup",
+		"Display a fieldgroup",
 		"long",
 		"example",
-		api.SRGetMixinP)
+		api.SRGetFieldGroupP)
 }

@@ -42,7 +42,7 @@ func NewDescriptorsCommand(conf *helper.Configuration) *cobra.Command {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			p.SRDescriptorFormat = api.AcceptObjects
 			helper.CheckErr(output.SetTransformationDesc(descriptorsTransformation))
-			pager := helper.NewPager(api.SRGetDescriptorsP, conf.Authentication, p.Params()).
+			pager := helper.NewPager(api.SRListDescriptorsP, conf.Authentication, p.Params()).
 				OF("results").PP("next").P("start", "orderby")
 			helper.CheckErr(output.PrintPaged(pager))
 		},

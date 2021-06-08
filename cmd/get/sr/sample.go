@@ -17,20 +17,28 @@ specific language governing permissions and limitations under the License.
 package sr
 
 import (
+	"context"
+
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
-// NewBehaviorsCommand creates an initialized command object
-func NewBehaviorsCommand(conf *helper.Configuration) *cobra.Command {
-	return newListCommand(
-		conf,
-		"behaviors",
-		"Display behaviors",
-		"long",
-		"example",
-		api.SRListBehaviorsP,
-		ListPredefined,
-	)
+// NewDescriptorCommand creates an initialized command object
+func NewSampleCommand(conf *helper.Configuration) *cobra.Command {
+	output := &helper.OutputConf{Default: "json"}
+	cmd := &cobra.Command{
+		Use:                   "sample schema_id",
+		Short:                 "Display sample data for schema",
+		Long:                  "long",
+		Example:               "example",
+		DisableFlagsInUseLine: true,
+		Args:                  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
+			helper.CheckErr(output.PrintResponse(api.SRGetSample(context.Background(), conf.Authentication, args[0])))
+		},
+	}
+	output.AddOutputFlags(cmd)
+	return cmd
 }

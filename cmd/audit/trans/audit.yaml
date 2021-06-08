@@ -1,0 +1,37 @@
+
+vars:
+  - name: time
+    path: [updatedTime]
+  - name: user
+    path: [updatedUser]
+  - name: version
+    path: [version]
+range:
+  type: array
+  path: [updates]
+  columns:
+    - name: TIME
+      var: time
+      format: localTime
+    - name: USER
+      var: user
+    - name: VERSION
+      var: version
+    - name: ACTION
+      path: [action]
+    - name: PATH
+      path: [path]
+      mode: wide
+    - name: VALUE
+      path: [value]
+      type: json
+      mode: wide
+  post:
+    vars:
+      - name: time
+        value:
+      - name: user
+        value:
+      - name: version
+        value:
+

@@ -401,3 +401,11 @@ func (q *Query) RangeValuesE(rf func(*Query) error, exclude ...string) error {
 	}
 	return rf(q)
 }
+
+func (q *Query) Pretty() string {
+	str, err := json.MarshalIndent(q.obj, "", "  ")
+	if err != nil {
+		return "**error**"
+	}
+	return string(str)
+}
