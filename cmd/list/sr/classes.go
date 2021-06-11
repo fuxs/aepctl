@@ -27,7 +27,7 @@ func NewClassesCommand(conf *helper.Configuration) *cobra.Command {
 	return newListCommand(
 		conf,
 		"classes",
-		"Display classes",
+		"Display classes (Schema Registry)",
 		"long",
 		"example",
 		api.SRListClassesP,

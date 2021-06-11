@@ -53,7 +53,7 @@ func NewBatchesCommand(conf *helper.Configuration) *cobra.Command {
 
 func addFlags(b *api.BatchesOptions, cmd *cobra.Command) {
 	flags := cmd.Flags()
-	flags.IntVarP(&b.Limit, "limit", "l", 0, "limits the number of results")
+	flags.IntVarP(&b.Limit, "limit", "l", 0, "limits the number of returned results per request")
 	flags.StringVar(&b.TimeFormat, "time-format", time.RFC3339, "format for date parsing, default is '2006-01-02T15:04:05Z07:00' (RFC3339)")
 	flags.StringVar(&b.CreatedAfter, "created-after", "", "returns batches created after this timestamp, see parameter time-format for encoding")
 	flags.StringVar(&b.CreatedBefore, "created-before", "", "returns batches created before this timestamp, see parameter time-format for encoding")

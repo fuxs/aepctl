@@ -27,7 +27,7 @@ func NewBehaviorsCommand(conf *helper.Configuration) *cobra.Command {
 	return newListCommand(
 		conf,
 		"behaviors",
-		"Display behaviors",
+		"Display behaviors (Schema Registry)",
 		"long",
 		"example",
 		api.SRListBehaviorsP,

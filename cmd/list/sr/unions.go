@@ -27,7 +27,7 @@ func NewUnionsCommand(conf *helper.Configuration) *cobra.Command {
 	return newListCommand(
 		conf,
 		"unions",
-		"Display union schemas",
+		"Display union schemas (Schema Registry)",
 		"long",
 		"example",
 		api.SRListUnionsP,

@@ -27,7 +27,7 @@ func NewDataTypesCommand(conf *helper.Configuration) *cobra.Command {
 	return newListCommand(
 		conf,
 		"datatypes",
-		"Display data types",
+		"Display data types (Schema Registry)",
 		"long",
 		"example",
 		api.SRListDataTypesP,

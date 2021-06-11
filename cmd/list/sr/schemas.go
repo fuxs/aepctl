@@ -27,7 +27,7 @@ func NewSchemasCommand(conf *helper.Configuration) *cobra.Command {
 	return newListCommand(
 		conf,
 		"schemas",
-		"Display schemas",
+		"Display schemas (Schema Registry)",
 		"long",
 		"example",
 		api.SRListSchemasP,

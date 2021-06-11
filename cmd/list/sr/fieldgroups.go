@@ -27,7 +27,7 @@ func NewFieldGroupsCommand(conf *helper.Configuration) *cobra.Command {
 	return newListCommand(
 		conf,
 		"fieldgroups",
-		"Display field groups",
+		"Display field groups (Schema Registry)",
 		"long",
 		"example",
 		api.SRListFieldGroupsP,

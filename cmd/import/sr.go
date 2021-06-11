@@ -23,6 +23,7 @@ import (
 
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
+	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
 )
 
@@ -35,19 +36,15 @@ func NewSRCommand(conf *helper.Configuration) *cobra.Command {
 		Long:                  "long",
 		Example:               "example",
 		DisableFlagsInUseLine: true,
-		Args:                  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErr(conf.Validate(cmd))
+			if util.HasPipe() || len(args) == 0 {
+				resource, err := ioutil.ReadAll(os.Stdin)
+				helper.CheckErr(err)
+				helper.CheckErr(out.PrintResponse(api.SRImport(context.Background(), conf.Authentication, resource)))
+			}
 			for _, file := range args {
-				var (
-					err      error
-					resource []byte
-				)
-				if file == "-" {
-					resource, err = ioutil.ReadAll(os.Stdin)
-				} else {
-					resource, err = os.ReadFile(file)
-				}
+				resource, err := os.ReadFile(file)
 				helper.CheckErr(err)
 				helper.CheckErr(out.PrintResponse(api.SRImport(context.Background(), conf.Authentication, resource)))
 			}

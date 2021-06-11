@@ -1,7 +1,6 @@
 columns:
   - name: ID
     path: [$id]
-    mode: wide
   - name: TITLE
     path: [title]
   - name: VERSION

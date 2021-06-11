@@ -93,7 +93,7 @@ func NewQueryCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema
 	flags.StringVar(&p.QOP, "qop", "", "Applies AND or OR operator to values in q query string param.")
 	flags.StringVarP(&p.Field, "field", "f", "", "List of fields to limit the search to")
 	flags.StringVarP(&p.OrderBy, "order-by", "b", "", "Sort results by a specific property.")
-	flags.IntVarP(&p.Limit, "limit", "l", 0, "Limit the number of decision rules returned.")
+	flags.IntVarP(&p.Limit, "limit", "l", 0, "limits the number of returned results per request")
 	helper.CheckErr(ac.AddContainerFlag(cmd))
 	return cmd
 }

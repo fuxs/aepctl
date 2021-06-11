@@ -183,3 +183,11 @@ func (d *Dir) SortedByModTime(hidden, sep, asc bool) []os.FileInfo {
 	d.current = files
 	return files
 }
+
+func HasPipe() bool {
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
+	return !(fi.Mode()&os.ModeNamedPipe == 0)
+}

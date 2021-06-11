@@ -50,7 +50,7 @@ func NewConnectionsCommand(conf *helper.Configuration) *cobra.Command {
 	f.StringVar(&p.ContinuationToken, "token", "", "a token for fetching records for next page")
 	f.BoolVar(&p.Count, "count", false, "boolean value specifying if the count of resources should be returned (true|false)")
 	f.StringVar(&p.Property, "property", "", "comma separated list of top-level object properties to be returned")
-	f.IntVar(&p.Limit, "limit", 0, "max number of objects to be returned")
+	f.IntVar(&p.Limit, "limit", 0, "limits the number of returned results per request")
 	f.StringVar(&p.OrderBy, "order", "", "results will be sorted")
 	return cmd
 }

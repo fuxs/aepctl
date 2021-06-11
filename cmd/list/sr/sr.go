@@ -90,8 +90,8 @@ func newListCommand(conf *helper.Configuration, use, short, long, example string
 }
 
 func addFlags(flags *pflag.FlagSet, p *api.SRBaseParams) {
-	flags.StringVar(&p.Property, "property", "", "Comma separated list of top-level object properties to be returned in the response")
-	flags.StringVar(&p.OrderBy, "order", "", "Sort response by specified fields separated by \",\"")
-	flags.StringVar(&p.Start, "start", "", "The start value of the first orderBy field")
-	flags.UintVar(&p.Limit, "limit", 0, "Specify a limit for the number of results to be displayed")
+	//flags.StringVar(&p.Property, "properties", "", "Comma separated list of top-level object properties to be returned in the response")
+	flags.StringVar(&p.OrderBy, "orderby", "", "sorts the response by specified fields (separated by \",\")")
+	flags.StringVar(&p.Start, "start", "", "offests the start of returned ")
+	flags.UintVar(&p.Limit, "limit", 0, "limits the number of returned results per request")
 }

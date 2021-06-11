@@ -53,5 +53,5 @@ func NewFilesCommand(conf *helper.Configuration) *cobra.Command {
 func addFlags(cmd *cobra.Command, da *api.DAOptions) {
 	flags := cmd.Flags()
 	flags.IntVarP(&da.Start, "start", "s", 0, "paging parameter")
-	flags.IntVarP(&da.Limit, "limit", "l", 0, "limits the number of results")
+	flags.IntVarP(&da.Limit, "limit", "l", 0, "limits the number of returned results per request")
 }

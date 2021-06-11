@@ -33,7 +33,7 @@ func NewDescriptorsCommand(conf *helper.Configuration) *cobra.Command {
 	p := &api.SRListDescriptorsParams{}
 	cmd := &cobra.Command{
 		Use:                   "descriptors",
-		Short:                 "Display descriptors",
+		Short:                 "Display descriptors (Schema Registry)",
 		Long:                  "long",
 		Example:               "example",
 		DisableFlagsInUseLine: true,
