@@ -20,10 +20,7 @@ At the moment the following APIs are implemented:
 
 * [Access Control API](https://www.adobe.io/apis/experienceplatform/home/api-reference.html#!acpdr/swagger-specs/access-control.yaml)
 * [Offer Decisioning](https://experienceleague.adobe.com/docs/offer-decisioning/using/api-reference/getting-started.html?lang=en#api-reference)
-
-Planed APIs:
-
-* Catalog Service API
+* [Schema Registry](doc/sr.md)
 
 # Quick Start
 

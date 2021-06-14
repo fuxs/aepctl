@@ -36,10 +36,10 @@ The following verbs are supported by Schema Registry:
 * `ls` or `list`([List](#List))
 
 # Audit
-The `audit`command returns the audit log for the passed ID.
+The `audit`command returns the audit log for the passed `RESOURCE_ID`.
 
 ```terminal
-aepctl get resource_id
+aepctl audit RESOURCE_ID
 ```
 
 ## Views
@@ -59,8 +59,8 @@ TIME                USER                             VERSION ACTION
 05-24-2021 01:42:18 0D5858275FF35C910A495FC9@AdobeID 1.1     update
                                                              add
 ```
-
-The flag `-o wide` adds the column VALUE, showing the JSON representation of the change:
+Each version consists of one or multiple actions. The flag `-o wide` adds the
+column VALUE, showing the JSON representation of the change:
 
 ```terminal
 aepctl audit https://ns.adobe.com/experienceplatform/schemas/f1fr70ac3d2b8f3fac09e542cf5f444fa8c1ea247d44897b -o wide
@@ -84,7 +84,12 @@ See [Output](output.md) for other output formats.
 
 # Delete
 
-The `delete` command deletes the resources with the passed IDs.
+The `delete RESOURCE` command deletes the resource with the passed `RESOURCE_ID`.
+
+```terminal
+aepctl delete RESOURCE RESOURCE_ID
+```
+
 It supports the following resources:
 
 * Class
@@ -116,11 +121,11 @@ aepctl delete schema https://ns.adobe.com/experienceplatform/schemas/349c2e69db3
 
 This command supports multiple arguments:
 ```terminal
-aepctl delete class class_id1 class_id2 class_idn
+aepctl delete class CLASS_ID1 CLASS_ID2 CLASS_IDN
 ```
 Alternative:
 ```terminal
-aepctl delete classes class_id1 class_id2 class_idn
+aepctl delete classes CLASS_ID1 CLASS_ID2 CLASS_IDN
 ```
 
 If the command has been executed successfully then it just returns with no
@@ -128,10 +133,14 @@ output. Otherwise, it will return an error message.
 
 # Export
 
-The `export` command exports the resource with the passed ID including
+The `export` command exports the resource with the passed `RESOURCE_ID` including
 dependencies. In combination with `import` it is possible to copy resources from
 one account or sandbox to another. Predefined resources by Adobe cannot be
 exported.
+
+```terminal
+aepctl export RESOURCE_ID
+```
 
 A simple export to standard out looks like this:
 ```terminal
@@ -155,7 +164,7 @@ additional configurations.
 
 # Get Resource
 
-The command `get RESOURCE` returns a resource by ID and uses the following pattern:
+The command `get RESOURCE` returns a resource by `RESOURCE_ID` and uses the following pattern:
 
 ```terminal
 aepctl get RESOURCE RESOURCE_ID
@@ -315,7 +324,13 @@ See [Output](output.md) for other output formats.
 
 # Get Sample
 
-The command `get sample RESOURCE_ID` generates some example data in JSON format for the passed `RESOURCE_ID`:
+The command `get sample` generates some example data in JSON format for the passed `RESOURCE_ID`:
+
+```terminal
+aepctl get sample RESOURCE_ID
+```
+
+The following example returns a sample for the data type `https://ns.adobe.com/xdm/common/geo`:
 
 ```terminal
 aepctl get sample https://ns.adobe.com/xdm/common/geo
@@ -353,7 +368,8 @@ Implements [GET /stats](https://www.adobe.io/apis/experienceplatform/home/api-re
 
 # Import
 
-The `import` command imports the passed resources, usually the results of the [`export`](#Export) command.
+The `import` command imports the passed resources, usually the results of the
+[`export`](#Export) command. The input is either coming from standard input or files.
 
 Import a file:
 ```terminal
@@ -368,7 +384,9 @@ Import multiple files:
 aepctl import file1.json file2.json filen.json
 ```
 
-Import from `export`:
+The next example imports the content from the previous `export` to standard
+output:
+
 ```terminal
 aepctl export https://ns.adobe.com/experienceplatform/schemas/b1032dfc8f8598c6c59884028da0cbde649d9c4dd00e7e88 | aepctl import --config name_of_configuration
 ```
@@ -381,6 +399,11 @@ additional configurations.
 # List
 
 The `ls` command returns a list of resources, either predefined, custom or both.
+
+```terminal
+aepctl ls RESOURCE
+```
+
 It supports the following resources:
 
 * Behaviors
