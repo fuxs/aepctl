@@ -207,13 +207,13 @@ paging.
 
 ## Raw
 
-Prints out the response without any formatting. This format does not support
+Prints out the response without any formatting. This format doesn't support
 paging.
 
 ### Example
 
 ```terminal
- aepctl get sandboxes types -o json
+ aepctl get sandboxes types -o raw
 
 {"sandboxTypes":["development","production"]}
 ```

@@ -1,0 +1,15 @@
+path: [clusters]
+vars:
+  - name: xid
+    path: [xid]
+range:
+  type: array
+  path: [members]
+  columns:
+    - name: SRC
+      var: xid
+    - name: XID
+  post:
+    vars:
+      - name: xid
+        value:

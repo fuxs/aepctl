@@ -29,7 +29,6 @@ import (
 
 // NewSRCommand creates an initialized command object
 func NewSRCommand(conf *helper.Configuration) *cobra.Command {
-	out := &helper.StatusConf{}
 	cmd := &cobra.Command{
 		Use:                   "import resource_id",
 		Short:                 "import schema registry resource",
@@ -41,12 +40,12 @@ func NewSRCommand(conf *helper.Configuration) *cobra.Command {
 			if util.HasPipe() || len(args) == 0 {
 				resource, err := ioutil.ReadAll(os.Stdin)
 				helper.CheckErr(err)
-				helper.CheckErr(out.PrintResponse(api.SRImport(context.Background(), conf.Authentication, resource)))
+				helper.CheckErr(api.DropResponse(api.SRImport(context.Background(), conf.Authentication, resource)))
 			}
 			for _, file := range args {
 				resource, err := os.ReadFile(file)
 				helper.CheckErr(err)
-				helper.CheckErr(out.PrintResponse(api.SRImport(context.Background(), conf.Authentication, resource)))
+				helper.CheckErr(api.DropResponse(api.SRImport(context.Background(), conf.Authentication, resource)))
 			}
 		},
 	}

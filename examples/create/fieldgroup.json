@@ -1,0 +1,29 @@
+{
+    "type": "object",
+    "title": "My Loyalty Details",
+    "description": "Field group to describe members of the Loyalty Program.",
+    "meta:intendedToExtend": [
+      "https://ns.adobe.com/xdm/context/profile"
+    ],
+    "definitions": {
+      "myloyalty": {
+        "properties": {
+          "_experienceplatform": {
+            "type": "object",
+            "properties": {
+              "loyaltyId": {
+                "title": "loyaltyId",
+                "type": "string",
+                "description": "Unique loyalty identifier."
+              }
+            }
+          }
+        }
+      }
+    },
+    "allOf": [
+      {
+        "$ref": "#/definitions/myloyalty"
+      }
+    ]
+  }

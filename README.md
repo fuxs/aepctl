@@ -21,6 +21,7 @@ At the moment the following APIs are implemented:
 * [Access Control API](https://www.adobe.io/apis/experienceplatform/home/api-reference.html#!acpdr/swagger-specs/access-control.yaml)
 * [Offer Decisioning](https://experienceleague.adobe.com/docs/offer-decisioning/using/api-reference/getting-started.html?lang=en#api-reference)
 * [Schema Registry](doc/sr.md)
+* [Identity Service](doc/is.md)
 
 # Quick Start
 
@@ -35,7 +36,7 @@ At the moment the following APIs are implemented:
         ```
         Add `aepctl.exe` to your `PATH`
 2. Create an [Adobe I/O Project](https://console.adobe.io/projects) ([detailed documentation](doc/new_project.md))
-3. Provide a  `config.yaml` file with the following command
+3. Provide a `config.yaml` file with the following command
     ```terminal
     aepctl configure
     ```
@@ -60,7 +61,7 @@ brew install fuxs/formulae/aepctl
 ### zsh completion
 The zsh is the default shell since macOS 10.15 Catalina and provides strong
 completion capabilities. It is recommended to activate completions for
-aepctl in order to ease the input with complex ids or names.
+aepctl in order to ease the input with complex IDs or names.
 
 The zsh requires some code for the completion function which must be stored in a
 file with the name `_aepctl`. This file must be located in a subdirectory of the
@@ -74,7 +75,7 @@ aepctl zsh
 This creates the `_aepctl` file in your home directory `~/.aepctl/zsh_completion`
 
 Now you have to add two lines to the `.zshrc` file. The first line adds the
-directory of the created `_aepctl` file to the `$fpath` environemnt variable.
+directory of the created `_aepctl` file to the `$fpath` environment variable.
 The second line with the `compinit` function activates the extended completion
 system of zsh.
 

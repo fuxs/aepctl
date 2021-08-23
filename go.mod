@@ -1,6 +1,6 @@
 module github.com/fuxs/aepctl
 
-go 1.16
+go 1.17
 
 require (
 	github.com/MakeNowJust/heredoc/v2 v2.0.1
@@ -32,4 +32,13 @@ require (
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+)
+
+require (
+	github.com/gdamore/encoding v1.0.0 // indirect
+	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
+	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/subosito/gotenv v1.2.0 // indirect
 )

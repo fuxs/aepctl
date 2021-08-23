@@ -24,11 +24,16 @@ import (
 
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/util"
+	"github.com/spf13/cobra"
 )
 
 // CheckErr prints a user friendly error message to stderr
 func CheckErr(err error) {
 	formatError(err, fatal)
+}
+
+func CheckErrInfo(err error) {
+	formatError(err, info)
 }
 
 func CheckErrParams(params api.ParametersE) util.Params {
@@ -47,13 +52,17 @@ func CheckErrEOF(err error) {
 	formatError(err, fatal)
 }
 
-func fatal(msg string, code int) {
+func info(msg string, code int) {
 	if len(msg) > 0 {
 		if !strings.HasSuffix(msg, "\n") {
 			msg = msg + "\n"
 		}
 		fmt.Fprint(os.Stderr, msg)
 	}
+}
+
+func fatal(msg string, code int) {
+	info(msg, code)
 	os.Exit(code)
 }
 
@@ -69,4 +78,12 @@ func CheckErrs(err ...error) {
 	for _, e := range err {
 		CheckErr(e)
 	}
+}
+
+func PrintError(msg string, cmd *cobra.Command) {
+	fmt.Fprintln(os.Stderr, msg)
+	if err := cmd.Help(); err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+	}
+	os.Exit(1)
 }

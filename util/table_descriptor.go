@@ -190,11 +190,11 @@ func (t *TableDescriptor) WriteRow(q *Query, w *RowWriter, wide bool) error {
 	}
 	r := t.Range
 
+	qp := q
+	if len(r.Path) > 0 {
+		qp = q.Path(r.Path...)
+	}
 	if r.Type == "array" {
-		qp := q
-		if len(r.Path) > 0 {
-			qp = q.Path(r.Path...)
-		}
 		return qp.RangeIE(func(_ int, qs *Query) error {
 			ss := NewScope(s, r.Vars, nil, qs)
 			out := processColumns(ss, cols, qs)
@@ -207,7 +207,7 @@ func (t *TableDescriptor) WriteRow(q *Query, w *RowWriter, wide bool) error {
 		})
 	}
 
-	return q.RangeAttributesE(func(_ string, qs *Query) error {
+	return qp.RangeAttributesE(func(_ string, qs *Query) error {
 		ss := NewScope(s, r.Vars, nil, qs)
 		out := processColumns(ss, cols, qs)
 		if r.Post != nil {
@@ -244,6 +244,7 @@ type TableColumnDescriptor struct {
 	Type       string            `json:"type" yaml:"type"`
 	Meta       string            `json:"meta,omitempty" yaml:"meta,omitempty"`
 	Path       []string          `json:"path,omitempty" yaml:"path,omitempty"`
+	AltPath    []string          `json:"altPath,omitempty" yaml:"altPath,omitempty"`
 	Format     string            `json:"format,omitempty" yaml:"format,omitempty"`
 	Parameters []string          `json:"parameters,omitempty" yaml:"parameters,omitempty"`
 	Var        string            `json:"var,omitempty" yaml:"var,omitempty"`
@@ -260,7 +261,11 @@ func (t *TableColumnDescriptor) Extract(scope *Scope, q *Query) string {
 		t.assignFunc()
 	}
 	if t.Var == "" {
-		return t.o(scope, q.Path(t.Path...))
+		sq := q.Path(t.Path...)
+		if sq.Nil() && len(t.AltPath) > 0 {
+			sq = q.Path(t.AltPath...)
+		}
+		return t.o(scope, sq)
 	}
 	return t.o(scope, scope.Get(t.Var).Path(t.Path...))
 }
@@ -270,6 +275,13 @@ func (t *TableColumnDescriptor) assignFunc() {
 		return q.String()
 	}
 	switch t.Type {
+	case "bool":
+		t.o = func(_ *Scope, q *Query) string {
+			if q.Boolean() {
+				return "●"
+			}
+			return "◯"
+		}
 	case "str":
 		switch t.Format {
 		case "localTime":

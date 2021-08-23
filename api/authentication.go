@@ -218,6 +218,16 @@ func (o *AuthenticationConfig) PostRequestRaw(ctx context.Context, header map[st
 	return o.FullRequestRaw(ctx, "POST", header, bytes.NewBuffer(data), url, a...)
 }
 
+// PutRequestRaw sends a http put request to the passed url
+func (o *AuthenticationConfig) PutRequestRaw(ctx context.Context, header map[string]string, data []byte, url string, a ...interface{}) (*http.Response, error) {
+	return o.FullRequestRaw(ctx, "PUT", header, bytes.NewBuffer(data), url, a...)
+}
+
+// PatchRequestRaw sends a http patch request to the passed url
+func (o *AuthenticationConfig) PatchRequestRaw(ctx context.Context, header map[string]string, data []byte, url string, a ...interface{}) (*http.Response, error) {
+	return o.FullRequestRaw(ctx, "PATCH", header, bytes.NewBuffer(data), url, a...)
+}
+
 // PostRequestRaw sends a http post request to the passed url
 func (o *AuthenticationConfig) PostRequestStream(ctx context.Context, header map[string]string, r io.Reader, url string, a ...interface{}) (*http.Response, error) {
 	return o.FullRequestRaw(ctx, "POST", header, r, url, a...)

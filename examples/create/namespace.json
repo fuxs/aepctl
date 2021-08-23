@@ -1,0 +1,6 @@
+{
+        "name": "My Loyalty Member",
+        "code": "MyLoyalty",
+        "description": "My Loyalty Program Member ID",
+        "idType": "Cross_device"
+}

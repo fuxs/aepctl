@@ -136,6 +136,13 @@ func (q *Query) String() string {
 	return GetString(q.obj)
 }
 
+func (q *Query) Boolean() bool {
+	if v, ok := q.obj.(bool); ok {
+		return v
+	}
+	return false
+}
+
 // Strings returns the current object as array of strings
 func (q *Query) Strings() []string {
 	if ar, ok := q.obj.([]string); ok {

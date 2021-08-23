@@ -1,5 +1,5 @@
 /*
-Package create is the base for all create commands.
+Package patch contains patch command related functions.
 
 Copyright 2021 Michael Bungenstock
 
@@ -14,7 +14,7 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 */
-package create
+package patch
 
 import (
 	"context"
@@ -38,32 +38,32 @@ var (
 // NewCommand creates an initialized command object
 func NewCommand(conf *helper.Configuration) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:                   "create",
-		Short:                 "Create a resource",
+		Use:                   "patch",
+		Short:                 "Patch a resource",
 		Long:                  longDesc,
 		DisableFlagsInUseLine: true,
 	}
 	conf.AddAuthenticationFlags(cmd)
-	cmd.AddCommand(NewODCommand(conf))
-	cmd.AddCommand(NewCatalogCommand(conf))
-	cmd.AddCommand(NewNamespaceCommand(conf))
 	cmd.AddCommand(NewClassCommand(conf))
 	cmd.AddCommand(NewDataTypeCommand(conf))
-	cmd.AddCommand(NewDescriptorCommand(conf))
 	cmd.AddCommand(NewFieldGroupCommand(conf))
 	cmd.AddCommand(NewSchemaCommand(conf))
 	return cmd
 }
 
-// NewCreateCommand creates an initialized command object
-func NewCreateCommand(conf *helper.Configuration, f api.FuncPost, use, short, long, example string, aliases ...string) *cobra.Command {
-	var response, ignore bool
+// NewPatchCommand creates an initialized command object
+func NewPatchCommand(conf *helper.Configuration, f api.FuncPostID, use, short, long, example string, aliases ...string) *cobra.Command {
+	var (
+		id       string
+		response bool
+	)
 	cmd := &cobra.Command{
 		Use:                   use,
 		Aliases:               aliases,
 		Short:                 short,
 		Long:                  long,
 		Example:               example,
+		Args:                  cobra.MaximumNArgs(1),
 		DisableFlagsInUseLine: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErr(conf.Validate(cmd))
@@ -71,27 +71,18 @@ func NewCreateCommand(conf *helper.Configuration, f api.FuncPost, use, short, lo
 			fr := util.MultiFileReader{Files: args}
 			if response {
 				helper.CheckErr(fr.ReadAll(func(data []byte) error {
-					err := api.PrintResponse(f(ctx, conf.Authentication, data))
-					if ignore {
-						helper.CheckErrInfo(err)
-						return nil
-					}
-					return err
+					return api.PrintResponse(f(ctx, conf.Authentication, id, data))
 				}))
 			} else {
 				helper.CheckErr(fr.ReadAll(func(data []byte) error {
-					err := api.DropResponse(f(ctx, conf.Authentication, data))
-					if ignore {
-						helper.CheckErrInfo(err)
-						return nil
-					}
-					return err
+					return api.DropResponse(f(ctx, conf.Authentication, id, data))
 				}))
 			}
 		},
 	}
 	flags := cmd.Flags()
 	flags.BoolVar(&response, "response", false, "Print out response")
-	flags.BoolVar(&ignore, "ignore", false, "Ignore errors (for multiple arguments)")
+	flags.StringVar(&id, "id", "", "@id of the resource")
+	helper.CheckErr(cmd.MarkFlagRequired("id"))
 	return cmd
 }

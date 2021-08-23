@@ -1,0 +1,23 @@
+columns:
+  - name: ID
+    path: [id]
+  - name: CODE
+    path: [code]
+  - name: NAME
+    path: [name]
+  - name: ID TYPE
+    path: [idType]
+  - name: STATUS
+    path: [status]
+    mode: wide
+  - name: TYPE
+    path: [namespaceType]
+    mode: wide
+  - name: UPDATED
+    path: [updateTime]
+    type: num
+    format: utime
+    mode: wide
+  - name: DESCRIPTION
+    path: [description]
+    mode: wide

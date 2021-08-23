@@ -29,6 +29,14 @@ const (
 	arrayState
 )
 
+func JSONPrintPrettyln(dec *json.Decoder, out io.Writer) error {
+	if err := JSONPrintPretty(dec, out); err != nil {
+		return err
+	}
+	fmt.Fprintln(out)
+	return nil
+}
+
 // JSONPrintPretty streams the dec JSON content in an indented format to out
 func JSONPrintPretty(dec *json.Decoder, out io.Writer) error {
 	var (

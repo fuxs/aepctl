@@ -1,0 +1,4 @@
+path: [$]
+columns:
+  - name: XID
+    path: [xid]

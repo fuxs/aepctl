@@ -17,10 +17,14 @@ specific language governing permissions and limitations under the License.
 package api
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
+	"mime"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/fuxs/aepctl/util"
 )
@@ -40,18 +44,53 @@ func NewQuery(res *http.Response, err error) (*util.Query, error) {
 	return i.Query()
 }
 
+func printPayload(res *http.Response, w io.Writer) error {
+	mt, _, _ := mime.ParseMediaType(res.Header.Get("Content-Type"))
+	if mt == "application/json" {
+		if err := util.JSONPrintPretty(json.NewDecoder(res.Body), w); err != nil {
+			return err
+		}
+	} else {
+		_, err := io.Copy(w, res.Body)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// HandleStatusCode checks for a previous error and the HTTP status code. If an
+// error exists or the status code is good then the passed objects will be
+// returned. Otherwise it will create an error object from the status
+// information and the returned HTTP body.
 func HandleStatusCode(res *http.Response, err error) (*http.Response, error) {
 	if err != nil || (res.StatusCode >= 200 && res.StatusCode < 300) {
 		return res, err
 	}
-	if res.ContentLength > 0 {
-		data, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return nil, err
-		}
-		if len(data) > 0 {
-			return nil, errors.New(string(data))
-		}
+	var sb strings.Builder
+	fmt.Fprintln(&sb, "http error with status code:", res.StatusCode)
+	if err = printPayload(res, &sb); err != nil {
+		return res, err
 	}
-	return nil, fmt.Errorf("http error with no message, status code: %v", res.StatusCode)
+	return res, errors.New(sb.String())
+}
+
+func DropResponse(res *http.Response, err error) error {
+	_, err = HandleStatusCode(res, err)
+	return err
+}
+
+func PrintResponse(res *http.Response, err error) error {
+	// check for previous error
+	if err != nil {
+		return err
+	}
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		fmt.Fprintln(os.Stderr, "http error with status code:", res.StatusCode)
+	}
+	if err = printPayload(res, os.Stdout); err != nil {
+		return err
+	}
+	fmt.Println()
+	return nil
 }

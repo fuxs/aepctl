@@ -460,7 +460,7 @@ either `--predefined` nor `--all`.
 The default view shows a table with the columns ID, TITLE and VERSION:
 
 ```terminal
-aepctl ls classes --predefined -o wide
+aepctl ls classes --predefined
 ID                                                                               TITLE                                            VERSION
 https://ns.adobe.com/experience/journeyOrchestration/stepEvents/journey          Journey Orchestration Class                      1.22.3
 https://ns.adobe.com/experience/journeyOrchestration/stepEvents/journeyStepEvent Journey Step Event                               1.22.3

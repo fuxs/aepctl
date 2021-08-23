@@ -27,7 +27,6 @@ import (
 // NewSRCommand creates an initialized command object
 func NewSRCommand(conf *helper.Configuration) *cobra.Command {
 	var destination string
-	out := &helper.StatusConf{}
 	cmd := &cobra.Command{
 		Use:                   "sr",
 		Short:                 "copy schema registry resource",
@@ -45,7 +44,7 @@ func NewSRCommand(conf *helper.Configuration) *cobra.Command {
 				src, err := api.HandleStatusCode(api.SRExport(context.Background(), conf.Authentication, resource))
 				helper.CheckErr(err)
 				defer src.Body.Close()
-				helper.CheckErr(out.PrintResponse(api.SRImportStream(context.Background(), &destAuth, src.Body)))
+				helper.CheckErr(api.DropResponse(api.SRImportStream(context.Background(), &destAuth, src.Body)))
 			}
 		},
 	}

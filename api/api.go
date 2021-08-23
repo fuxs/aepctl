@@ -26,6 +26,8 @@ import (
 
 type FuncID func(context.Context, *AuthenticationConfig, string) (*http.Response, error)
 type Func func(context.Context, *AuthenticationConfig, util.Params) (*http.Response, error)
+type FuncPost func(context.Context, *AuthenticationConfig, []byte) (*http.Response, error)
+type FuncPostID func(context.Context, *AuthenticationConfig, string, []byte) (*http.Response, error)
 type FuncTable map[string]Func
 type Parameters interface {
 	Params() util.Params

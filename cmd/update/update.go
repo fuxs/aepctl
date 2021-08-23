@@ -17,6 +17,9 @@ specific language governing permissions and limitations under the License.
 package update
 
 import (
+	"context"
+
+	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
@@ -42,5 +45,47 @@ func NewCommand(conf *helper.Configuration) *cobra.Command {
 	}
 	conf.AddAuthenticationFlags(cmd)
 	cmd.AddCommand(NewODCommand(conf))
+	cmd.AddCommand(NewClassCommand(conf))
+	cmd.AddCommand(NewDataTypeCommand(conf))
+	cmd.AddCommand(NewDescriptorCommand(conf))
+	cmd.AddCommand(NewFieldGroupCommand(conf))
+	cmd.AddCommand(NewSchemaCommand(conf))
+	cmd.AddCommand(NewNamespaceCommand(conf))
+	return cmd
+}
+
+// NewUpdateCommand creates an initialized command object
+func NewUpdateCommand(conf *helper.Configuration, f api.FuncPostID, use, short, long, example string, aliases ...string) *cobra.Command {
+	var (
+		id       string
+		response bool
+	)
+	cmd := &cobra.Command{
+		Use:                   use,
+		Aliases:               aliases,
+		Short:                 short,
+		Long:                  long,
+		Example:               example,
+		Args:                  cobra.MaximumNArgs(1),
+		DisableFlagsInUseLine: true,
+		Run: func(cmd *cobra.Command, args []string) {
+			helper.CheckErr(conf.Validate(cmd))
+			ctx := context.Background()
+			fr := util.MultiFileReader{Files: args}
+			if response {
+				helper.CheckErr(fr.ReadAll(func(data []byte) error {
+					return api.PrintResponse(f(ctx, conf.Authentication, id, data))
+				}))
+			} else {
+				helper.CheckErr(fr.ReadAll(func(data []byte) error {
+					return api.DropResponse(f(ctx, conf.Authentication, id, data))
+				}))
+			}
+		},
+	}
+	flags := cmd.Flags()
+	flags.BoolVar(&response, "response", false, "Print out response")
+	flags.StringVar(&id, "id", "", "@id of the resource")
+	helper.CheckErr(cmd.MarkFlagRequired("id"))
 	return cmd
 }

@@ -1,5 +1,5 @@
 /*
-Package sr contains schema registry related functions.
+Package update contains update command related functions.
 
 Copyright 2021 Michael Bungenstock
 
@@ -14,28 +14,22 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 */
-package sr
+package update
 
 import (
-	"context"
-
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
-func NewDeleteCommand(conf *helper.Configuration, f api.FuncID, use string, aliases ...string) *cobra.Command {
-	out := &helper.StatusConf{}
-	cmd := &cobra.Command{
-		Use:     use,
-		Aliases: aliases,
-		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErr(conf.Validate(cmd))
-			ctx := context.Background()
-			for _, id := range args {
-				helper.CheckErr(out.PrintResponse(f(ctx, conf.Authentication, id)))
-			}
-		},
-	}
-	return cmd
+// NewClassCommand creates an initialized command object
+func NewNamespaceCommand(conf *helper.Configuration) *cobra.Command {
+	return NewUpdateCommand(conf,
+		api.ISUpdateNamespace,
+		"namespace",
+		"Update a namespace (Identity Service)",
+		"long",
+		"example",
+		"namespaces",
+	)
 }

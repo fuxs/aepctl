@@ -1,5 +1,5 @@
 /*
-Package helper consists of helping functions.
+Package create is the base for all create commands.
 
 Copyright 2021 Michael Bungenstock
 
@@ -14,18 +14,22 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 */
-package helper
+package create
 
 import (
-	"net/http"
-
 	"github.com/fuxs/aepctl/api"
+	"github.com/fuxs/aepctl/cmd/helper"
+	"github.com/spf13/cobra"
 )
 
-type StatusConf struct {
-}
-
-func (s *StatusConf) PrintResponse(res *http.Response, err error) error {
-	_, err = api.HandleStatusCode(res, err)
-	return err
+// NewNamespaceCommand creates an initialized command object
+func NewNamespaceCommand(conf *helper.Configuration) *cobra.Command {
+	return NewCreateCommand(conf,
+		api.ISCreateNamespace,
+		"namespace",
+		"Create a namespace (Identity Service)",
+		"long",
+		"example",
+		"namespaces",
+	)
 }

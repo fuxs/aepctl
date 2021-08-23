@@ -17,6 +17,7 @@ specific language governing permissions and limitations under the License.
 package get
 
 import (
+	"github.com/fuxs/aepctl/cmd/get/is"
 	"github.com/fuxs/aepctl/cmd/get/sr"
 	"github.com/fuxs/aepctl/cmd/helper"
 
@@ -36,6 +37,15 @@ func NewCommand(conf *helper.Configuration) *cobra.Command {
 	cmd.AddCommand(NewSandboxCommand(conf))
 	cmd.AddCommand(NewSandboxesCommand(conf))
 	cmd.AddCommand(NewCatalogCommand(conf))
+	//
+	// identity service commands
+	cmd.AddCommand(is.NewNamespaceCommand(conf))
+	cmd.AddCommand(is.NewClusterCommand(conf))
+	cmd.AddCommand(is.NewClustersCommand(conf))
+	cmd.AddCommand(is.NewHistoryCommand(conf))
+	cmd.AddCommand(is.NewHistoriesCommand(conf))
+	cmd.AddCommand(is.NewXIDCommand(conf))
+	cmd.AddCommand(is.NewMappingCommand(conf))
 	//
 	// schema registry commands
 	cmd.AddCommand(sr.NewBehaviorCommand(conf))

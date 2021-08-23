@@ -381,3 +381,94 @@ func SRDeleteFieldGroup(ctx context.Context, a *AuthenticationConfig, id string)
 func SRDeleteSchema(ctx context.Context, a *AuthenticationConfig, id string) (*http.Response, error) {
 	return srDelete(ctx, a, "schemas", id)
 }
+
+func srCreate(ctx context.Context, a *AuthenticationConfig, resource string, payload []byte) (*http.Response, error) {
+	header := map[string]string{
+		"Content-Type": "application/json",
+	}
+	return a.PostRequestRaw(ctx,
+		header,
+		payload,
+		"https://platform.adobe.io/data/foundation/schemaregistry/tenant/%s",
+		url.PathEscape(resource))
+}
+
+func SRCreateClass(ctx context.Context, a *AuthenticationConfig, payload []byte) (*http.Response, error) {
+	return srCreate(ctx, a, "classes", payload)
+}
+
+func SRCreateDataType(ctx context.Context, a *AuthenticationConfig, payload []byte) (*http.Response, error) {
+	return srCreate(ctx, a, "datatypes", payload)
+}
+
+func SRCreateDescriptor(ctx context.Context, a *AuthenticationConfig, payload []byte) (*http.Response, error) {
+	return srCreate(ctx, a, "descriptors", payload)
+}
+
+func SRCreateFieldGroup(ctx context.Context, a *AuthenticationConfig, payload []byte) (*http.Response, error) {
+	return srCreate(ctx, a, "fieldgroups", payload)
+}
+
+func SRCreateSchema(ctx context.Context, a *AuthenticationConfig, payload []byte) (*http.Response, error) {
+	return srCreate(ctx, a, "schemas", payload)
+}
+
+func srUpdate(ctx context.Context, a *AuthenticationConfig, resource, id string, payload []byte) (*http.Response, error) {
+	header := map[string]string{
+		"Content-Type": "application/json",
+	}
+	return a.PutRequestRaw(ctx,
+		header,
+		payload,
+		"https://platform.adobe.io/data/foundation/schemaregistry/tenant/%s/%s",
+		url.PathEscape(resource),
+		url.PathEscape(id))
+}
+
+func SRUpdateClass(ctx context.Context, a *AuthenticationConfig, id string, payload []byte) (*http.Response, error) {
+	return srUpdate(ctx, a, "classes", id, payload)
+}
+
+func SRUpdateDataType(ctx context.Context, a *AuthenticationConfig, id string, payload []byte) (*http.Response, error) {
+	return srUpdate(ctx, a, "datatypes", id, payload)
+}
+
+func SRUpdateDescriptor(ctx context.Context, a *AuthenticationConfig, id string, payload []byte) (*http.Response, error) {
+	return srUpdate(ctx, a, "descriptors", id, payload)
+}
+
+func SRUpdateFieldGroup(ctx context.Context, a *AuthenticationConfig, id string, payload []byte) (*http.Response, error) {
+	return srUpdate(ctx, a, "fieldgroups", id, payload)
+}
+
+func SRUpdateSchema(ctx context.Context, a *AuthenticationConfig, id string, payload []byte) (*http.Response, error) {
+	return srUpdate(ctx, a, "schemas", id, payload)
+}
+
+func srPatch(ctx context.Context, a *AuthenticationConfig, resource, id string, payload []byte) (*http.Response, error) {
+	header := map[string]string{
+		"Content-Type": "application/json",
+	}
+	return a.PatchRequestRaw(ctx,
+		header,
+		payload,
+		"https://platform.adobe.io/data/foundation/schemaregistry/tenant/%s/%s",
+		url.PathEscape(resource),
+		url.PathEscape(id))
+}
+
+func SRPatchClass(ctx context.Context, a *AuthenticationConfig, id string, payload []byte) (*http.Response, error) {
+	return srPatch(ctx, a, "classes", id, payload)
+}
+
+func SRPatchDataType(ctx context.Context, a *AuthenticationConfig, id string, payload []byte) (*http.Response, error) {
+	return srPatch(ctx, a, "datatypes", id, payload)
+}
+
+func SRPatchFieldGroup(ctx context.Context, a *AuthenticationConfig, id string, payload []byte) (*http.Response, error) {
+	return srPatch(ctx, a, "fieldgroups", id, payload)
+}
+
+func SRPatchSchema(ctx context.Context, a *AuthenticationConfig, id string, payload []byte) (*http.Response, error) {
+	return srPatch(ctx, a, "schemas", id, payload)
+}

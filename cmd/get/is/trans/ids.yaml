@@ -1,0 +1,19 @@
+path: [clusters]
+vars:
+  - name: id
+    path: [compositeXid,id]
+range:
+  type: array
+  path: [members]
+  columns:
+    - name: SRC
+      var: id
+    - name: NAMESPACE
+      path: [namespace]
+      altPath: [nsid]
+    - name: ID
+      path: [id]
+  post:
+    vars:
+      - name: id
+        value:
