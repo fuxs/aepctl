@@ -1,6 +1,6 @@
 # Identity Service
 
-The identity service handles the multiple identities for a user profile. Data
+The Identity Service handles the multiple identities for a user profile. Data
 from different channels comes with its own identities, e.g. data from CRM
 contains hashed email addresses (first party PII) while data from web analytics
 comes with cookie IDs (device ID). Each channel uses its specific namespace for
@@ -11,44 +11,31 @@ addresses). Please visit [Identity Service
 Overview](https://experienceleague.adobe.com/docs/experience-platform/identity/home.html?lang=en)
 for more information.
 
-# List Namespaces
+The command uses the following pattern:
 
-The `ls` command returns a list of all declared namespaces:
+```terminal
+aepctl (verb) (noun)
+```
+
+E.g., if you want to list the available namespaces
+
+```terminal
+aepctl list namespaces
+```
+
+Some commands support a preferred short notation, e.g. `ls` for `list`:
 
 ```terminal
 aepctl ls namespaces
 ```
 
-The default view shows a table with the columns ID, CODE, NAME and ID TYPE
+The following verbs are supported by Schema Registry:
 
-```terminal
-ID       CODE              NAME                         ID TYPE
-0        CORE              CORE                         COOKIE
-4        ECID              ECID                         COOKIE
-411      AdCloud           AdCloud                      COOKIE
-11       Email_LC_SHA256   Emails (SHA256, lowercased)  Email
-17       Phone_E.164       Phone (E.164)                Phone
-…
-```
-
-The flag `-o wide` adds the columns STATUS, TYPE, UPDATED and DESCRIPTION:
-
-```terminal
-aepctl ls namespaces -o wide
-ID       CODE     NAME      ID TYPE    STATUS TYPE        UPDATED              DESCRIPTION
-0        CORE     CORE      COOKIE     ACTIVE Standard    04 Mar 19 09:33 CET  Adobe Audience Manger UUID
-4        ECID     ECID      COOKIE     ACTIVE Standard    04 Mar 19 09:33 CET  Adobe Experience Cloud ID
-411      AdCloud  AdCloud   COOKIE     ACTIVE Standard    04 Mar 19 09:33 CET  Adobe AdCloud - ID Syncing Partner
-…
-```
-
-## Shared Namespaces
-
-Provide an IMS Organization ID with the flag `--ims-org ID` to show the shared namespaces with a different organization.
-
-```terminal
-aepctl ls namespaces --ims-org 792D3C635C5CDF980A395CB2@AdobeOrg
-```
+* `create` ([Create Namespaces](#Create-Namespaces))
+* `get` ([Get Namespace](#Get-Namespace), [Get XID](#Get-XID) and [Get Cluster of IDs](#Get-Cluster-of-IDs))
+* `import` ([Import](#Import))
+* `ls` or `list`([List Namespaces](#List-Namespaces))
+* `update` ([Update Namespaces](#Update-Namespaces))
 
 # Create Namespaces
 
@@ -124,6 +111,8 @@ ID CODE NAME ID TYPE STATUS TYPE     UPDATED             DESCRIPTION
 4  ECID ECID COOKIE  ACTIVE Standard 04 Mar 19 09:33 CET Adobe Experience Cloud ID
 ```
 
+See [Output](output.md) for other output formats. 
+
 ## Shared Namespaces
 
 Provide an IMS Organization ID with the flag `--ims-org ID` to get the shared namespace with a different organization:
@@ -138,13 +127,11 @@ Or
 aepctl get namespace --ims-org 792D3C635C5CDF980A395CB2@AdobeOrg 4
 ```
 
-# Get IDs
+# Get XID
 
 The AEP supports composite IDs, e.g. the namespace ECID in combination with the
 ID 67504705834917073766149225290256685656, which can be represented by a
 single-value ID with the name XID, e.g. A28eOco1-QqGQERvuJjKVoEd.
-
-# Get XID
 
 It is possible to calculate the single-value XID, either from the namespace code
 or namespace ID in combination with the related ID. Use the following command to
@@ -161,7 +148,6 @@ XID
 Bm_wQb_rOn2uXVgamU3Sb1ZV
 ```
 
-
 Provide either a namespace code, e.g. `Email`, or the namespace ID, which is 6 for `Email`. Use `aepctl ls namespaces` to list all namespaces. The following examples return the same results:
 
 ```terminal
@@ -173,6 +159,8 @@ With the namespace code:
 ```terminal
 aepctl get xid --ns-id 6 max@mustermann.de
 ```
+
+See [Output](output.md) for other output formats. 
 
 # Get Cluster of IDs
 
@@ -224,7 +212,7 @@ aepctl get cluster --ns-id 4 67504705834917073766149225290256685657
 The output could look like this:
 
 ```terminal
-NAMESPACE       ID
+NAMESPACE ID
 4         46494157307721956142054018333203263300
 11        7b29a83d12a9aab27440586da291bde292e38e3b38e3cad44cc92d2b8b8c0ae1
 7         +49110112
@@ -283,6 +271,47 @@ The last `--ns-id` sets the namespace for all following IDs. The example will re
 
 ```terminal
 aepctl get clusters --ns-id 4  67504705834917073766149225290256685657 46494157307721956142054018333203263300
+```
+
+# List Namespaces
+
+The `ls` command returns a list of all declared namespaces:
+
+```terminal
+aepctl ls namespaces
+```
+
+The default view shows a table with the columns ID, CODE, NAME and ID TYPE
+
+```terminal
+ID       CODE              NAME                         ID TYPE
+0        CORE              CORE                         COOKIE
+4        ECID              ECID                         COOKIE
+411      AdCloud           AdCloud                      COOKIE
+11       Email_LC_SHA256   Emails (SHA256, lowercased)  Email
+17       Phone_E.164       Phone (E.164)                Phone
+…
+```
+
+The flag `-o wide` adds the columns STATUS, TYPE, UPDATED and DESCRIPTION:
+
+```terminal
+aepctl ls namespaces -o wide
+ID       CODE     NAME      ID TYPE    STATUS TYPE        UPDATED              DESCRIPTION
+0        CORE     CORE      COOKIE     ACTIVE Standard    04 Mar 19 09:33 CET  Adobe Audience Manger UUID
+4        ECID     ECID      COOKIE     ACTIVE Standard    04 Mar 19 09:33 CET  Adobe Experience Cloud ID
+411      AdCloud  AdCloud   COOKIE     ACTIVE Standard    04 Mar 19 09:33 CET  Adobe AdCloud - ID Syncing Partner
+…
+```
+
+See [Output](output.md) for other output formats. 
+
+## Shared Namespaces
+
+Provide an IMS Organization ID with the flag `--ims-org ID` to show the shared namespaces with a different organization.
+
+```terminal
+aepctl ls namespaces --ims-org 792D3C635C5CDF980A395CB2@AdobeOrg
 ```
 
 # Update Namespaces
