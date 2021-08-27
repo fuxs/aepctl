@@ -18,10 +18,10 @@ learning the APIs.
 
 At the moment the following APIs are implemented:
 
-* [Access Control API](https://www.adobe.io/apis/experienceplatform/home/api-reference.html#!acpdr/swagger-specs/access-control.yaml)
-* [Offer Decisioning](https://experienceleague.adobe.com/docs/offer-decisioning/using/api-reference/getting-started.html?lang=en#api-reference)
-* [Schema Registry](doc/sr.md)
-* [Identity Service](doc/is.md)
+* [Access Control API](https://www.adobe.io/apis/experienceplatform/home/api-reference.html#!acpdr/swagger-specs/access-control.yaml) (External API documentation)
+* [Offer Decisioning](https://experienceleague.adobe.com/docs/offer-decisioning/using/api-reference/getting-started.html?lang=en#api-reference) (External API documentation)
+* [Schema Registry](doc/sr.md) commands
+* [Identity Service](doc/is.md) commands
 
 # Quick Start
 
@@ -32,7 +32,7 @@ At the moment the following APIs are implemented:
         ```
     * Windows (requires PowerShell)
         ```terminal
-        Invoke-WebRequest https://www.bungenstock.de/aepctl/releases/v0.2.0/windows/amd64/aepctl.exe -OutFile aepctl.exe
+        Invoke-WebRequest https://www.bungenstock.de/aepctl/releases/latest/windows/amd64/aepctl.exe -OutFile aepctl.exe
         ```
         Add `aepctl.exe` to your `PATH`
 2. Create an [Adobe I/O Project](https://console.adobe.io/projects) ([detailed documentation](doc/new_project.md))
