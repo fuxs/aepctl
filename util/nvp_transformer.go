@@ -37,13 +37,13 @@ func (t *NVPTransformer) WriteRow(q *Query, w *RowWriter, wide bool) error {
 	if wide {
 		return w.Write(
 			q.JSONName(),
-			Truncate(q.String(), 128),
+			q.String(),
 			q.JSONPath(),
 		)
 	}
 	return w.Write(
 		q.JSONFullPath(),
-		Truncate(q.String(), 128),
+		q.String(),
 	)
 }
 

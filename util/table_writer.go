@@ -85,27 +85,33 @@ func (t *RowWriter) WriteSingle(v ...string) error {
 	return nil
 }
 
-// WriteMulti writes one row with mutliple lines and terminates it with a
-// newline
+// Write writes one row with mutliple lines and terminates it with a newline. v
+// is a slice of columns separated by the delimiter, e.g. a tab.
 func (t *RowWriter) Write(v ...string) error {
+	// l is number of columns
 	l := len(v)
 	values := make([]string, l)
 	lengths := make([]int, l)
+	// replace delimiters with escaped variant, e.g. tabs with spaces
 	for i, w := range v {
-		// replace
 		values[i] = strings.ReplaceAll(w, t.d, t.e)
 		lengths[i] = len(values[i])
 	}
+	// stores the progress for each column
 	offsets := make([]int, l)
 	done := 0
+	// iterate over all columns until each column has been printed row by row
 	for done < l {
-		for i, w := range v {
+		// i is current column
+		for i, w := range values {
+			// write the column delimiter between columns
 			if i > 0 {
 				// write delimiter
 				if _, err := t.w.Write([]byte(t.d)); err != nil {
 					return err
 				}
 			}
+			// check the length, skip empty
 			length := lengths[i]
 			if length == 0 {
 				done++
@@ -115,8 +121,10 @@ func (t *RowWriter) Write(v ...string) error {
 			if offset < length {
 				var str string
 				current := w[offset:]
+				// search for next newline
 				index := strings.IndexByte(current, '\n')
 				if index >= 0 {
+					// skip newline characters
 					skip := 1
 					if index > 0 {
 						if w[index-1] == '\r' {
@@ -125,8 +133,13 @@ func (t *RowWriter) Write(v ...string) error {
 						}
 					}
 					str = current[:index]
-					offsets[i] = offset + index + skip
+					nextOffset := offset + index + skip
+					if nextOffset == length {
+						done++
+					}
+					offsets[i] = nextOffset
 				} else {
+					// no newline
 					str = current
 					offsets[i] = length
 					done++
@@ -136,7 +149,9 @@ func (t *RowWriter) Write(v ...string) error {
 				}
 			}
 		}
+		// output new line
 		fmt.Fprintln(t.w)
+		// automatic flush
 		t.c++
 		if t.l > 0 && t.c > t.l {
 			if err := t.Flush(); err != nil {
