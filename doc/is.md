@@ -29,7 +29,7 @@ Some commands support a preferred short notation, e.g. `ls` for `list`:
 aepctl ls namespaces
 ```
 
-The following verbs are supported by Schema Registry:
+The following verbs are supported by Identity Service:
 
 * `create` ([Create Namespaces](#Create-Namespaces))
 * `get` ([Get Namespace](#Get-Namespace), [Get XID](#Get-XID) and [Get Cluster of IDs](#Get-Cluster-of-IDs))
@@ -170,7 +170,7 @@ single-value XID or the combination of namespace and ID.
 The following command returns the related XIDs:
 
 ```terminal
-aepctl get cluster A28eOco1-QqGQERvuJjKVoEe
+aepctl get ids A28eOco1-QqGQERvuJjKVoEe
 ```
 
 The output could look like this:
@@ -186,7 +186,8 @@ A28eOco1-QqGQERvuJjKVoEe A28eOco1-QqGQERvuJjKVoEe
                          A2_MthJFcLjbZK1mvuK3oLVe
 ```
 
-The following command returns the related namespace code + ID combinations:
+The following command returns the related namespace code + ID combinations
+(using the alias cluster for ids):
 
 ```terminal
 aepctl get cluster --namespace ECID 67504705834917073766149225290256685657
@@ -206,7 +207,7 @@ ECID            67504705834917073766149225290256685657
 The following command returns the related namespace ID + ID combinations:
 
 ```terminal
-aepctl get cluster --ns-id 4 67504705834917073766149225290256685657
+aepctl get ids --ns-id 4 67504705834917073766149225290256685657
 ```
 
 The output could look like this:

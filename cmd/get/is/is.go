@@ -98,7 +98,7 @@ func NewClusterCommand(conf *helper.Configuration) *cobra.Command {
 	output := &helper.OutputConf{}
 	pp := &api.ISClusterParams{}
 	cmd := &cobra.Command{
-		Use:                   "id xid",
+		Use:                   "ids xid",
 		Short:                 "Display a cluster of identities (Identity Service)",
 		Long:                  "long",
 		Example:               "example",
@@ -165,13 +165,12 @@ func NewClustersCommand(conf *helper.Configuration) *cobra.Command {
 	output := &helper.OutputConf{}
 	pp := &api.ISClustersParams{}
 	cmd := &cobra.Command{
-		Use:                   "ids xid+",
+		Use:                   "clusters xid+",
 		Short:                 "Display multiple clusters of identities (Identity Service)",
 		Long:                  "long",
 		Example:               "example",
 		DisableFlagsInUseLine: true,
 		Args:                  cobra.MinimumNArgs(1),
-		Aliases:               []string{"clusters"},
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			lns := len(pp.Namespaces)
@@ -194,7 +193,7 @@ func NewClustersCommand(conf *helper.Configuration) *cobra.Command {
 	}
 	output.AddOutputFlags(cmd)
 	flags := cmd.Flags()
-	//flags.StringArrayVarP(&pp.Namespaces, "namespace", "n", []string{}, "namespace code, e.g. ECID")
+	flags.StringArrayVarP(&pp.Namespaces, "namespace", "n", []string{}, "namespace code, e.g. ECID")
 	flags.StringArrayVar(&pp.NamesapceIDs, "ns-id", []string{}, "namespace ID, e.g. 4 for ECID")
 	flags.StringVar(&pp.GraphType, "graph", "", "select identity graph. Private Graph is default, None for no graph")
 	flags.StringVar(&pp.Region, "region", "va7", "region for routing (va7 is default, nld2 is the alternative")
