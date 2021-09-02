@@ -113,7 +113,7 @@ type ISClusterParams struct {
 
 func (p *ISClusterParams) Request() *Request {
 	result := p.ISParams.Request()
-	result.Query.Add("graph-type", p.GraphType)
+	result.AddQuery("graph-type", p.GraphType)
 	return result
 }
 
@@ -239,7 +239,7 @@ func ISGetClustersR(ctx context.Context, a *AuthenticationConfig, req *Request) 
 	req.ContentType("application/json")
 	return a.PostRequestRaw(ctx,
 		req.Header(),
-		req.Body,
+		req.body,
 		"https://platform-%s.adobe.io/data/core/identity/clusters/members",
 		req.GetValueV("region", "va7"))
 }
@@ -256,7 +256,7 @@ func ISGetHistoriesR(ctx context.Context, a *AuthenticationConfig, req *Request)
 	req.ContentType("application/json")
 	return a.PostRequestRaw(ctx,
 		req.Header(),
-		req.Body,
+		req.body,
 		"https://platform-%s.adobe.io/data/core/identity/clusters/history",
 		req.GetValueV("region", "va7"))
 }

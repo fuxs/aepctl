@@ -22,9 +22,13 @@ import (
 	"strings"
 )
 
+// RequestHeader containts the Header values of an HTTP request, e.g. Accept: text/html
 type RequestHeader map[string]string
+
+// RequestQuery contains the Query values of an HTTP request, e.g. ?next=good
 type RequestQuery map[string][]string
 
+// NewRequestQuery accepts multiple query name value pairs
 func NewRequestQuery(pairs ...string) RequestQuery {
 	result := make(RequestQuery, len(pairs)/2)
 	result.Set(pairs...)
@@ -85,25 +89,25 @@ type RequestHost map[string]string
 
 type Request struct {
 	header RequestHeader
-	Query  RequestQuery
-	Body   []byte
-	Aux    map[string]string
+	query  RequestQuery
+	body   []byte
+	aux    map[string]string
 }
 
 func NewRequest(pairs ...string) *Request {
-	return &Request{Query: NewRequestQuery(pairs...)}
+	return &Request{query: NewRequestQuery(pairs...)}
 }
 
 func NewRequestHeader(header RequestHeader, pairs ...string) *Request {
-	return &Request{header: header, Query: NewRequestQuery(pairs...)}
+	return &Request{header: header, query: NewRequestQuery(pairs...)}
 }
 
 func NewRequestBody(body []byte, pairs ...string) *Request {
-	return &Request{Body: body, Query: NewRequestQuery(pairs...)}
+	return &Request{body: body, query: NewRequestQuery(pairs...)}
 }
 
 func (r *Request) EncodedQuery() string {
-	return r.Query.Encode()
+	return r.query.Encode()
 }
 
 func (r *Request) Header() RequestHeader {
@@ -128,29 +132,36 @@ func (r *Request) ContentType(value string) {
 	r.SetHeader("Content-Type", value)
 }
 
-func (r *Request) SetValue(name, value string) {
-	if r.Aux == nil {
-		r.Aux = make(map[string]string)
+func (r *Request) AddQuery(name, value string) {
+	if r.query == nil {
+		r.query = make(RequestQuery)
 	}
-	r.Aux[name] = value
+	r.query.Add(name, value)
+}
+
+func (r *Request) SetValue(name, value string) {
+	if r.aux == nil {
+		r.aux = make(map[string]string)
+	}
+	r.aux[name] = value
 }
 
 func (r *Request) GetValue(name string) string {
-	return r.Aux[name]
+	return r.aux[name]
 }
 
 func (r *Request) GetValuePath(name string) string {
-	return url.PathEscape(r.Aux[name])
+	return url.PathEscape(r.aux[name])
 }
 
 func (r *Request) GetValueQuery(name string) string {
-	return url.QueryEscape(r.Aux[name])
+	return url.QueryEscape(r.aux[name])
 }
 
 // GetValueV returns the value with the passed name. If the value doesn't exist
 // it returns the second value.
 func (r *Request) GetValueV(name, value string) string {
-	if result, ok := r.Aux[name]; ok {
+	if result, ok := r.aux[name]; ok {
 		return result
 	}
 	return value
