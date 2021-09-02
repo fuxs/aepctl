@@ -19,6 +19,7 @@ package list
 import (
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/cmd/list/is"
+	"github.com/fuxs/aepctl/cmd/list/qs"
 	"github.com/fuxs/aepctl/cmd/list/sr"
 	"github.com/spf13/cobra"
 )
@@ -31,6 +32,9 @@ func NewCommand(conf *helper.Configuration) *cobra.Command {
 		Short:   "List resources",
 	}
 	conf.AddAuthenticationFlags(cmd)
+	//
+	// quer service commands
+	cmd.AddCommand(qs.NewQueriesCommand(conf))
 	//
 	// identity service commands
 	cmd.AddCommand(is.NewNamespacesCommand(conf))

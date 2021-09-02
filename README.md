@@ -22,6 +22,7 @@ At the moment the following APIs are implemented:
 * [Offer Decisioning](https://experienceleague.adobe.com/docs/offer-decisioning/using/api-reference/getting-started.html?lang=en#api-reference) (External API documentation)
 * [Schema Registry](doc/sr.md) commands
 * [Identity Service](doc/is.md) commands
+* [Query Service](doc/qs.md) commands
 
 # Quick Start
 

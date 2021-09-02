@@ -69,6 +69,8 @@ type OutputConf struct {
 	Default   string
 	Type      OutputType
 	Truncate  bool
+	Flush     bool
+	Paging    bool
 	jsonPath  string
 	transPath string
 	tf        Transformer
@@ -105,11 +107,18 @@ func (o *OutputConf) AddOutputFlags(cmd *cobra.Command) {
 	flags.StringVarP(&o.Output, "output", "o", o.Default, "Output format (json|jsonpath=''|nvp|pv|raw|table|wide)")
 	flags.BoolVarP(&o.Truncate, "truncate", "t", false, "Truncate output to terminal width")
 	if err := cmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-
 		return []string{"json", "jsonpath=", "nvp", "pv", "raw", "table", "wide"}, cobra.ShellCompDirectiveNoFileComp
 	}); err != nil {
 		fatal("Error in AddOutputFlags", 1)
 	}
+}
+
+// AddOutputFlags extends the passed command with flags for output
+func (o *OutputConf) AddOutputFlagsPaging(cmd *cobra.Command) {
+	o.AddOutputFlags(cmd)
+	flags := cmd.PersistentFlags()
+	flags.BoolVar(&o.Flush, "flush", true, "Flush each response to output (enabled by default)")
+	flags.BoolVar(&o.Paging, "paging", true, "Enable paging (enabled by default)")
 }
 
 // ValidateFlags checks the passed flags
@@ -269,13 +278,16 @@ func (o *OutputConf) PrintTable(pager *Pager) error {
 		// complete JSON document must be processed
 		defer func() {
 			_ = c.End()
+			if o.Flush {
+				w.Flush()
+			}
 		}()
 		// create the new iterator for the copied cursor
 		i, err := o.tf.Iterator(c)
 		if err != nil {
 			return err
 		}
-		// print table body
+		// print table body (w is the reason for lamda func)
 		return o.streamTableBody(i, w)
 	})
 	// print the header
@@ -283,7 +295,10 @@ func (o *OutputConf) PrintTable(pager *Pager) error {
 		return err
 	}
 	// print the table body
-	return pager.Run()
+	if o.Paging {
+		return pager.Run()
+	}
+	return pager.RunOnce()
 }
 
 func (o *OutputConf) getWriter() *util.RowWriter {
