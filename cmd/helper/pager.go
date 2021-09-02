@@ -95,6 +95,9 @@ func (p *Pager) SingleCall() (*http.Response, error) {
 	if p.Context == nil {
 		p.Context = context.Background()
 	}
+	if len(p.Values) == 0 {
+		return api.HandleStatusCode(p.Func(p.Context, p.Auth, nil))
+	}
 	return api.HandleStatusCode(p.Func(p.Context, p.Auth, p.Values[0]))
 }
 
@@ -109,11 +112,17 @@ func (p *Pager) Call() error {
 		if p.Context == nil {
 			p.Context = context.Background()
 		}
-		params = p.Values[0]
+		if len(p.Values) > 0 {
+			params = p.Values[0]
+		}
 	} else {
 		// subsequent call
 		if len(p.nextParams) > 0 {
-			params = p.Values[p.valuesi]
+			if len(p.Values) > 0 {
+				params = p.Values[p.valuesi]
+			} else {
+				params = make(util.Params, len(p.PageParams))
+			}
 			for i, n := range p.PageParams {
 				params[n] = []string{p.nextParams[i]}
 			}
@@ -127,9 +136,9 @@ func (p *Pager) Call() error {
 	if err != nil {
 		return err
 	}
+	defer res.Body.Close()
 	p.calls++
 	i := util.NewJSONIterator(util.NewJSONCursor(res.Body))
-	defer res.Body.Close()
 	p.jf.SetIterator(i)
 	return p.jf.Run()
 }
@@ -140,6 +149,14 @@ func (p *Pager) Run() error {
 		if err := p.Call(); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+// RunOnce executes only one REST call
+func (p *Pager) RunOnce() error {
+	if p.Next() {
+		return p.Call()
 	}
 	return nil
 }

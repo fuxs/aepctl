@@ -91,15 +91,15 @@ type Request struct {
 }
 
 func NewRequest(pairs ...string) *Request {
-	return &Request{Query: RequestQuery(NewRequestQuery(pairs...))}
+	return &Request{Query: NewRequestQuery(pairs...)}
 }
 
 func NewRequestHeader(header RequestHeader, pairs ...string) *Request {
-	return &Request{header: header, Query: RequestQuery(NewRequestQuery(pairs...))}
+	return &Request{header: header, Query: NewRequestQuery(pairs...)}
 }
 
 func NewRequestBody(body []byte, pairs ...string) *Request {
-	return &Request{Body: body, Query: RequestQuery(NewRequestQuery(pairs...))}
+	return &Request{Body: body, Query: NewRequestQuery(pairs...)}
 }
 
 func (r *Request) EncodedQuery() string {
