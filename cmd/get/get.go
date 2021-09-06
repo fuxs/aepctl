@@ -62,5 +62,8 @@ func NewCommand(conf *helper.Configuration) *cobra.Command {
 	cmd.AddCommand(NewDataAccessCommand(conf))
 	cmd.AddCommand(NewFlowCommand(conf))
 	cmd.AddCommand(NewUPSCommand(conf))
+	//
+	// query service
+	cmd.AddCommand(NewConnectionCommand(conf))
 	return cmd
 }

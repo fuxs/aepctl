@@ -70,3 +70,8 @@ func QSListQueriesP(ctx context.Context, a *AuthenticationConfig, p *Request) (*
 	}
 	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/queries%s", p.EncodedQuery())
 }
+
+// QSGetConnection retrieves connection parameters for the interactive interface
+func QSGetConnection(ctx context.Context, a *AuthenticationConfig) (*http.Response, error) {
+	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/connection_parameters")
+}

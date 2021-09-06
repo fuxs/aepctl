@@ -24,6 +24,7 @@ import (
 	"github.com/fuxs/aepctl/cmd/delete"
 	"github.com/fuxs/aepctl/cmd/download"
 	"github.com/fuxs/aepctl/cmd/export"
+	"github.com/fuxs/aepctl/cmd/extern"
 	"github.com/fuxs/aepctl/cmd/get"
 	"github.com/fuxs/aepctl/cmd/helper"
 	imp "github.com/fuxs/aepctl/cmd/import"
@@ -71,6 +72,7 @@ func NewCommand() *cobra.Command {
 	cmd.AddCommand(imp.NewSRCommand(conf))
 	cmd.AddCommand(audit.NewCommand(conf))
 	cmd.AddCommand(version.NewCommand(Version))
+	cmd.AddCommand(extern.NewPSQLCommand(conf))
 	return cmd
 }
 

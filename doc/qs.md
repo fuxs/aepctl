@@ -22,14 +22,42 @@ aepctl ls namespaces
 
 The following verbs are supported by Query Service:
 
+* `get` ([Get Connection](#Get-Connection))
 * `ls` or `list` ([List Queries](#List-Queries))
+* `psql` ([PSQL](#PSQL))
+
+# Get Connection
+
+The `get connection` command returns all parameters for a connection with the
+interactive PosgreSQL terminal `psql`:
+
+```terminal
+aepctl get connection
+```
+
+The default view shows a table with the columns PATH and Value
+
+```terminal
+PATH      VALUE
+username  127075E95BF479EC0A495C73@AdobeOrg
+dbName    mysandbox:all
+host      experienceplatform.platform-query.adobe.io
+version   1
+port      80
+token     eyJhbGciOiJSUzI1NiIsIng1dSI6Imltc19uYTEta2V5LTEuY2VyIn0…
+```
+
+See [Output](output.md) for other output formats.
+
+The command `aepctl psql` uses this information to start the `psql` client for
+you, see section [PSQL](#PSQL) for more information.
 
 # List Queries
 
-The `ls` command returns a list of all queries:
+The `ls queries` command returns a list of all queries:
 
 ```terminal
-aepctl ls namespaces
+aepctl ls queries
 ```
 
 The default view shows a table with the columns ID, NAME and LAST MODIFIED
@@ -119,4 +147,14 @@ Other flags to control the number of results:
 * `--exclude-hidden=false` to show system generated queries (`true` is default
   and doesn't have to be set).
 
-See [Output](output.md) for other output formats. 
+See [Output](output.md) for other output formats.
+
+# PSQL
+
+The command `aepctl psql` runs an PostgreSQL interactive terminal connected to
+the AEP instance. It requires an installed `psql` command (OS X: run `brew
+install postgres` for installation). If the command is not on the path or if a
+specific version is required then use the flag `--command=/usr/local/bin/psql`
+
+The flag `--print` just prints the command with all parameters. Use the command
+`aepctl get connection` for a structured output of all parameters.
