@@ -30,5 +30,5 @@ func NewDataTypeCommand(conf *helper.Configuration) *cobra.Command {
 		"Display a data type",
 		"long",
 		"example",
-		api.SRGetDataTypeP)
+		api.SRGetDataType)
 }

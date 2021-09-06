@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	"github.com/fuxs/aepctl/api"
-	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
 )
 
@@ -36,8 +35,8 @@ func CheckErrInfo(err error) {
 	formatError(err, info)
 }
 
-func CheckErrParams(params api.ParametersE) util.Params {
-	p, err := params.Params()
+func CheckErrParams(params api.ParametersE) *api.Request {
+	p, err := params.Request()
 	if err != nil {
 		formatError(err, fatal)
 	}

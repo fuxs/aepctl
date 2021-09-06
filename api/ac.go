@@ -19,33 +19,28 @@ package api
 import (
 	"context"
 	"net/http"
-
-	"github.com/fuxs/aepctl/util"
 )
 
 // ACGetPermissionsAndResources returns the access control policies.
 func ACGetPermissionsAndResources(ctx context.Context, p *AuthenticationConfig) (*http.Response, error) {
-	return ACGetPermissionsAndResourcesP(ctx, p, nil)
-}
-
-// ACGetPermissionsAndResources returns the access control policies.
-func ACGetPermissionsAndResourcesP(ctx context.Context, p *AuthenticationConfig, _ util.Params) (*http.Response, error) {
 	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/access-control/acl/reference")
 }
 
 type ACGetEffecticeACLPoliciesParams []string
 
-func (p ACGetEffecticeACLPoliciesParams) Params() util.Params {
-	return util.Params{"urls": []string(p)}
+func (p ACGetEffecticeACLPoliciesParams) Request() *Request {
+	req := NewRequest()
+	req.SetArray("urls", []string(p))
+	return req
 }
 
 // ACGetEffecticeACLPolicies returns the effective acl policies
 func ACGetEffecticeACLPolicies(ctx context.Context, p *AuthenticationConfig, params ACGetEffecticeACLPoliciesParams) (*http.Response, error) {
-	return ACGetEffecticeACLPoliciesP(ctx, p, params.Params())
+	return ACGetEffecticeACLPoliciesP(ctx, p, params.Request())
 }
 
 // ACGetEffecticeACLPolicies returns the effective acl policies
-func ACGetEffecticeACLPoliciesP(ctx context.Context, p *AuthenticationConfig, params util.Params) (*http.Response, error) {
-	urls := params["urls"]
+func ACGetEffecticeACLPoliciesP(ctx context.Context, p *AuthenticationConfig, params *Request) (*http.Response, error) {
+	urls := params.GetArray("urls")
 	return p.PostJSONRequestRaw(ctx, urls, "https://platform.adobe.io/data/foundation/access-control/acl/effective-policies")
 }

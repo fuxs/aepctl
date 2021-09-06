@@ -23,7 +23,6 @@ import (
 	"fmt"
 
 	"github.com/fuxs/aepctl/api"
-	"github.com/fuxs/aepctl/util"
 )
 
 const (
@@ -61,18 +60,35 @@ func ListContainer(ctx context.Context, p *api.AuthenticationConfig) (interface{
 	return p.GetRequest(ctx, "https://platform.adobe.io/data/core/xcore/?product=acp&property=_instance.containerType==decisioning")
 }
 
+type ListParam struct {
+	ContainerID string
+	Schema      string
+}
+
+func (p *ListParam) Request() *api.Request {
+	req := api.NewRequest("schema", p.Schema)
+	req.SetValue("cid", p.ContainerID)
+	return req
+}
+
+func List(ctx context.Context, p *api.AuthenticationConfig, param *ListParam) (interface{}, error) {
+	return ListP(ctx, p, param.Request())
+}
+
 // List lists all objects
-func List(ctx context.Context, p *api.AuthenticationConfig, containerID, schema string) (interface{}, error) {
+func ListP(ctx context.Context, p *api.AuthenticationConfig, req *api.Request) (interface{}, error) {
+	containerID := req.GetValuePath("cid")
 	if containerID == "" {
 		return nil, errors.New("container-id is empty")
 	}
-	if schema == "" {
+	query := req.EncodedQuery()
+	if query == "" {
 		return nil, errors.New("schema is empty")
 	}
 	return p.GetRequest(ctx,
 		"https://platform.adobe.io/data/core/xcore/%s/queries/core/search%s",
 		containerID,
-		util.Par("schema", schema),
+		query,
 	)
 }
 

@@ -17,6 +17,7 @@ specific language governing permissions and limitations under the License.
 package sr
 
 import (
+	"context"
 	_ "embed"
 
 	"github.com/fuxs/aepctl/api"
@@ -26,11 +27,27 @@ import (
 
 // NewBehaviorCommand creates an initialized command object
 func NewBehaviorCommand(conf *helper.Configuration) *cobra.Command {
-	return newGetCommand(
-		conf,
-		"behavior",
-		"Display a behavior",
-		"long",
-		"example",
-		api.SRGetBehaviorP)
+	output := &helper.OutputConf{}
+	p := &api.SRGetGlobalParams{}
+	cmd := &cobra.Command{
+		Use:                   "behavior",
+		Short:                 "Display a behavior",
+		Long:                  "long",
+		Example:               "example",
+		DisableFlagsInUseLine: true,
+		Args:                  cobra.ExactValidArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
+			if p.Full {
+				output.SetTransformation(helper.NewTreeTransformer("$"))
+			} else {
+				output.SetTransformation(helper.NewRefTransformer("$"))
+			}
+			p.ID = args[0]
+			helper.CheckErr(output.PrintResponse(api.SRGetBehavior(context.Background(), conf.Authentication, p)))
+		},
+	}
+	output.AddOutputFlags(cmd)
+	addAcceptVersionedFlags(cmd, &p.SRFormat)
+	return cmd
 }

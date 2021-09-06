@@ -20,47 +20,45 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-
-	"github.com/fuxs/aepctl/util"
 )
 
 type FuncID func(context.Context, *AuthenticationConfig, string) (*http.Response, error)
-type Func func(context.Context, *AuthenticationConfig, util.Params) (*http.Response, error)
+type Func func(context.Context, *AuthenticationConfig, *Request) (*http.Response, error)
 type FuncPost func(context.Context, *AuthenticationConfig, []byte) (*http.Response, error)
 type FuncPostID func(context.Context, *AuthenticationConfig, string, []byte) (*http.Response, error)
 type FuncTable map[string]Func
 type Parameters interface {
-	Params() util.Params
+	Params() *Request
 }
 
 type ParametersE interface {
-	Params() (util.Params, error)
+	Request() (*Request, error)
 }
 
 var All = map[string]Func{
-	"ACGetPermissionsAndResources": ACGetPermissionsAndResourcesP,
-	"ACGetEffecticeACLPolicies":    ACGetEffecticeACLPoliciesP,
-	"CatalogGetBatches":            CatalogGetBatchesP,
-	"CatalogGetDatasets":           CatalogGetDatasetsP,
-	"DADownload":                   DADownloadP,
-	"DAGetFiles":                   DAGetFilesP,
-	"DAGetFils":                    DAGetFileP,
-	"ODGet":                        ODGetP,
-	"ODQuery":                      ODQueryP,
-	"FlowGetConnections":           FlowGetConnectionsP,
-	"SBGetSandbox":                 SBGetSandboxP,
-	"SBListAllSandboxes":           SBListAllSandboxesP,
-	"SBListSandboxes":              SBListSandboxesP,
-	"SBListSandboxTypes":           SBListSandboxTypesP,
-	"SRGetBehaviorsP":              SRListBehaviorsP,
-	"SRGetBehaviorP":               SRGetBehaviorP,
-	"SRGetStats":                   SRGetStatsP,
-	"SRGetSchemas":                 SRListSchemasP,
-	"SRGetSchema":                  SRGetSchemaP,
-	"UPSGetEntities":               UPSGetEntitiesP,
+	//"ACGetPermissionsAndResources": ACGetPermissionsAndResourcesP,
+	"ACGetEffecticeACLPolicies": ACGetEffecticeACLPoliciesP,
+	"CatalogGetBatches":         CatalogGetBatchesP,
+	"CatalogGetDatasets":        CatalogGetDatasetsP,
+	"DADownload":                DADownloadP,
+	"DAGetFiles":                DAGetFilesP,
+	"DAGetFils":                 DAGetFileP,
+	"ODGet":                     ODGetP,
+	"ODQuery":                   ODQueryP,
+	"FlowGetConnections":        FlowGetConnectionsP,
+	"SBGetSandbox":              SBGetSandboxP,
+	//"SBListAllSandboxes":           SBListAllSandboxesP,
+	//"SBListSandboxes":              SBListSandboxesP,
+	//"SBListSandboxTypes":           SBListSandboxTypesP,
+	"SRGetBehaviorsP": SRListBehaviorsP,
+	"SRGetBehaviorP":  SRGetBehaviorP,
+	//"SRGetStats":                   SRGetStatsP,
+	"SRGetSchemas":   SRListSchemasP,
+	"SRGetSchema":    SRGetSchemaP,
+	"UPSGetEntities": UPSGetEntitiesP,
 }
 
-func (ft FuncTable) Call(name string, ctx context.Context, auth *AuthenticationConfig, params util.Params) (*http.Response, error) {
+func (ft FuncTable) Call(name string, ctx context.Context, auth *AuthenticationConfig, params *Request) (*http.Response, error) {
 	f := ft[name]
 	if f == nil {
 		return nil, fmt.Errorf("function %s not found", name)

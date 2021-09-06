@@ -23,17 +23,15 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-
-	"github.com/fuxs/aepctl/util"
 )
 
 // GetStats returns schema registry informations
 func SRGetStats(ctx context.Context, p *AuthenticationConfig) (*http.Response, error) {
-	return SRGetStatsP(ctx, p, nil)
+	return SRGetStatsP(ctx, p)
 }
 
 // GetStatsP returns schema registry informations
-func SRGetStatsP(ctx context.Context, p *AuthenticationConfig, _ util.Params) (*http.Response, error) {
+func SRGetStatsP(ctx context.Context, p *AuthenticationConfig) (*http.Response, error) {
 	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/schemaregistry/stats")
 }
 
@@ -71,10 +69,8 @@ func (s *SRFormat) Accept() string {
 	return sb.String()
 }
 
-func (s *SRFormat) Params() util.Params {
-	return util.NewParams(
-		"accept", s.Accept(),
-	)
+func (s *SRFormat) Request() *Request {
+	return NewRequestHeader("accept", s.Accept())
 }
 
 const (
@@ -102,10 +98,11 @@ type SRBaseParams struct {
 	OrderBy  string
 	Start    string
 	Limit    uint
-	Global   bool
+	// TODO Rename
+	Global bool
 }
 
-func (p *SRBaseParams) Params() util.Params {
+func (p *SRBaseParams) Request() *Request {
 	var (
 		limit string
 		cid   string
@@ -118,13 +115,14 @@ func (p *SRBaseParams) Params() util.Params {
 	} else {
 		cid = "tenant"
 	}
-	return util.NewParams(
+	req := NewRequest(
 		"property", p.Property,
 		"orderby", p.OrderBy,
 		"start", p.Start,
 		"limit", limit,
-		"-cid", cid,
 	)
+	req.SetValue("cid", cid)
+	return req
 }
 
 type SRListParams struct {
@@ -132,9 +130,9 @@ type SRListParams struct {
 	SRFormat
 }
 
-func (p *SRListParams) Params() util.Params {
-	result := p.SRBaseParams.Params()
-	result.Add("-accept", p.Accept())
+func (p *SRListParams) Request() *Request {
+	result := p.SRBaseParams.Request()
+	result.SetHeader("accept", p.Accept())
 	return result
 }
 
@@ -143,70 +141,69 @@ type SRListDescriptorsParams struct {
 	SRDescriptorFormat
 }
 
-func (p *SRListDescriptorsParams) Params() util.Params {
-	result := p.SRBaseParams.Params()
-	result.Add("-accept", p.Accept())
+func (p *SRListDescriptorsParams) Request() *Request {
+	result := p.SRBaseParams.Request()
+	result.SetHeader("-accept", p.Accept())
 	return result
 }
 
-func srList(ctx context.Context, a *AuthenticationConfig, p util.Params, res string) (*http.Response, error) {
-	header := map[string]string{"Accept": p.Get("-accept")}
-	return a.GetRequestHRaw(ctx, header, "https://platform.adobe.io/data/foundation/schemaregistry/%s/%s%s", p.Get("-cid"), res, p.EncodeWithout("-cid", "-accept"))
+func srList(ctx context.Context, a *AuthenticationConfig, p *Request, res string) (*http.Response, error) {
+	return a.GetRequestHRaw(ctx, p.Header(), "https://platform.adobe.io/data/foundation/schemaregistry/%s/%s%s", p.GetValuePath("cid"), res, p.EncodedQuery())
 }
 
 func SRListBehaviors(ctx context.Context, a *AuthenticationConfig, p *SRListParams) (*http.Response, error) {
-	return srList(ctx, a, p.Params(), "behaviors")
+	return srList(ctx, a, p.Request(), "behaviors")
 }
 
-func SRListBehaviorsP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+func SRListBehaviorsP(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
 	return srList(ctx, a, p, "behaviors")
 }
 
 func SRListClasses(ctx context.Context, a *AuthenticationConfig, p *SRListParams) (*http.Response, error) {
-	return srList(ctx, a, p.Params(), "classes")
+	return srList(ctx, a, p.Request(), "classes")
 }
 
-func SRListClassesP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+func SRListClassesP(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
 	return srList(ctx, a, p, "classes")
 }
 
 func SRListDataTypes(ctx context.Context, a *AuthenticationConfig, p *SRListParams) (*http.Response, error) {
-	return srList(ctx, a, p.Params(), "datatypes")
+	return srList(ctx, a, p.Request(), "datatypes")
 }
 
-func SRListDataTypesP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+func SRListDataTypesP(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
 	return srList(ctx, a, p, "datatypes")
 }
 
 func SRListDescriptors(ctx context.Context, a *AuthenticationConfig, p *SRListDescriptorsParams) (*http.Response, error) {
-	return srList(ctx, a, p.Params(), "descriptors")
+	return srList(ctx, a, p.Request(), "descriptors")
 }
 
-func SRListDescriptorsP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+func SRListDescriptorsP(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
 	return srList(ctx, a, p, "descriptors")
 }
 
 func SRListFieldGroups(ctx context.Context, a *AuthenticationConfig, p *SRListParams) (*http.Response, error) {
-	return srList(ctx, a, p.Params(), "fieldgroups")
+	return srList(ctx, a, p.Request(), "fieldgroups")
 }
 
-func SRListFieldGroupsP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+func SRListFieldGroupsP(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
 	return srList(ctx, a, p, "fieldgroups")
 }
 
 func SRListSchemas(ctx context.Context, a *AuthenticationConfig, p *SRListParams) (*http.Response, error) {
-	return srList(ctx, a, p.Params(), "schemas")
+	return srList(ctx, a, p.Request(), "schemas")
 }
 
-func SRListSchemasP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+func SRListSchemasP(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
 	return srList(ctx, a, p, "schemas")
 }
 
 func SRListUnions(ctx context.Context, a *AuthenticationConfig, p *SRListParams) (*http.Response, error) {
-	return srList(ctx, a, p.Params(), "unions")
+	return srList(ctx, a, p.Request(), "unions")
 }
 
-func SRListUnionsP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+func SRListUnionsP(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
 	return srList(ctx, a, p, "unions")
 }
 
@@ -215,16 +212,16 @@ type SRGetBaseParams struct {
 	Global bool
 }
 
-func (p *SRGetBaseParams) Params() util.Params {
+func (p *SRGetBaseParams) Request() *Request {
 	var cid string
 	if p.Global {
 		cid = "global"
 	} else {
 		cid = "tenant"
 	}
-	return util.NewParams(
-		"-id", p.ID,
-		"-cid", cid,
+	return NewRequestValues(
+		"id", p.ID,
+		"cid", cid,
 	)
 }
 
@@ -233,9 +230,9 @@ type SRGetParams struct {
 	SRFormat
 }
 
-func (p *SRGetParams) Params() util.Params {
-	result := p.SRGetBaseParams.Params()
-	result.Add("-accept", p.SRFormat.Accept())
+func (p *SRGetParams) Request() *Request {
+	result := p.SRGetBaseParams.Request()
+	result.Accept(p.SRFormat.Accept())
 	return result
 }
 
@@ -244,62 +241,61 @@ type SRGetDescriptorParams struct {
 	SRDescriptorFormat
 }
 
-func (p *SRGetDescriptorParams) Params() util.Params {
-	result := p.SRGetBaseParams.Params()
-	result.Add("-accept", p.SRDescriptorFormat.Accept())
+func (p *SRGetDescriptorParams) Request() *Request {
+	result := p.SRGetBaseParams.Request()
+	result.SetHeader("accept", p.SRDescriptorFormat.Accept())
 	return result
 }
 
-func srGet(ctx context.Context, a *AuthenticationConfig, p util.Params, res string) (*http.Response, error) {
-	header := map[string]string{"Accept": p.Get("-accept")}
-	return a.GetRequestHRaw(ctx, header, "https://platform.adobe.io/data/foundation/schemaregistry/%s/%s/%s", p.GetForPath("-cid"), res, p.GetForPath("-id"))
+func srGet(ctx context.Context, a *AuthenticationConfig, p *Request, res string) (*http.Response, error) {
+	return a.GetRequestHRaw(ctx, p.Header(), "https://platform.adobe.io/data/foundation/schemaregistry/%s/%s/%s", p.GetValuePath("cid"), res, p.GetValuePath("id"))
 }
 
 func SRGetClass(ctx context.Context, a *AuthenticationConfig, p *SRGetParams) (*http.Response, error) {
-	return srGet(ctx, a, p.Params(), "classes")
+	return srGet(ctx, a, p.Request(), "classes")
 }
 
-func SRGetClassP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+func SRGetClassP(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
 	return srGet(ctx, a, p, "classes")
 }
 
 func SRGetFieldGroup(ctx context.Context, a *AuthenticationConfig, p *SRGetParams) (*http.Response, error) {
-	return srGet(ctx, a, p.Params(), "fieldgroups")
+	return srGet(ctx, a, p.Request(), "fieldgroups")
 }
 
-func SRGetFieldGroupP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+func SRGetFieldGroupP(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
 	return srGet(ctx, a, p, "fieldgroups")
 }
 
 func SRGetDataType(ctx context.Context, a *AuthenticationConfig, p *SRGetParams) (*http.Response, error) {
-	return srGet(ctx, a, p.Params(), "datatypes")
+	return srGet(ctx, a, p.Request(), "datatypes")
 }
 
-func SRGetDataTypeP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+func SRGetDataTypeP(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
 	return srGet(ctx, a, p, "datatypes")
 }
 
-func SRGetDescriptor(ctx context.Context, a *AuthenticationConfig, p *SRGetParams) (*http.Response, error) {
-	return srGet(ctx, a, p.Params(), "descriptors")
+func SRGetDescriptor(ctx context.Context, a *AuthenticationConfig, p *SRListDescriptorsParams) (*http.Response, error) {
+	return srGet(ctx, a, p.Request(), "descriptors")
 }
 
-func SRGetDescriptorP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+func SRGetDescriptorP(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
 	return srGet(ctx, a, p, "descriptors")
 }
 
 func SRGetSchema(ctx context.Context, a *AuthenticationConfig, p *SRGetParams) (*http.Response, error) {
-	return srGet(ctx, a, p.Params(), "schemas")
+	return srGet(ctx, a, p.Request(), "schemas")
 }
 
-func SRGetSchemaP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+func SRGetSchemaP(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
 	return srGet(ctx, a, p, "schemas")
 }
 
 func SRGetUnion(ctx context.Context, a *AuthenticationConfig, p *SRGetParams) (*http.Response, error) {
-	return srGet(ctx, a, p.Params(), "unions")
+	return srGet(ctx, a, p.Request(), "unions")
 }
 
-func SRGetUnionP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
+func SRGetUnionP(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
 	return srGet(ctx, a, p, "unions")
 }
 
@@ -317,29 +313,27 @@ type SRGetGlobalParams struct {
 	ID string
 }
 
-func (p *SRGetGlobalParams) Params() util.Params {
-	return util.NewParams(
-		"id", p.ID,
-		"accept", p.Accept(),
-	)
+func (p *SRGetGlobalParams) Request() *Request {
+	req := NewRequestHeader("accept", p.Accept())
+	req.SetValue("id", p.ID)
+	return req
 }
 
 func SRGetBehavior(ctx context.Context, a *AuthenticationConfig, p *SRGetGlobalParams) (*http.Response, error) {
-	return SRGetBehaviorP(ctx, a, p.Params())
+	return SRGetBehaviorP(ctx, a, p.Request())
 }
 
-func SRGetBehaviorP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
-	header := map[string]string{"Accept": p.Get("accept")}
-	return a.GetRequestHRaw(ctx, header, "https://platform.adobe.io/data/foundation/schemaregistry/global/behaviors/%s", p.GetForPath("id"))
+func SRGetBehaviorP(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
+	return a.GetRequestHRaw(ctx, p.Header(), "https://platform.adobe.io/data/foundation/schemaregistry/global/behaviors/%s", p.GetValuePath("id"))
 }
 
 func SRExport(ctx context.Context, a *AuthenticationConfig, id string) (*http.Response, error) {
-	return SRExportP(ctx, a, util.NewParams("id", id))
+	return SRExportP(ctx, a, NewRequestValues("id", id))
 }
 
-func SRExportP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
-	header := map[string]string{"Accept": "application/vnd.adobe.xed-full+json; version=1"}
-	return a.GetRequestHRaw(ctx, header, "https://platform.adobe.io/data/foundation/schemaregistry/rpc/export/%s", p.GetForPath("id"))
+func SRExportP(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
+	p.SetHeaderIf("Accept", "application/vnd.adobe.xed-full+json; version=1")
+	return a.GetRequestHRaw(ctx, p.Header(), "https://platform.adobe.io/data/foundation/schemaregistry/rpc/export/%s", p.GetValuePath("id"))
 }
 
 func SRImport(ctx context.Context, a *AuthenticationConfig, resource []byte) (*http.Response, error) {

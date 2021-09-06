@@ -17,6 +17,8 @@ specific language governing permissions and limitations under the License.
 package sr
 
 import (
+	"context"
+
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
@@ -38,7 +40,7 @@ func NewDescriptorCommand(conf *helper.Configuration) *cobra.Command {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 
 			//helper.CheckErr(output.SetTransformationDesc(desc))
-			helper.CheckErr(output.Print(api.SRGetDescriptorP, conf.Authentication, p.Params()))
+			helper.CheckErr(output.PrintResponse(api.SRGetDescriptor(context.Background(), conf.Authentication, p)))
 		},
 	}
 	output.AddOutputFlags(cmd)

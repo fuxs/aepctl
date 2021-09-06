@@ -17,13 +17,16 @@ specific language governing permissions and limitations under the License.
 package sr
 
 import (
+	"context"
+	"net/http"
+
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
 // NewStatsCommand creates an initialized command object
-func newGetCommand(conf *helper.Configuration, use, short, long, example string, f api.Func) *cobra.Command {
+func newGetCommand(conf *helper.Configuration, use, short, long, example string, f func(context.Context, *api.AuthenticationConfig, *api.SRGetParams) (*http.Response, error)) *cobra.Command {
 	output := &helper.OutputConf{}
 	p := &api.SRGetParams{}
 	cmd := &cobra.Command{
@@ -41,11 +44,13 @@ func newGetCommand(conf *helper.Configuration, use, short, long, example string,
 				output.SetTransformation(helper.NewRefTransformer("$"))
 			}
 			p.ID = args[0]
-			helper.CheckErr(output.Print(f, conf.Authentication, p.Params()))
+			helper.CheckErr(output.PrintResponse(f(context.Background(), conf.Authentication, p)))
 		},
 	}
 	output.AddOutputFlags(cmd)
 	addAcceptVersionedFlags(cmd, &p.SRFormat)
+	flags := cmd.Flags()
+	flags.BoolVar(&p.Global, "predefined", false, "return resource defined by Adobe")
 	return cmd
 }
 

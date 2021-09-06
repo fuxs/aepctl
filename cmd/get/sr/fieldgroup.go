@@ -30,5 +30,5 @@ func NewFieldGroupCommand(conf *helper.Configuration) *cobra.Command {
 		"Display a fieldgroup",
 		"long",
 		"example",
-		api.SRGetFieldGroupP)
+		api.SRGetFieldGroup)
 }

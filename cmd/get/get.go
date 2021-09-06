@@ -31,7 +31,8 @@ func NewCommand(conf *helper.Configuration) *cobra.Command {
 		Short: "Display one or many resources",
 	}
 	conf.AddAuthenticationFlags(cmd)
-	cmd.AddCommand(NewACCommand(conf))
+	cmd.AddCommand(NewEffectiveCommand(conf))
+	cmd.AddCommand(NewPermissionsCommand(conf))
 	cmd.AddCommand(NewTokenCommand(conf))
 	cmd.AddCommand(NewODCommand(conf))
 	cmd.AddCommand(NewSandboxCommand(conf))

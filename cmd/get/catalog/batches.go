@@ -17,6 +17,7 @@ specific language governing permissions and limitations under the License.
 package catalog
 
 import (
+	"context"
 	_ "embed"
 	"time"
 
@@ -42,8 +43,7 @@ func NewBatchesCommand(conf *helper.Configuration) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErr(output.SetTransformationDesc(batchesTransformation))
-			p := helper.CheckErrParams(bc)
-			helper.CheckErr(output.Print(api.CatalogGetBatchesP, conf.Authentication, p))
+			helper.CheckErr(output.PrintResponse(api.CatalogGetBatches(context.Background(), conf.Authentication, bc)))
 		},
 	}
 	output.AddOutputFlags(cmd)

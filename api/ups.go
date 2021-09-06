@@ -42,7 +42,7 @@ type UPSEntitiesParams struct {
 	TimeFormat    string
 }
 
-func (p *UPSEntitiesParams) Params() (util.Params, error) {
+func (p *UPSEntitiesParams) Request() (*Request, error) {
 	var start, end, limit, ca string
 	tf := p.TimeFormat
 	if tf == "" {
@@ -76,7 +76,7 @@ func (p *UPSEntitiesParams) Params() (util.Params, error) {
 	if p.CA {
 		ca = "true"
 	}
-	return util.NewParams(
+	return NewRequest(
 		"schema.name", p.Schema,
 		"relatedSchema.name", p.RelatedSchema,
 		"entityId", p.ID,
@@ -95,19 +95,19 @@ func (p *UPSEntitiesParams) Params() (util.Params, error) {
 }
 
 func UPSGetEntities(ctx context.Context, auth *AuthenticationConfig, p *UPSEntitiesParams) (*http.Response, error) {
-	params, err := p.Params()
+	params, err := p.Request()
 	if err != nil {
 		return nil, err
 	}
 	return auth.GetRequestRaw(ctx,
 		"https://platform.adobe.io/data/core/ups/access/entities%s",
-		params.Encode(),
+		params.EncodedQuery(),
 	)
 }
 
-func UPSGetEntitiesP(ctx context.Context, auth *AuthenticationConfig, p util.Params) (*http.Response, error) {
+func UPSGetEntitiesP(ctx context.Context, auth *AuthenticationConfig, p *Request) (*http.Response, error) {
 	return auth.GetRequestRaw(ctx,
 		"https://platform.adobe.io/data/core/ups/access/entities%s",
-		p.Encode(),
+		p.EncodedQuery(),
 	)
 }

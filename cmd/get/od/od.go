@@ -17,6 +17,8 @@ specific language governing permissions and limitations under the License.
 package od
 
 import (
+	"context"
+
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cache"
 	"github.com/fuxs/aepctl/cmd/helper"
@@ -56,7 +58,7 @@ func NewGetCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema, 
 			}
 			for _, name := range args {
 				gp.ID = idc.Lookup(name)
-				helper.CheckErr(output.Print(api.ODGetP, conf.Authentication, gp.Params()))
+				helper.CheckErr(output.PrintResponse(api.ODGet(context.Background(), conf.Authentication, gp)))
 			}
 		},
 	}
@@ -82,7 +84,7 @@ func NewQueryCommand(conf *helper.Configuration, ac *cache.AutoContainer, schema
 			output.SetTransformation(td)
 			p.ContainerID, err = ac.Get()
 			helper.CheckErr(err)
-			pager := helper.NewPager(api.ODQueryP, conf.Authentication, p.Params()).
+			pager := helper.NewPager(api.ODQueryP, conf.Authentication, p.Request()).
 				OF("_embedded", "results").P("start", "orderby")
 			helper.CheckErr(output.PrintPaged(pager))
 		},

@@ -21,8 +21,6 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-
-	"github.com/fuxs/aepctl/util"
 )
 
 // ODQueryParames contains all available parameters for offer decisioning
@@ -37,14 +35,13 @@ type ODQueryParames struct {
 	Limit       int
 }
 
-// Params returns the parameters in generic util.Params format
-func (p *ODQueryParames) Params() util.Params {
+// Params returns the parameters in generic Request format
+func (p *ODQueryParames) Request() *Request {
 	var limit string
 	if p.Limit > 0 {
 		limit = strconv.FormatInt(int64(p.Limit), 10)
 	}
-	return util.NewParams(
-		"-containerID", p.ContainerID,
+	req := NewRequest(
 		"schema", p.Schema,
 		"q", p.Query,
 		"qop", p.QOP,
@@ -52,18 +49,20 @@ func (p *ODQueryParames) Params() util.Params {
 		"oderBy", p.OrderBy,
 		"limit", limit,
 	)
+	req.SetValue("containerID", p.ContainerID)
+	return req
 }
 
 // ODQueryP sends a query to the offer decisioning API
-func ODQueryP(ctx context.Context, p *AuthenticationConfig, params util.Params) (*http.Response, error) {
-	containerID := params.GetForPath("-containerID")
+func ODQueryP(ctx context.Context, p *AuthenticationConfig, params *Request) (*http.Response, error) {
+	containerID := params.GetValuePath("containerID")
 	if containerID == "" {
 		return nil, errors.New("container-id is empty")
 	}
 	return p.GetRequestRaw(ctx,
 		"https://platform.adobe.io/data/core/xcore/%s/queries/core/search%s",
 		containerID,
-		params.EncodeWithout("-containerID"),
+		params.EncodedQuery(),
 	)
 }
 
@@ -73,25 +72,27 @@ type ODGetParams struct {
 	Schema      string
 }
 
-// Params returns the parameters in generic util.Params format
-func (p *ODGetParams) Params() util.Params {
-	return util.NewParams("-containerID", p.ContainerID, "schema", p.Schema, "id", p.ID)
+// Params returns the parameters in generic Request format
+func (p *ODGetParams) Request() *Request {
+	req := NewRequest("schema", p.Schema, "id", p.ID)
+	req.SetValue("containerID", p.ContainerID)
+	return req
 }
 
 // ODGet returns a collection by name (wild cards are supported) or id (exact match)
 func ODGet(ctx context.Context, p *AuthenticationConfig, params *ODGetParams) (*http.Response, error) {
-	return ODGetP(ctx, p, params.Params())
+	return ODGetP(ctx, p, params.Request())
 }
 
 // ODGetP returns a collection by name (wild cards are supported) or id (exact match)
-func ODGetP(ctx context.Context, p *AuthenticationConfig, params util.Params) (*http.Response, error) {
-	containerID := params.GetForPath("-containerID")
+func ODGetP(ctx context.Context, p *AuthenticationConfig, params *Request) (*http.Response, error) {
+	containerID := params.GetValuePath("containerID")
 	if containerID == "" {
 		return nil, errors.New("container-id is empty")
 	}
 	return p.GetRequestRaw(ctx,
 		"https://platform.adobe.io/data/core/xcore/%s/instances%s",
 		containerID,
-		params.EncodeWithout("-containerID"),
+		params.EncodedQuery(),
 	)
 }

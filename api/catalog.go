@@ -21,8 +21,6 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-
-	"github.com/fuxs/aepctl/util"
 )
 
 // BatchesOptions contains all options for batch requests
@@ -41,7 +39,7 @@ type BatchesOptions struct {
 }
 
 // ToURLPar converts the options to a URL parameter query
-func (b *BatchesOptions) Params() (util.Params, error) {
+func (b *BatchesOptions) Request() (*Request, error) {
 	var (
 		limit         string
 		createdAfter  string
@@ -100,7 +98,7 @@ func (b *BatchesOptions) Params() (util.Params, error) {
 		}
 		startBefore = strconv.FormatInt(t.Unix()*1000, 10)
 	}
-	return util.NewParams(
+	return NewRequest(
 		"limit", limit,
 		"createdAfter", createdAfter,
 		"createdBefore", createdBefore,
@@ -116,7 +114,7 @@ func (b *BatchesOptions) Params() (util.Params, error) {
 
 // CatalogGetBatches returns a list of batches
 func CatalogGetBatches(ctx context.Context, p *AuthenticationConfig, options *BatchesOptions) (*http.Response, error) {
-	params, err := options.Params()
+	params, err := options.Request()
 	if err != nil {
 		return nil, err
 	}
@@ -124,13 +122,13 @@ func CatalogGetBatches(ctx context.Context, p *AuthenticationConfig, options *Ba
 }
 
 // CatalogGetBatchesP returns a list of batches
-func CatalogGetBatchesP(ctx context.Context, p *AuthenticationConfig, params util.Params) (*http.Response, error) {
-	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/catalog/batches%s", params.Encode())
+func CatalogGetBatchesP(ctx context.Context, p *AuthenticationConfig, params *Request) (*http.Response, error) {
+	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/catalog/batches%s", params.EncodedQuery())
 }
 
 // CatalogGetDatasets returns a list of batches
 func CatalogGetDatasets(ctx context.Context, p *AuthenticationConfig, options *BatchesOptions) (*http.Response, error) {
-	params, err := options.Params()
+	params, err := options.Request()
 	if err != nil {
 		return nil, err
 	}
@@ -138,6 +136,6 @@ func CatalogGetDatasets(ctx context.Context, p *AuthenticationConfig, options *B
 }
 
 // CatalogGetDatasets returns a list of batches
-func CatalogGetDatasetsP(ctx context.Context, p *AuthenticationConfig, params util.Params) (*http.Response, error) {
-	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/catalog/datasets%s", params.Encode())
+func CatalogGetDatasetsP(ctx context.Context, p *AuthenticationConfig, params *Request) (*http.Response, error) {
+	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/catalog/datasets%s", params.EncodedQuery())
 }

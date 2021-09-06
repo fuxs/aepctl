@@ -21,6 +21,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/url"
 
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/util"
@@ -31,25 +32,25 @@ import (
 type Pager struct {
 	Func         api.Func
 	Auth         *api.AuthenticationConfig
-	Values       []util.Params
+	Requests     []*api.Request
 	Context      context.Context
 	PageFilter   []string
 	ObjectFilter []string
 	PagePath     []string
 	PageParams   []string
 	nextParams   []string
-	valuesi      int
+	requestNum   int
 	calls        int
 	jf           *util.JSONFinder
 }
 
 // NewPager creates an initialzed Pager object. It uses JSONFilter to process
 // payload and paging data.
-func NewPager(f api.Func, auth *api.AuthenticationConfig, v ...util.Params) *Pager {
+func NewPager(f api.Func, auth *api.AuthenticationConfig, requests ...*api.Request) *Pager {
 	result := &Pager{
 		Func:         f,
 		Auth:         auth,
-		Values:       v,
+		Requests:     requests,
 		PageFilter:   []string{"_links"},
 		ObjectFilter: []string{"items"},
 		PagePath:     []string{"next", "href"},
@@ -85,7 +86,7 @@ func (p *Pager) P(params ...string) *Pager {
 
 // Next returns true, if a REST call can be executed
 func (p *Pager) Next() bool {
-	return p.calls == 0 || len(p.nextParams) > 0 || p.valuesi < (len(p.Values)-1)
+	return p.calls == 0 || len(p.nextParams) > 0 || p.requestNum < (len(p.Requests)-1)
 }
 
 func (p *Pager) SingleCall() (*http.Response, error) {
@@ -95,10 +96,10 @@ func (p *Pager) SingleCall() (*http.Response, error) {
 	if p.Context == nil {
 		p.Context = context.Background()
 	}
-	if len(p.Values) == 0 {
+	if len(p.Requests) == 0 {
 		return api.HandleStatusCode(p.Func(p.Context, p.Auth, nil))
 	}
-	return api.HandleStatusCode(p.Func(p.Context, p.Auth, p.Values[0]))
+	return api.HandleStatusCode(p.Func(p.Context, p.Auth, p.Requests[0]))
 }
 
 // Call executes the REST function
@@ -106,30 +107,31 @@ func (p *Pager) Call() error {
 	if !p.Next() {
 		return io.EOF
 	}
-	var params util.Params
+	var params *api.Request
 	if p.calls == 0 {
 		// first call
 		if p.Context == nil {
 			p.Context = context.Background()
 		}
-		if len(p.Values) > 0 {
-			params = p.Values[0]
+		if len(p.Requests) > 0 {
+			params = p.Requests[0]
 		}
 	} else {
 		// subsequent call
 		if len(p.nextParams) > 0 {
-			if len(p.Values) > 0 {
-				params = p.Values[p.valuesi]
+			if len(p.Requests) > 0 {
+				// use provided request
+				params = p.Requests[p.requestNum].Clone()
 			} else {
-				params = make(util.Params, len(p.PageParams))
+				params = api.NewRequest()
 			}
-			for i, n := range p.PageParams {
-				params[n] = []string{p.nextParams[i]}
-			}
+			// add the paging parameters
+			params.AddQueries(p.nextParams...)
+			// clear slice and keep allocated memory
 			p.nextParams = p.nextParams[:0]
 		} else {
-			p.valuesi++
-			params = p.Values[p.valuesi]
+			p.requestNum++
+			params = p.Requests[p.requestNum]
 		}
 	}
 	res, err := api.HandleStatusCode(p.Func(p.Context, p.Auth, params))
@@ -171,20 +173,23 @@ func (p *Pager) Prepare() {
 		p.nextParams = make([]string, 0, len(p.PageParams))
 	}
 	jf := util.NewJSONFinder()
+	// this is the pager function
 	jf.Add(func(j util.JSONResponse) error {
 		q, err := j.Query()
 		if err != nil {
 			return err
 		}
+		// select the element with the paging information
 		qu := q.Path(p.PagePath...)
 		if !qu.Nil() {
-			url := qu.String()
+			u, err := url.Parse(qu.String())
+			if err != nil {
+				return err
+			}
+			urlq := u.Query()
+			// search for all
 			for _, name := range p.PageParams {
-				value, err := util.GetParam(url, name)
-				if err != nil {
-					return err
-				}
-				p.nextParams = append(p.nextParams, value)
+				p.nextParams = append(p.nextParams, name, urlq.Get(name))
 			}
 		}
 		return nil

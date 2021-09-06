@@ -21,8 +21,6 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-
-	"github.com/fuxs/aepctl/util"
 )
 
 type DAOptions struct {
@@ -31,7 +29,7 @@ type DAOptions struct {
 	Limit int
 }
 
-func (d *DAOptions) Params() util.Params {
+func (d *DAOptions) Request() *Request {
 	var (
 		limit string
 		start string
@@ -42,48 +40,54 @@ func (d *DAOptions) Params() util.Params {
 	if d.Limit > 0 {
 		limit = strconv.FormatInt(int64(d.Limit), 10)
 	}
-	return util.NewParams(
-		"-id", d.ID,
+	req := NewRequest(
 		"start", start,
 		"limit", limit,
 	)
+	req.SetValue("id", d.ID)
+	return req
 }
 
 // DAGetFilesP returns a list of files for the passed batchId
 func DAGetFiles(ctx context.Context, p *AuthenticationConfig, options *DAOptions) (*http.Response, error) {
-	return DAGetFilesP(ctx, p, options.Params())
+	return DAGetFilesP(ctx, p, options.Request())
 }
 
 // DAGetFilesP returns a list of files for the passed batchId
-func DAGetFilesP(ctx context.Context, p *AuthenticationConfig, params util.Params) (*http.Response, error) {
-	batchId := params.GetForPath("-id")
+func DAGetFilesP(ctx context.Context, p *AuthenticationConfig, params *Request) (*http.Response, error) {
+	batchId := params.GetValuePath("id")
 	if batchId == "" {
 		return nil, errors.New("parameter batchId is empty")
 	}
-	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/export/batches/%s/files%s", batchId, params.EncodeWithout("-id"))
+	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/export/batches/%s/files%s", batchId, params.EncodedQuery())
 }
 
 // DAGetFile returns a list of files for the passed fileId
 func DAGetFile(ctx context.Context, p *AuthenticationConfig, options *DAOptions) (*http.Response, error) {
-	return DAGetFileP(ctx, p, options.Params())
+	return DAGetFileP(ctx, p, options.Request())
 }
 
 // DAGetFileP returns a list of files for the passed fileId
-func DAGetFileP(ctx context.Context, p *AuthenticationConfig, params util.Params) (*http.Response, error) {
-	fileId := params.GetForPath("-id")
+func DAGetFileP(ctx context.Context, p *AuthenticationConfig, params *Request) (*http.Response, error) {
+	fileId := params.GetValuePath("id")
 	if fileId == "" {
 		return nil, errors.New("parameter batchId is empty")
 	}
-	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/export/files/%s%s", fileId, params.EncodeWithout("-id"))
+	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/export/files/%s%s", fileId, params.EncodedQuery())
 }
 
 // DADownload downloads a file fromt the given url
 func DADownload(ctx context.Context, p *AuthenticationConfig, fileId, path string) (*http.Response, error) {
-	return DADownloadP(ctx, p, util.NewParams("-id", fileId, "path", path))
+	req := NewRequest("path", path)
+	req.SetValue("id", fileId)
+	return DADownloadP(ctx, p, req)
 }
 
 // DADownload downloads a file fromt the given url
-func DADownloadP(ctx context.Context, p *AuthenticationConfig, params util.Params) (*http.Response, error) {
-	fileId := params.GetForPath("-id")
-	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/export/files/%s%s", fileId, params.EncodeWithout("-id"))
+func DADownloadP(ctx context.Context, p *AuthenticationConfig, params *Request) (*http.Response, error) {
+	fileId := params.GetValuePath("id")
+	if fileId == "" {
+		return nil, errors.New("parameter batchId is empty")
+	}
+	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/export/files/%s%s", fileId, params.EncodedQuery())
 }

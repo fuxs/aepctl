@@ -40,7 +40,7 @@ func NewQueriesCommand(conf *helper.Configuration) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErr(output.SetTransformationDesc(qsTransformation))
-			pager := helper.NewPager(api.QSListQueriesP, conf.Authentication, params.Params()).
+			pager := helper.NewPager(api.QSListQueriesP, conf.Authentication, params.Request()).
 				OF("queries").P("start", "orderby")
 			helper.CheckErr(output.PrintPaged(pager))
 		},

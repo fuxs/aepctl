@@ -17,6 +17,7 @@ specific language governing permissions and limitations under the License.
 package get
 
 import (
+	"context"
 	_ "embed"
 
 	"github.com/fuxs/aepctl/api"
@@ -119,27 +120,46 @@ var permissionsTransformation string
 //go:embed trans/effective.yaml
 var effectiveTransformation string
 
-// NewACCommand creates an initialized command object
-func NewACCommand(conf *helper.Configuration) *cobra.Command {
+// NewEffectiveCommand creates an initialized command object
+func NewEffectiveCommand(conf *helper.Configuration) *cobra.Command {
 	output := &helper.OutputConf{}
 	cmd := &cobra.Command{
-		Use:                   "ac [(RESOURCE | PERMISSION)*]",
-		Short:                 "Display all or effictive permissions",
+		Use:                   "effective [(RESOURCE | PERMISSION)+]",
+		Short:                 "Display effective permissions",
 		Long:                  aclLong,
 		Example:               aclExample,
 		DisableFlagsInUseLine: true,
+		Args:                  cobra.MinimumNArgs(1),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			return util.Difference(validArgs, args), cobra.ShellCompDirectiveNoFileComp
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			if len(args) == 0 {
-				helper.CheckErr(output.SetTransformationDesc(permissionsTransformation))
-				helper.CheckErr(output.Print(api.ACGetPermissionsAndResourcesP, conf.Authentication, nil))
-			} else {
-				helper.CheckErr(output.SetTransformationDesc(effectiveTransformation))
-				helper.CheckErr(output.Print(api.ACGetEffecticeACLPoliciesP, conf.Authentication, api.ACGetEffecticeACLPoliciesParams(args).Params()))
-			}
+			helper.CheckErr(output.SetTransformationDesc(effectiveTransformation))
+			helper.CheckErr(output.PrintResponse(api.ACGetEffecticeACLPolicies(
+				context.Background(),
+				conf.Authentication,
+				api.ACGetEffecticeACLPoliciesParams(args))))
+		},
+	}
+	output.AddOutputFlags(cmd)
+	return cmd
+}
+
+// NewACCommand creates an initialized command object
+func NewPermissionsCommand(conf *helper.Configuration) *cobra.Command {
+	output := &helper.OutputConf{}
+	cmd := &cobra.Command{
+		Use:                   "permissions",
+		Short:                 "Display all or effictive permissions",
+		Long:                  "Long",
+		Example:               "Example",
+		DisableFlagsInUseLine: true,
+		Args:                  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
+			helper.CheckErr(output.SetTransformationDesc(permissionsTransformation))
+			helper.CheckErr(output.PrintResponse(api.ACGetPermissionsAndResources(context.Background(), conf.Authentication)))
 		},
 	}
 	output.AddOutputFlags(cmd)

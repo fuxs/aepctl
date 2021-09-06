@@ -41,7 +41,7 @@ func NewConnectionsCommand(conf *helper.Configuration) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErrs(output.SetTransformationDesc(connectionsTransformation))
-			pager := helper.NewPager(api.FlowGetConnectionsP, conf.Authentication, p.Params())
+			pager := helper.NewPager(api.FlowGetConnectionsP, conf.Authentication, p.Request())
 			helper.CheckErr(output.PrintPaged(pager))
 		},
 	}

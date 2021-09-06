@@ -31,5 +31,5 @@ func NewUnionCommand(conf *helper.Configuration) *cobra.Command {
 		"Display a union schema",
 		"long",
 		"example",
-		api.SRGetUnionP)
+		api.SRGetUnion)
 }

@@ -21,7 +21,6 @@ import (
 
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
-	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -61,18 +60,21 @@ func newListCommand(conf *helper.Configuration, use, short, long, example string
 				p.Short = true
 				helper.CheckErr(output.SetTransformationDesc(shortTransformation))
 			}
-			params := make([]util.Params, 1, 2)
-			params[0] = p.Params()
+			// prepare two calls for flag --all
+			params := make([]*api.Request, 1, 2)
+			params[0] = p.Request()
+			// show predefined and custom schemas?
 			if all {
+				// invert the Predefined flag
 				p.SRBaseParams.Global = !p.SRBaseParams.Global
-				params = append(params, p.Params())
+				params = append(params, p.Request())
 			}
 			pager := helper.NewPager(f, conf.Authentication, params...).
 				OF("results").PP("next").P("start", "orderby")
 			helper.CheckErr(output.PrintPaged(pager))
 		},
 	}
-	output.AddOutputFlags(cmd)
+	output.AddOutputFlagsPaging(cmd)
 	flags := cmd.Flags()
 	flags.BoolVar(&show, "show", false, "Show resource definition")
 	bp := &p.SRBaseParams

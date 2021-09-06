@@ -31,5 +31,5 @@ func NewSchemaCommand(conf *helper.Configuration) *cobra.Command {
 		"Display a schema",
 		"long",
 		"example",
-		api.SRGetSchemaP)
+		api.SRGetSchema)
 }

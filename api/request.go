@@ -22,55 +22,86 @@ import (
 	"strings"
 )
 
-// RequestHeader containts the Header values of an HTTP request, e.g. Accept: text/html
-type RequestHeader map[string]string
-
-// RequestQuery contains the Query values of an HTTP request, e.g. ?next=good
-type RequestQuery map[string][]string
-
-// NewRequestQuery accepts multiple query name value pairs
-func NewRequestQuery(pairs ...string) RequestQuery {
-	result := make(RequestQuery, len(pairs)/2)
-	result.Set(pairs...)
-	return result
+// Request consists of HTTP header, body, query and auxiliary values
+type Request struct {
+	header map[string]string
+	query  map[string][]string
+	body   []byte
+	aux    map[string]string
+	auxm   map[string][]string
 }
 
-func (p RequestQuery) Set(pairs ...string) {
-	l := len(pairs)
-	if l%2 != 0 {
-		pairs = append(pairs, "")
-		l++
+// NewRequest accepts string pairs of name and value for the HTTP query
+func NewRequest(queries ...string) *Request {
+	req := &Request{}
+	req.AddQueries(queries...)
+	return req
+}
+
+// NewRequestHeader accepts string pairs of name and value for the HTTP header
+func NewRequestHeader(header ...string) *Request {
+	req := &Request{}
+	req.SetHeaders(header...)
+	return req
+}
+
+// NewRequestBody accpets a body payload and name value pairs for the HTTP query
+func NewRequestBody(body []byte, queries ...string) *Request {
+	req := &Request{body: body}
+	req.AddQueries(queries...)
+	return req
+}
+
+// NewRequestValues accepts pairs of name and value for multiple purposes, e.g.
+// in the path or host
+func NewRequestValues(values ...string) *Request {
+	req := &Request{}
+	req.SetValues(values...)
+	return req
+}
+
+// Clone creates a copy with the same body array
+func (r *Request) Clone() *Request {
+	header := make(map[string]string, len(r.header))
+	for k, v := range r.header {
+		header[k] = v
 	}
-	if l == 0 {
-		return
+	query := make(map[string][]string, len(r.query))
+	for k, v := range r.query {
+		query[k] = v
 	}
-	for i := 0; i < l; i = i + 2 {
-		if pairs[i+1] != "" {
-			p.Add(pairs[i], pairs[i+1])
-		}
+	aux := make(map[string]string, len(r.aux))
+	for k, v := range r.aux {
+		aux[k] = v
+	}
+	auxm := make(map[string][]string, len(r.auxm))
+	for k, v := range r.auxm {
+		auxm[k] = v
+	}
+	return &Request{
+		header: header,
+		query:  query,
+		body:   r.body,
+		aux:    aux,
+		auxm:   auxm,
 	}
 }
 
-func (p RequestQuery) Add(name, value string) {
-	p[name] = append(p[name], value)
-}
-
-// Encode builds an URL query
-func (p RequestQuery) Encode() string {
-	if p == nil {
+func (r *Request) EncodedQuery() string {
+	if r.query == nil {
 		return ""
 	}
 	var buf strings.Builder
-	keys := make([]string, len(p))
+	keys := make([]string, len(r.query))
 	i := 0
-	for k := range p {
+	for k := range r.query {
 		keys[i] = k
 		i++
 	}
 	sort.Strings(keys)
 	sep := byte('?')
 	for _, k := range keys {
-		vs := p[k]
+		vs := r.query[k]
 		keyEscaped := url.QueryEscape(k)
 		for _, v := range vs {
 			if v != "" {
@@ -85,43 +116,46 @@ func (p RequestQuery) Encode() string {
 	return buf.String()
 }
 
-type RequestHost map[string]string
-
-type Request struct {
-	header RequestHeader
-	query  RequestQuery
-	body   []byte
-	aux    map[string]string
-}
-
-func NewRequest(pairs ...string) *Request {
-	return &Request{query: NewRequestQuery(pairs...)}
-}
-
-func NewRequestHeader(header RequestHeader, pairs ...string) *Request {
-	return &Request{header: header, query: NewRequestQuery(pairs...)}
-}
-
-func NewRequestBody(body []byte, pairs ...string) *Request {
-	return &Request{body: body, query: NewRequestQuery(pairs...)}
-}
-
-func (r *Request) EncodedQuery() string {
-	return r.query.Encode()
-}
-
-func (r *Request) Header() RequestHeader {
+func (r *Request) Header() map[string]string {
 	if r.header == nil {
-		r.header = make(RequestHeader)
+		r.header = make(map[string]string)
 	}
 	return r.header
 }
 
 func (r *Request) SetHeader(name, value string) {
 	if r.header == nil {
-		r.header = make(RequestHeader)
+		r.header = make(map[string]string)
 	}
 	r.header[name] = value
+}
+
+func (r *Request) SetHeaderIf(name, value string) {
+	if r.header == nil {
+		r.header = make(map[string]string)
+		r.header[name] = value
+		return
+	}
+	if _, ok := r.header[name]; ok {
+		return
+	}
+	r.header[name] = value
+}
+
+func (p *Request) SetHeaders(values ...string) {
+	l := len(values)
+	if l%2 != 0 {
+		values = append(values, "")
+		l++
+	}
+	if l == 0 {
+		return
+	}
+	for i := 0; i < l; i = i + 2 {
+		if values[i+1] != "" {
+			p.SetHeader(values[i], values[i+1])
+		}
+	}
 }
 
 func (r *Request) Accept(value string) {
@@ -134,9 +168,25 @@ func (r *Request) ContentType(value string) {
 
 func (r *Request) AddQuery(name, value string) {
 	if r.query == nil {
-		r.query = make(RequestQuery)
+		r.query = make(map[string][]string)
 	}
-	r.query.Add(name, value)
+	r.query[name] = append(r.query[name], value)
+}
+
+func (p *Request) AddQueries(values ...string) {
+	l := len(values)
+	if l%2 != 0 {
+		values = append(values, "")
+		l++
+	}
+	if l == 0 {
+		return
+	}
+	for i := 0; i < l; i = i + 2 {
+		if values[i+1] != "" {
+			p.AddQuery(values[i], values[i+1])
+		}
+	}
 }
 
 func (r *Request) SetValue(name, value string) {
@@ -147,22 +197,64 @@ func (r *Request) SetValue(name, value string) {
 }
 
 func (r *Request) GetValue(name string) string {
-	return r.aux[name]
+	if r.aux != nil {
+		return r.aux[name]
+	}
+	return ""
 }
 
 func (r *Request) GetValuePath(name string) string {
-	return url.PathEscape(r.aux[name])
+	if r.aux != nil {
+		return url.PathEscape(r.aux[name])
+	}
+	return ""
 }
 
 func (r *Request) GetValueQuery(name string) string {
-	return url.QueryEscape(r.aux[name])
+	if r.aux != nil {
+		return url.QueryEscape(r.aux[name])
+	}
+	return ""
 }
 
 // GetValueV returns the value with the passed name. If the value doesn't exist
 // it returns the second value.
 func (r *Request) GetValueV(name, value string) string {
-	if result, ok := r.aux[name]; ok {
-		return result
+	if r.aux != nil {
+		if result, ok := r.aux[name]; ok {
+			return result
+		}
+		return value
 	}
 	return value
+}
+
+func (p *Request) SetValues(values ...string) {
+	l := len(values)
+	if l%2 != 0 {
+		values = append(values, "")
+		l++
+	}
+	if l == 0 {
+		return
+	}
+	for i := 0; i < l; i = i + 2 {
+		if values[i+1] != "" {
+			p.SetValue(values[i], values[i+1])
+		}
+	}
+}
+
+func (r *Request) SetArray(name string, value []string) {
+	if r.auxm == nil {
+		r.auxm = make(map[string][]string)
+	}
+	r.auxm[name] = value
+}
+
+func (r *Request) GetArray(name string) []string {
+	if r.auxm != nil {
+		return r.auxm[name]
+	}
+	return []string{}
 }

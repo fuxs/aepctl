@@ -18,7 +18,6 @@ package helper
 
 import (
 	"bufio"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -212,9 +211,9 @@ func (o *OutputConf) PrintPaged(pager *Pager) error {
 	return nil
 }
 
-func (o *OutputConf) Print(f api.Func, auth *api.AuthenticationConfig, params util.Params) error {
+/*func (o *OutputConf) Print(f api.Func, auth *api.AuthenticationConfig, params *api.Request) error {
 	return o.PrintResponse(f(context.Background(), auth, params))
-}
+}*/
 
 func (o *OutputConf) PrintResponse(res *http.Response, err error) error {
 	res, err = api.HandleStatusCode(res, err)

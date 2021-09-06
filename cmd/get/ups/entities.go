@@ -17,6 +17,7 @@ specific language governing permissions and limitations under the License.
 package ups
 
 import (
+	"context"
 	_ "embed"
 	"time"
 
@@ -42,8 +43,7 @@ func NewEntitiesCommand(conf *helper.Configuration) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErrs(output.SetTransformationDesc(profileTransformation))
-			p := helper.CheckErrParams(ep)
-			helper.CheckErr(output.Print(api.UPSGetEntitiesP, conf.Authentication, p))
+			helper.CheckErr(output.PrintResponse(api.UPSGetEntities(context.Background(), conf.Authentication, ep)))
 		},
 	}
 	output.AddOutputFlags(cmd)
@@ -80,8 +80,7 @@ func NewProfileCommand(conf *helper.Configuration) *cobra.Command {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErrs(output.SetTransformationDesc(profileTransformation))
 			ep.ID = args[0]
-			p := helper.CheckErrParams(ep)
-			helper.CheckErr(output.Print(api.UPSGetEntitiesP, conf.Authentication, p))
+			helper.CheckErr(output.PrintResponse(api.UPSGetEntities(context.Background(), conf.Authentication, ep)))
 		},
 	}
 	output.AddOutputFlags(cmd)
@@ -117,8 +116,7 @@ func NewEventsCommand(conf *helper.Configuration) *cobra.Command {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErrs(output.SetTransformationDesc(profileTransformation))
 			ep.RelatedID = args[0]
-			p := helper.CheckErrParams(ep)
-			helper.CheckErr(output.Print(api.UPSGetEntitiesP, conf.Authentication, p))
+			helper.CheckErr(output.PrintResponse(api.UPSGetEntities(context.Background(), conf.Authentication, ep)))
 		},
 	}
 	output.AddOutputFlags(cmd)

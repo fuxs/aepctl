@@ -17,6 +17,7 @@ specific language governing permissions and limitations under the License.
 package da
 
 import (
+	"context"
 	_ "embed"
 
 	"github.com/fuxs/aepctl/api"
@@ -42,7 +43,7 @@ func NewFilesCommand(conf *helper.Configuration) *cobra.Command {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErrs(output.SetTransformationDesc(filesTransformation))
 			fc.ID = args[0]
-			helper.CheckErr(output.Print(api.DAGetFilesP, conf.Authentication, fc.Params()))
+			helper.CheckErr(output.PrintResponse(api.DAGetFiles(context.Background(), conf.Authentication, fc)))
 		},
 	}
 	output.AddOutputFlags(cmd)

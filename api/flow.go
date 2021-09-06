@@ -20,8 +20,6 @@ import (
 	"context"
 	"net/http"
 	"strconv"
-
-	"github.com/fuxs/aepctl/util"
 )
 
 type FlowGetConnectionsParams struct {
@@ -32,7 +30,7 @@ type FlowGetConnectionsParams struct {
 	Count             bool
 }
 
-func (p *FlowGetConnectionsParams) Params() util.Params {
+func (p *FlowGetConnectionsParams) Request() *Request {
 	var limit, count string
 	if p.Limit > 0 {
 		limit = strconv.FormatInt(int64(p.Limit), 10)
@@ -40,7 +38,7 @@ func (p *FlowGetConnectionsParams) Params() util.Params {
 	if p.Count {
 		count = "true"
 	}
-	return util.NewParams(
+	return NewRequest(
 		"property", p.Property,
 		"limit", limit,
 		"oderby", p.OrderBy,
@@ -50,8 +48,8 @@ func (p *FlowGetConnectionsParams) Params() util.Params {
 }
 
 // DAGetFile returns a list of files for the passed fileId
-func FlowGetConnectionsP(ctx context.Context, auth *AuthenticationConfig, params util.Params) (*http.Response, error) {
+func FlowGetConnectionsP(ctx context.Context, auth *AuthenticationConfig, params *Request) (*http.Response, error) {
 	return auth.GetRequestRaw(ctx,
 		"https://platform.adobe.io/data/foundation/flowservice/connections%s",
-		params.Encode())
+		params.EncodedQuery())
 }

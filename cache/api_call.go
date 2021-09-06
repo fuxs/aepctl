@@ -86,5 +86,9 @@ func (c *ODCall) Call() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return od.List(context.Background(), c.ac.Auth, cid, c.schema)
+	param := &od.ListParam{
+		ContainerID: cid,
+		Schema:      c.schema,
+	}
+	return od.List(context.Background(), c.ac.Auth, param)
 }

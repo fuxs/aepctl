@@ -18,35 +18,32 @@ package api
 
 import (
 	"context"
+	"errors"
 	"net/http"
-
-	"github.com/fuxs/aepctl/util"
 )
 
 type SBGetSandboxParams string
 
-func (p SBGetSandboxParams) Params() util.Params {
-	return util.NewParams("name", string(p))
+func (p SBGetSandboxParams) Request() *Request {
+	return NewRequestValues("name", string(p))
 }
 
 // SBGetSandbox returns the details of a sandbox with the given name
 func SBGetSandbox(ctx context.Context, p *AuthenticationConfig, params SBGetSandboxParams) (*http.Response, error) {
-	return SBGetSandboxP(ctx, p, params.Params())
+	return SBGetSandboxP(ctx, p, params.Request())
 }
 
 // SBGetSandboxP returns the details of a sandbox with the given name
-func SBGetSandboxP(ctx context.Context, p *AuthenticationConfig, params util.Params) (*http.Response, error) {
-	name := params.GetForPath("name")
+func SBGetSandboxP(ctx context.Context, p *AuthenticationConfig, params *Request) (*http.Response, error) {
+	name := params.GetValuePath("name")
+	if name == "" {
+		return nil, errors.New("sandbox parameter missing")
+	}
 	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/sandbox-management/sandboxes/%s", name)
 }
 
 // SBListAllSandboxes returns a list of all sandboxes
 func SBListAllSandboxes(ctx context.Context, p *AuthenticationConfig) (*http.Response, error) {
-	return SBListAllSandboxesP(ctx, p, nil)
-}
-
-// SBListAllSandboxesP returns a list of all sandboxes. This variant implements the api.Func type.
-func SBListAllSandboxesP(ctx context.Context, p *AuthenticationConfig, _ util.Params) (*http.Response, error) {
 	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/sandbox-management/sandboxes")
 }
 
@@ -59,20 +56,10 @@ func List(ctx context.Context, p *AuthenticationConfig) (interface{}, error) {
 
 // SBListSandboxes returns a list of usable sandboxes
 func SBListSandboxes(ctx context.Context, p *AuthenticationConfig) (*http.Response, error) {
-	return SBListSandboxesP(ctx, p, nil)
-}
-
-// SBListSandboxesP returns a list of usable sandboxes. This variant implements the api.Func type.
-func SBListSandboxesP(ctx context.Context, p *AuthenticationConfig, _ util.Params) (*http.Response, error) {
 	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/sandbox-management/")
 }
 
 // SBListSandboxTypes lists the available sandbox types
 func SBListSandboxTypes(ctx context.Context, p *AuthenticationConfig) (*http.Response, error) {
-	return SBListSandboxTypesP(ctx, p, nil)
-}
-
-// SBListSandboxTypes lists the available sandbox types. This variant implements the api.Func type.
-func SBListSandboxTypesP(ctx context.Context, p *AuthenticationConfig, _ util.Params) (*http.Response, error) {
 	return p.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/sandbox-management/sandboxTypes")
 }

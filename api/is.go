@@ -22,8 +22,6 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
-
-	"github.com/fuxs/aepctl/util"
 )
 
 func ISListNamespaces(ctx context.Context, a *AuthenticationConfig) (*http.Response, error) {
@@ -81,7 +79,6 @@ func (p *ISParams) Request() *Request {
 	if p.Namespace != "" || p.NamespaceID != "" {
 		idName = "id"
 	}
-
 	req := NewRequest(
 		idName, p.ID,
 		"namespace", p.Namespace,
@@ -115,18 +112,6 @@ func (p *ISClusterParams) Request() *Request {
 	result := p.ISParams.Request()
 	result.AddQuery("graph-type", p.GraphType)
 	return result
-}
-
-func (p *ISClusterParams) Params() util.Params {
-	idName := "xid"
-	if p.Namespace != "" || p.NamespaceID != "" {
-		idName = "id"
-	}
-	return util.NewParams(
-		idName, p.ID,
-		"namespace", p.Namespace,
-		"nsid", p.NamespaceID,
-	)
 }
 
 func (p *ISClusterParams) Accept() string {

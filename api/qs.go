@@ -20,8 +20,6 @@ import (
 	"context"
 	"net/http"
 	"strconv"
-
-	"github.com/fuxs/aepctl/util"
 )
 
 // QSListQueriesParams defines the parameters for list queries
@@ -57,49 +55,18 @@ func (p *QSListQueriesParams) Request() *Request {
 	return req
 }
 
-// This should be deprecated
-func (p *QSListQueriesParams) Params() util.Params {
-	var limit, esd, eh string
-	if p.Limit >= 0 {
-		limit = strconv.Itoa(p.Limit)
-	}
-	if !p.ExcludeSoftDeleted {
-		esd = "false"
-	}
-	if !p.ExcludeHidden {
-		eh = "false"
-	}
-	req := util.NewParams(
-		"orderby", p.Order,
-		"limit", limit,
-		"start", p.Start,
-		"property", p.Filter,
-		"excludeSoftDeleted", esd,
-		"excludeHidden", eh,
-	)
-	return req
-}
-
 // QSListQueries calls the query servie to list queries
 func QSListQueries(ctx context.Context, a *AuthenticationConfig, p *QSListQueriesParams) (*http.Response, error) {
 	if p != nil {
-		return QSListQueriesR(ctx, a, p.Request())
+		return QSListQueriesP(ctx, a, p.Request())
 	}
-	return QSListQueriesR(ctx, a, nil)
+	return QSListQueriesP(ctx, a, nil)
 }
 
 // QSListQueriesR calls the query servie to list queries
-func QSListQueriesR(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
+func QSListQueriesP(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
 	if p == nil {
 		return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/queries")
 	}
 	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/queries%s", p.EncodedQuery())
-}
-
-// QSListQueries calls the query servie to list queries
-func QSListQueriesP(ctx context.Context, a *AuthenticationConfig, p util.Params) (*http.Response, error) {
-	if p == nil {
-		return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/queries")
-	}
-	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/queries%s", p.Encode())
 }
