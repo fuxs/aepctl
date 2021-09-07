@@ -25,7 +25,24 @@ import (
 
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/util"
+	"github.com/spf13/pflag"
 )
+
+func AddPagingFlags(params *api.PageParams, flags *pflag.FlagSet) {
+	addPagingFlags(params, flags)
+	flags.StringVar(&params.Start, "start", "", "start value of property specified by flag order")
+}
+
+func AddPagingFlagsToken(params *api.PageParams, flags *pflag.FlagSet) {
+	addPagingFlags(params, flags)
+	flags.StringVar(&params.Start, "token", "", "a token for fetching records for next page")
+}
+
+func addPagingFlags(params *api.PageParams, flags *pflag.FlagSet) {
+	flags.StringVar(&params.Order, "order", "", "order the result either by property updated or created (default)")
+	flags.IntVar(&params.Limit, "limit", -1, "limits the number of returned results per request")
+	flags.StringVar(&params.Filter, "filter", "", "filter by property created, updated, state or id")
+}
 
 // Pager executes a REST function and handles automatically the subsequent calls
 // to get paged responses

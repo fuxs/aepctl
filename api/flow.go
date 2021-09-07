@@ -19,32 +19,21 @@ package api
 import (
 	"context"
 	"net/http"
-	"strconv"
 )
 
 type FlowGetConnectionsParams struct {
-	Property          string
-	Limit             int
-	OrderBy           string
-	ContinuationToken string
-	Count             bool
+	PageParams
+	Count bool
 }
 
 func (p *FlowGetConnectionsParams) Request() *Request {
-	var limit, count string
-	if p.Limit > 0 {
-		limit = strconv.FormatInt(int64(p.Limit), 10)
-	}
+	var count string
 	if p.Count {
 		count = "true"
 	}
-	return NewRequest(
-		"property", p.Property,
-		"limit", limit,
-		"oderby", p.OrderBy,
-		"continuationToken", p.ContinuationToken,
-		"count", count,
-	)
+	req := p.PageParams.RequestToken()
+	req.AddQuery("count", count)
+	return req
 }
 
 // DAGetFile returns a list of files for the passed fileId

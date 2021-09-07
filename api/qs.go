@@ -19,39 +19,27 @@ package api
 import (
 	"context"
 	"net/http"
-	"strconv"
 )
 
 // QSListQueriesParams defines the parameters for list queries
 type QSListQueriesParams struct {
-	Order              string
-	Limit              int
-	Start              string
-	Filter             string
+	PageParams
 	ExcludeSoftDeleted bool
 	ExcludeHidden      bool
 }
 
-// TODO: Switch to Request
 func (p *QSListQueriesParams) Request() *Request {
-	var limit, esd, eh string
-	if p.Limit >= 0 {
-		limit = strconv.Itoa(p.Limit)
-	}
+	var esd, eh string
 	if !p.ExcludeSoftDeleted {
 		esd = "false"
 	}
 	if !p.ExcludeHidden {
 		eh = "false"
 	}
-	req := NewRequest(
-		"orderby", p.Order,
-		"limit", limit,
-		"start", p.Start,
-		"property", p.Filter,
+	req := p.PageParams.Request()
+	req.AddQueries(
 		"excludeSoftDeleted", esd,
-		"excludeHidden", eh,
-	)
+		"excludeHidden", eh)
 	return req
 }
 
@@ -74,4 +62,19 @@ func QSListQueriesP(ctx context.Context, a *AuthenticationConfig, p *Request) (*
 // QSGetConnection retrieves connection parameters for the interactive interface
 func QSGetConnection(ctx context.Context, a *AuthenticationConfig) (*http.Response, error) {
 	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/connection_parameters")
+}
+
+// QSListQueriesR calls the query servie to list queries
+func QSListSchedulesP(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
+	if p == nil {
+		return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/schedules")
+	}
+	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/schedules%s", p.EncodedQuery())
+}
+
+func QSCreateSchedule(ctx context.Context, a *AuthenticationConfig, body []byte) (*http.Response, error) {
+	header := map[string]string{
+		"Content-Type": "application/json",
+	}
+	return a.PostRequestRaw(ctx, header, body, "https://platform.adobe.io/data/foundation/query/schedules")
 }

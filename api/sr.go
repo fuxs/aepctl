@@ -21,7 +21,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 )
 
@@ -94,33 +93,16 @@ func (f SRDescriptorFormat) Accept() string {
 }
 
 type SRBaseParams struct {
-	Property string
-	OrderBy  string
-	Start    string
-	Limit    uint
-	// TODO Rename
-	Global bool
+	PageParams
+	Predefined bool
 }
 
 func (p *SRBaseParams) Request() *Request {
-	var (
-		limit string
-		cid   string
-	)
-	if p.Limit > 0 {
-		limit = strconv.FormatUint(uint64(p.Limit), 10)
-	}
-	if p.Global {
+	cid := "tenant"
+	if p.Predefined {
 		cid = "global"
-	} else {
-		cid = "tenant"
 	}
-	req := NewRequest(
-		"property", p.Property,
-		"orderby", p.OrderBy,
-		"start", p.Start,
-		"limit", limit,
-	)
+	req := p.PageParams.Request()
 	req.SetValue("cid", cid)
 	return req
 }
@@ -132,7 +114,7 @@ type SRListParams struct {
 
 func (p *SRListParams) Request() *Request {
 	result := p.SRBaseParams.Request()
-	result.SetHeader("accept", p.Accept())
+	result.Accept(p.Accept())
 	return result
 }
 
@@ -143,7 +125,7 @@ type SRListDescriptorsParams struct {
 
 func (p *SRListDescriptorsParams) Request() *Request {
 	result := p.SRBaseParams.Request()
-	result.SetHeader("-accept", p.Accept())
+	result.Accept(p.Accept())
 	return result
 }
 

@@ -47,8 +47,7 @@ func NewDescriptorsCommand(conf *helper.Configuration) *cobra.Command {
 			helper.CheckErr(output.PrintPaged(pager))
 		},
 	}
-	output.AddOutputFlags(cmd)
-	flags := cmd.Flags()
-	addFlags(flags, &p.SRBaseParams)
+	output.AddOutputFlagsPaging(cmd)
+	helper.AddPagingFlags(&p.PageParams, cmd.Flags())
 	return cmd
 }

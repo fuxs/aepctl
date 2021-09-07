@@ -51,6 +51,7 @@ func NewCommand(conf *helper.Configuration) *cobra.Command {
 	cmd.AddCommand(NewDataTypeCommand(conf))
 	cmd.AddCommand(NewDescriptorCommand(conf))
 	cmd.AddCommand(NewFieldGroupCommand(conf))
+	cmd.AddCommand(NewScheduleCommand(conf))
 	cmd.AddCommand(NewSchemaCommand(conf))
 	return cmd
 }

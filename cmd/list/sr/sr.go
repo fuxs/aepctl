@@ -22,7 +22,6 @@ import (
 	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 //go:embed trans/short.yaml
@@ -66,7 +65,7 @@ func newListCommand(conf *helper.Configuration, use, short, long, example string
 			// show predefined and custom schemas?
 			if all {
 				// invert the Predefined flag
-				p.SRBaseParams.Global = !p.SRBaseParams.Global
+				p.SRBaseParams.Predefined = !p.SRBaseParams.Predefined
 				params = append(params, p.Request())
 			}
 			pager := helper.NewPager(f, conf.Authentication, params...).
@@ -76,24 +75,17 @@ func newListCommand(conf *helper.Configuration, use, short, long, example string
 	}
 	output.AddOutputFlagsPaging(cmd)
 	flags := cmd.Flags()
+	helper.AddPagingFlags(&p.PageParams, flags)
 	flags.BoolVar(&show, "show", false, "Show resource definition")
 	bp := &p.SRBaseParams
-	addFlags(flags, bp)
 	switch o {
 	case ListPredefined:
-		bp.Global = true
+		bp.Predefined = true
 	case ListCustom:
-		bp.Global = false
+		bp.Predefined = false
 	case ListSelect:
-		flags.BoolVar(&bp.Global, "predefined", false, "return resources defined by Adobe")
+		flags.BoolVar(&bp.Predefined, "predefined", false, "return resources defined by Adobe")
 		flags.BoolVar(&all, "all", false, "return resources defined by Adobe and custom resurces")
 	}
 	return cmd
-}
-
-func addFlags(flags *pflag.FlagSet, p *api.SRBaseParams) {
-	//flags.StringVar(&p.Property, "properties", "", "Comma separated list of top-level object properties to be returned in the response")
-	flags.StringVar(&p.OrderBy, "orderby", "", "sorts the response by specified fields (separated by \",\")")
-	flags.StringVar(&p.Start, "start", "", "offests the start of returned ")
-	flags.UintVar(&p.Limit, "limit", 0, "limits the number of returned results per request")
 }

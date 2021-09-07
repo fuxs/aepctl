@@ -25,7 +25,7 @@ import (
 )
 
 //go:embed trans/queries.yaml
-var qsTransformation string
+var qsQueriesTransformation string
 
 func NewQueriesCommand(conf *helper.Configuration) *cobra.Command {
 	output := &helper.OutputConf{}
@@ -39,7 +39,7 @@ func NewQueriesCommand(conf *helper.Configuration) *cobra.Command {
 		Args:                  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
-			helper.CheckErr(output.SetTransformationDesc(qsTransformation))
+			helper.CheckErr(output.SetTransformationDesc(qsQueriesTransformation))
 			pager := helper.NewPager(api.QSListQueriesP, conf.Authentication, params.Request()).
 				OF("queries").P("start", "orderby")
 			helper.CheckErr(output.PrintPaged(pager))
@@ -47,11 +47,34 @@ func NewQueriesCommand(conf *helper.Configuration) *cobra.Command {
 	}
 	output.AddOutputFlagsPaging(cmd)
 	flags := cmd.Flags()
-	flags.StringVar(&params.Order, "order", "", "order the result either by property updated or created (default)")
-	flags.IntVar(&params.Limit, "limit", -1, "limits the number of returned results per request")
-	flags.StringVar(&params.Start, "start", "", "start value of property specified by flag order")
-	flags.StringVar(&params.Filter, "filter", "", "filter by property created, updated, state or id")
+	helper.AddPagingFlags(&params.PageParams, cmd.Flags())
 	flags.BoolVar(&params.ExcludeSoftDeleted, "exclude-deleted", true, "exclude queries that have been soft deleted")
 	flags.BoolVar(&params.ExcludeHidden, "exclude-hidden", true, "exclude uninteresting queries")
+	return cmd
+}
+
+//go:embed trans/schedules.yaml
+var qsSchedulesTransformation string
+
+func NewSchedulesCommand(conf *helper.Configuration) *cobra.Command {
+	output := &helper.OutputConf{}
+	params := &api.PageParams{}
+	cmd := &cobra.Command{
+		Use:                   "schedules",
+		Short:                 "List schedules (Query Service)",
+		Long:                  "long",
+		Example:               "example",
+		DisableFlagsInUseLine: true,
+		Args:                  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
+			helper.CheckErr(output.SetTransformationDesc(qsSchedulesTransformation))
+			pager := helper.NewPager(api.QSListSchedulesP, conf.Authentication, params.Request()).
+				OF("schedules").P("start", "orderby")
+			helper.CheckErr(output.PrintPaged(pager))
+		},
+	}
+	output.AddOutputFlagsPaging(cmd)
+	helper.AddPagingFlags(params, cmd.Flags())
 	return cmd
 }

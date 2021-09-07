@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 )
 
 type FuncID func(context.Context, *AuthenticationConfig, string) (*http.Response, error)
@@ -33,6 +34,44 @@ type Parameters interface {
 
 type ParametersE interface {
 	Request() (*Request, error)
+}
+
+// PageParams contains often used parameters for paging
+type PageParams struct {
+	Order  string
+	Limit  int
+	Start  string
+	Filter string
+}
+
+// Request uses start parameter for paging
+func (p *PageParams) Request() *Request {
+	var limit string
+	if p.Limit >= 0 {
+		limit = strconv.Itoa(p.Limit)
+	}
+	req := NewRequest(
+		"orderby", p.Order,
+		"limit", limit,
+		"start", p.Start,
+		"property", p.Filter,
+	)
+	return req
+}
+
+// RequestToken uses continuationToken for paging
+func (p *PageParams) RequestToken() *Request {
+	var limit string
+	if p.Limit >= 0 {
+		limit = strconv.Itoa(p.Limit)
+	}
+	req := NewRequest(
+		"orderby", p.Order,
+		"limit", limit,
+		"continuationToken", p.Start,
+		"property", p.Filter,
+	)
+	return req
 }
 
 var All = map[string]Func{

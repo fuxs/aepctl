@@ -1,0 +1,19 @@
+columns:
+  - name: ID
+    path: [id]
+  - name: NAME
+    path: [query, name]
+  - name: STATE
+    path: [state]
+  - name: LAST MODIFIED
+    path: [updated]
+    format: localTime
+  - name: SCHEDULE
+    path: [schedule, schedule]
+    mode: wide
+  - name: START DATE
+    path: [schedule, startDate]
+    mode: wide
+  - name: SQL
+    path: [query, sql]
+    mode: wide
