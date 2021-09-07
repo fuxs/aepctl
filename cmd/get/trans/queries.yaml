@@ -1,0 +1,14 @@
+path: [$]
+columns:
+  - name: ID
+    path: [id]
+  - name: NAME
+    path: [request, name]
+  - name: STATE
+    path: [state]
+  - name: LAST MODIFIED
+    path: [updated]
+    format: localTime
+  - name: SQL
+    path: [request, sql]
+    mode: wide

@@ -65,5 +65,7 @@ func NewCommand(conf *helper.Configuration) *cobra.Command {
 	//
 	// query service
 	cmd.AddCommand(NewConnectionCommand(conf))
+	cmd.AddCommand(NewQueryCommand(conf))
+	cmd.AddCommand(NewScheduleCommand(conf))
 	return cmd
 }

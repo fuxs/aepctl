@@ -19,7 +19,13 @@ package api
 import (
 	"context"
 	"net/http"
+	"net/url"
 )
+
+// QSGetQuery returns the details of a query by id
+func QSGetQuery(ctx context.Context, a *AuthenticationConfig, id string) (*http.Response, error) {
+	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/queries/%s", url.PathEscape(id))
+}
 
 // QSListQueriesParams defines the parameters for list queries
 type QSListQueriesParams struct {
@@ -77,4 +83,9 @@ func QSCreateSchedule(ctx context.Context, a *AuthenticationConfig, body []byte)
 		"Content-Type": "application/json",
 	}
 	return a.PostRequestRaw(ctx, header, body, "https://platform.adobe.io/data/foundation/query/schedules")
+}
+
+// QSGetSchedule returns the details of a scheduled query by id
+func QSGetSchedule(ctx context.Context, a *AuthenticationConfig, id string) (*http.Response, error) {
+	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/schedules/%s", url.PathEscape(id))
 }
