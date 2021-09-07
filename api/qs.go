@@ -90,9 +90,19 @@ func QSGetSchedule(ctx context.Context, a *AuthenticationConfig, id string) (*ht
 	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/schedules/%s", url.PathEscape(id))
 }
 
+// QSGetRun returns the details of a scheduled query run by id
+func QSGetRun(ctx context.Context, a *AuthenticationConfig, scheduleId, runId string) (*http.Response, error) {
+	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/schedules/%s/runs/%s", url.PathEscape(scheduleId), url.PathEscape(runId))
+}
+
 // QSListRunsP calls the query service to list runs for a
 func QSListRunsP(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
 	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/schedules/%s/runs%s", p.GetValuePath("id"), p.EncodedQuery())
+}
+
+// QSGetTemplate returns the details of a query template by id
+func QSGetTemplate(ctx context.Context, a *AuthenticationConfig, id string) (*http.Response, error) {
+	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/query-templates/%s", url.PathEscape(id))
 }
 
 // QSListTemplatesP calls the query service to list query templates

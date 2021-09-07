@@ -65,6 +65,28 @@ func NewQueryCommand(conf *helper.Configuration) *cobra.Command {
 	return cmd
 }
 
+//go:embed trans/runs.yaml
+var runTransformation string
+
+func NewRunCommand(conf *helper.Configuration) *cobra.Command {
+	output := &helper.OutputConf{}
+	cmd := &cobra.Command{
+		Use:                   "run scheduleId runId",
+		Short:                 "Display scheduled query run (Query Service)",
+		Long:                  "long",
+		Example:               "example",
+		DisableFlagsInUseLine: true,
+		Args:                  cobra.ExactArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
+			helper.CheckErr(output.SetTransformationDesc(runTransformation))
+			helper.CheckErr(output.PrintResponse(api.QSGetRun(context.Background(), conf.Authentication, args[0], args[1])))
+		},
+	}
+	output.AddOutputFlags(cmd)
+	return cmd
+}
+
 //go:embed trans/schedules.yaml
 var scheduleTransformation string
 
@@ -81,6 +103,28 @@ func NewScheduleCommand(conf *helper.Configuration) *cobra.Command {
 			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
 			helper.CheckErr(output.SetTransformationDesc(scheduleTransformation))
 			helper.CheckErr(output.PrintResponse(api.QSGetSchedule(context.Background(), conf.Authentication, args[0])))
+		},
+	}
+	output.AddOutputFlags(cmd)
+	return cmd
+}
+
+//go:embed trans/templates.yaml
+var templateTransformation string
+
+func NewTemplateCommand(conf *helper.Configuration) *cobra.Command {
+	output := &helper.OutputConf{}
+	cmd := &cobra.Command{
+		Use:                   "template",
+		Short:                 "Display a query template (Query Service)",
+		Long:                  "long",
+		Example:               "example",
+		DisableFlagsInUseLine: true,
+		Args:                  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
+			helper.CheckErr(output.SetTransformationDesc(templateTransformation))
+			helper.CheckErr(output.PrintResponse(api.QSGetTemplate(context.Background(), conf.Authentication, args[0])))
 		},
 	}
 	output.AddOutputFlags(cmd)

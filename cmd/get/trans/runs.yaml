@@ -1,0 +1,17 @@
+path: [taskStatusList]
+columns:
+  - name: TASK ID
+    path: [taskId]
+  - name: STATE
+    path: [state]
+  - name: MESSAGE
+    path: [message]
+  - name: DURATION
+    path: [duration]
+    type: num
+  - name: START DATE
+    path: [startDate]
+    format: localTime
+  - name: END DATE
+    path: [endDate]
+    format: localTime
