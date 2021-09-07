@@ -1,0 +1,8 @@
+columns:
+  - name: ID
+    path: [id]
+  - name: STATE
+    path: [state]
+  - name: CREATED
+    path: [created]
+    format: localTime

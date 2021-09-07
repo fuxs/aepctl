@@ -35,7 +35,9 @@ func NewCommand(conf *helper.Configuration) *cobra.Command {
 	//
 	// quer service commands
 	cmd.AddCommand(qs.NewQueriesCommand(conf))
+	cmd.AddCommand(qs.NewRunsCommand(conf))
 	cmd.AddCommand(qs.NewSchedulesCommand(conf))
+	cmd.AddCommand(qs.NewTemplatesCommand(conf))
 	//
 	// identity service commands
 	cmd.AddCommand(is.NewNamespacesCommand(conf))

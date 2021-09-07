@@ -89,3 +89,16 @@ func QSCreateSchedule(ctx context.Context, a *AuthenticationConfig, body []byte)
 func QSGetSchedule(ctx context.Context, a *AuthenticationConfig, id string) (*http.Response, error) {
 	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/schedules/%s", url.PathEscape(id))
 }
+
+// QSListRunsP calls the query service to list runs for a
+func QSListRunsP(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
+	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/schedules/%s/runs%s", p.GetValuePath("id"), p.EncodedQuery())
+}
+
+// QSListTemplatesP calls the query service to list query templates
+func QSListTemplatesP(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
+	if p == nil {
+		return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/query-templates")
+	}
+	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/query-templates%s", p.EncodedQuery())
+}

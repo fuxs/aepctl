@@ -47,7 +47,7 @@ func NewQueriesCommand(conf *helper.Configuration) *cobra.Command {
 	}
 	output.AddOutputFlagsPaging(cmd)
 	flags := cmd.Flags()
-	helper.AddPagingFlags(&params.PageParams, cmd.Flags())
+	helper.AddPagingFlags(&params.PageParams, flags)
 	flags.BoolVar(&params.ExcludeSoftDeleted, "exclude-deleted", true, "exclude queries that have been soft deleted")
 	flags.BoolVar(&params.ExcludeHidden, "exclude-hidden", true, "exclude uninteresting queries")
 	return cmd
@@ -71,6 +71,60 @@ func NewSchedulesCommand(conf *helper.Configuration) *cobra.Command {
 			helper.CheckErr(output.SetTransformationDesc(qsSchedulesTransformation))
 			pager := helper.NewPager(api.QSListSchedulesP, conf.Authentication, params.Request()).
 				OF("schedules").P("start", "orderby")
+			helper.CheckErr(output.PrintPaged(pager))
+		},
+	}
+	output.AddOutputFlagsPaging(cmd)
+	helper.AddPagingFlags(params, cmd.Flags())
+	return cmd
+}
+
+//go:embed trans/runs.yaml
+var qsRunsTransformation string
+
+func NewRunsCommand(conf *helper.Configuration) *cobra.Command {
+	output := &helper.OutputConf{}
+	params := &api.PageParams{}
+	cmd := &cobra.Command{
+		Use:                   "runs scheduleId",
+		Short:                 "List of runs for scheduled query (Query Service)",
+		Long:                  "long",
+		Example:               "example",
+		DisableFlagsInUseLine: true,
+		Args:                  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
+			helper.CheckErr(output.SetTransformationDesc(qsRunsTransformation))
+			req := params.Request()
+			req.SetValue("id", args[0])
+			pager := helper.NewPager(api.QSListRunsP, conf.Authentication, req).
+				OF("runsSchedules").P("start", "orderby")
+			helper.CheckErr(output.PrintPaged(pager))
+		},
+	}
+	output.AddOutputFlagsPaging(cmd)
+	helper.AddPagingFlags(params, cmd.Flags())
+	return cmd
+}
+
+//go:embed trans/templates.yaml
+var qsTemplatesTransformation string
+
+func NewTemplatesCommand(conf *helper.Configuration) *cobra.Command {
+	output := &helper.OutputConf{}
+	params := &api.PageParams{}
+	cmd := &cobra.Command{
+		Use:                   "templates",
+		Short:                 "List query templates (Query Service)",
+		Long:                  "long",
+		Example:               "example",
+		DisableFlagsInUseLine: true,
+		Args:                  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			helper.CheckErrs(conf.Validate(cmd), output.ValidateFlags())
+			helper.CheckErr(output.SetTransformationDesc(qsTemplatesTransformation))
+			pager := helper.NewPager(api.QSListTemplatesP, conf.Authentication, params.Request()).
+				OF("templates").P("start", "orderby")
 			helper.CheckErr(output.PrintPaged(pager))
 		},
 	}
