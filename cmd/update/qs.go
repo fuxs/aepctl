@@ -1,5 +1,5 @@
 /*
-Package create is the base for all create commands.
+Package update contains update command related functions.
 
 Copyright 2021 Michael Bungenstock
 
@@ -14,7 +14,7 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 */
-package create
+package update
 
 import (
 	"github.com/fuxs/aepctl/api"
@@ -22,36 +22,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewNamespaceCommand creates an initialized command object
-func NewScheduleCommand(conf *helper.Configuration) *cobra.Command {
-	return NewCreateCommand(conf,
-		api.QSCreateSchedule,
-		"schedule",
-		"Create a scheduled query (Query Service)",
-		"long",
-		"example",
-		"scheduled",
-	)
-}
-
-// NewQueryCommand creates an initialized command object
-func NewQueryCommand(conf *helper.Configuration) *cobra.Command {
-	return NewCreateCommand(conf,
-		api.QSCreateQuery,
-		"query",
-		"Create a query (Query Service)",
-		"long",
-		"example",
-	)
-}
-
-// NewQueryCommand creates an initialized command object
+// NewClassCommand creates an initialized command object
 func NewQueryTemplateCommand(conf *helper.Configuration) *cobra.Command {
-	return NewCreateCommand(conf,
-		api.QSCreateQueryTemplate,
+	return NewUpdateCommand(conf,
+		api.QSUpdateQueryTemplate,
 		"template",
-		"Create a query template (Query Service)",
+		"Update a query template (Schema Registry)",
 		"long",
 		"example",
+		"templates",
 	)
 }

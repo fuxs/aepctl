@@ -22,6 +22,29 @@ import (
 	"net/url"
 )
 
+func QSCreateQuery(ctx context.Context, a *AuthenticationConfig, body []byte) (*http.Response, error) {
+	header := map[string]string{
+		"Content-Type": "application/json",
+	}
+	return a.PostRequestRaw(ctx, header, body, "https://platform.adobe.io/data/foundation/query/queries")
+}
+
+func QSCancelQuery(ctx context.Context, a *AuthenticationConfig, id string) (*http.Response, error) {
+	body := `{"op": "cancel"}`
+	header := map[string]string{
+		"Content-Type": "application/json",
+	}
+	return a.PatchRequestRaw(ctx, header, []byte(body), "https://platform.adobe.io/data/foundation/query/queries/%s", url.PathEscape(id))
+}
+
+func QSDeleteQuery(ctx context.Context, a *AuthenticationConfig, id string) (*http.Response, error) {
+	body := `{"op": "soft_delete"}`
+	header := map[string]string{
+		"Content-Type": "application/json",
+	}
+	return a.PatchRequestRaw(ctx, header, []byte(body), "https://platform.adobe.io/data/foundation/query/queries/%s", url.PathEscape(id))
+}
+
 // QSGetQuery returns the details of a query by id
 func QSGetQuery(ctx context.Context, a *AuthenticationConfig, id string) (*http.Response, error) {
 	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/queries/%s", url.PathEscape(id))
@@ -85,6 +108,12 @@ func QSCreateSchedule(ctx context.Context, a *AuthenticationConfig, body []byte)
 	return a.PostRequestRaw(ctx, header, body, "https://platform.adobe.io/data/foundation/query/schedules")
 }
 
+func QSDeleteSchedule(ctx context.Context, a *AuthenticationConfig, id string) (*http.Response, error) {
+	return a.DeleteRequestRaw(ctx,
+		"https://platform.adobe.io/data/foundation/query/schedules/%s",
+		url.PathEscape(id))
+}
+
 // QSGetSchedule returns the details of a scheduled query by id
 func QSGetSchedule(ctx context.Context, a *AuthenticationConfig, id string) (*http.Response, error) {
 	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/schedules/%s", url.PathEscape(id))
@@ -111,4 +140,28 @@ func QSListTemplatesP(ctx context.Context, a *AuthenticationConfig, p *Request) 
 		return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/query-templates")
 	}
 	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/query-templates%s", p.EncodedQuery())
+}
+
+func QSCreateQueryTemplate(ctx context.Context, a *AuthenticationConfig, body []byte) (*http.Response, error) {
+	header := map[string]string{
+		"Content-Type": "application/json",
+	}
+	return a.PostRequestRaw(ctx, header, body, "https://platform.adobe.io/data/foundation/query/query-templates")
+}
+
+func QSDeleteQueryTemplate(ctx context.Context, a *AuthenticationConfig, id string) (*http.Response, error) {
+	return a.DeleteRequestRaw(ctx,
+		"https://platform.adobe.io/data/foundation/query/query-templates/%s",
+		url.PathEscape(id))
+}
+
+func QSUpdateQueryTemplate(ctx context.Context, a *AuthenticationConfig, id string, payload []byte) (*http.Response, error) {
+	header := map[string]string{
+		"Content-Type": "application/json",
+	}
+	return a.PutRequestRaw(ctx,
+		header,
+		payload,
+		"https://platform.adobe.io/data/foundation/query/query-templates/%s",
+		url.PathEscape(id))
 }

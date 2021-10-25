@@ -3,6 +3,8 @@ columns:
     path: [id]
   - name: NAME
     path: [request, name]
+  - name: STATE
+    path: [state]
   - name: LAST MODIFIED
     path: [updated]
     format: localTime

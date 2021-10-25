@@ -22,9 +22,245 @@ aepctl ls namespaces
 
 The following verbs are supported by Query Service:
 
-* `get` ([Get Connection](#Get-Connection))
-* `ls` or `list` ([List Queries](#List-Queries))
+* `cancel` ([Cancel Query](#Cancel-Query))
+* `create` ([Create Query](#Create-Query), [Create Query Template](#Create-Query-Template) and [Create Scheduled Query](#Create-Scheduled-Query))
+* `delete` ([Delete Query](#Delete-Query))
+* `get` ([Get Connection](#Get-Connection), [Get Query](#Get-Query), [Get Query Template](#Get-Query-Template) and [Get Scheduled Query](#Get-Scheduled-Query))
+* `ls` or `list` ([List Queries](#List-Queries), [List Scheduled Queries](#List-Scheduled-Queries) and [List Scheduled Query Runs](#List-Scheduled-Query-Runs))
 * `psql` ([PSQL](#PSQL))
+
+# Cancel Query
+
+The `cancel query` command supports the cancellation of one or more submitted
+queries which haven't been executed.
+
+```terminal
+aepctl cancel query 17cc37a7-015f-4e5e-9b3b-787b9d90a050 12fec78c-eff3-4266-a106-e02dde48aa1c
+```
+
+In case of no errors the command returns without any output. Use the flag
+`--response` to show the response from the server.
+
+```terminal
+aepctl cancel query 17cc37a7-015f-4e5e-9b3b-787b9d90a050 12fec78c-eff3-4266-a106-e02dde48aa1c --response
+```
+The command should return something like:
+```terminal
+{
+  "message": "Query cancel request received.",
+  "statusCode": 202
+}
+{
+  "message": "Query cancel request received.",
+  "statusCode": 202
+}
+```
+If you pass multiple query IDs and an error occurs then the command will stop
+the execution. Use the flag `--ignore` to execute the command for all IDs
+ignoring any errors.
+
+# Create Query
+
+The `create query` command creates a new query and requires a payload in JSON format.
+
+`dbName` and `sql` are mandatory, `name` and `description` are optional. Please
+see the [Query Service
+API](https://www.adobe.io/experience-platform-apis/references/query-service/#operation/create_query)
+documentation for a full list of JSON attributes.
+
+```json
+{
+    "dbName": "myorg:all",
+    "sql": "SELECT * FROM callcenter_interaction_analysis LIMIT 5;",
+    "name": "Sample Query",
+    "description": "A sample of a query."
+}
+```
+
+This payload can be provided in a file, e.g. `query.json` in the folder `examples/create`:
+
+```terminal
+aepctl create query examples/create/query.json
+```
+
+If no file name is provided then aepctl reads from the standard input stdin,
+hence heredoc is supported, too:
+
+```terminal
+aepctl create query << EOF
+{
+  "dbName": "myorg:all",
+  "sql": "SELECT * FROM callcenter_interaction_analysis LIMIT 5;",
+  "name": "Sample Query",
+  "description": "A sample of a query."
+}
+```
+
+In case of no errors the command returns without any output. Use the flag
+`--response` to show the response from the server.
+
+It is also possible to create multiple queries with one call:
+
+```terminal
+aepctl create query query1.json query2.json last_query.json
+```
+
+Use the flag `--ignore` to skip over errors during the execution. Otherwise,
+aepctl would stop the execution in the case of the first error.
+
+# Create Query Template
+
+The `create template` command creates a new query-template and requires a
+payload in JSON format.
+
+```json
+{
+  "sql": "SELECT $key from $key1 where $key > $key2;",
+  "queryParameters": {
+    "key": "value",
+    "key1": "value1",
+    "key2": "value2"
+  },
+  "name": "Sample-Template"
+}
+```
+
+This payload can be provided in a file, e.g. `query-template.json` in the folder `examples/create`:
+
+```terminal
+aepctl create template examples/create/query-template.json
+```
+
+If no file name is provided then aepctl reads from the standard input stdin,
+hence heredoc is supported, too:
+
+```terminal
+aepctl create template << EOF
+{
+  "sql": "SELECT $key from $key1 where $key > $key2;",
+  "queryParameters": {
+    "key": "value",
+    "key1": "value1",
+    "key2": "value2"
+  },
+  "name": "Sample-Template"
+}
+```
+
+In case of no errors the command returns without any output. Use the flag
+`--response` to show the response from the server.
+
+It is also possible to create multiple queries with one call:
+
+```terminal
+aepctl create template query-template1.json query-template2.json last_query-template.json
+```
+
+Use the flag `--ignore` to skip over errors during the execution. Otherwise,
+aepctl would stop the execution in case of the first error.
+
+# Create Scheduled Query
+
+The `create schedule` command creates a new scheduled query and requires a
+payload in JSON format.
+
+```json
+{
+  "query": {
+    "dbName": "myorg:all",
+    "sql": "SELECT * FROM callcenter_interaction_analysis LIMIT 5;",
+    "name": "My Scheduled Query",
+    "description": "A sample scheduled query."
+  },
+  "schedule": {
+      "schedule": "30 * * * *",
+      "startDate": "2021-09-07T12:00:00Z"
+  }
+}
+```
+
+This payload can be provided in a file, e.g. `schedule.json` in the folder `examples/create`:
+
+```terminal
+aepctl create schedule examples/create/schedule.json
+```
+
+If no file name is provided then aepctl reads from the standard input stdin,
+hence heredoc is supported, too:
+
+```terminal
+aepctl create schedule << EOF
+{
+  "query": {
+    "dbName": "myorg:all",
+    "sql": "SELECT * FROM callcenter_interaction_analysis LIMIT 5;",
+    "name": "My Scheduled Query",
+    "description": "A sample scheduled query."
+  },
+  "schedule": {
+      "schedule": "30 * * * *",
+      "startDate": "2021-09-07T12:00:00Z"
+  }
+}
+```
+
+In case of no errors the command returns without any output. Use the flag
+`--response` to show the response from the server.
+
+It is also possible to create multiple queries with one call:
+
+```terminal
+aepctl create query query1.json query2.json last_query.json
+```
+
+Use the flag `--ignore` to skip over errors during the execution. Otherwise,
+aepctl would stop the execution in the case of the first error.
+
+# Delete Query
+
+The `delete query` command deletes one or more queries. This is a soft delete
+and the `ls queries --exclude-deleted=false` can be used to show deleted
+queries.
+
+```terminal
+aepctl delete query 17cc37a7-015f-4e5e-9b3b-787b9d90a050 12fec78c-eff3-4266-a106-e02dde48aa1c
+```
+
+In case of no errors the command returns without any output. Use the flag
+`--response` to show the response from the server.
+
+```terminal
+aepctl delete query 17cc37a7-015f-4e5e-9b3b-787b9d90a050 12fec78c-eff3-4266-a106-e02dde48aa1c --response
+```
+The command should return something like:
+```terminal
+{
+  "message": "Query soft delete successful.",
+  "statusCode": 200
+}
+{
+  "message": "Query soft delete successful.",
+  "statusCode": 200
+}
+```
+If you pass multiple query IDs and an error occurs then the command will stop
+the execution. Use the flag `--ignore` to execute the command for all IDs
+ignoring any errors.
+
+# Delete Scheduled Query
+
+The `delete schedule` command deletes one or more scheduled queries.
+
+```terminal
+aepctl delete schedule 907075e95bf479ec0a495c73_68b9c64d-0dde-4db5-b9c6-4d0ddebdb5a7_my_scheduled_querywvo1ozznm5_bsngzg
+```
+
+In case of no errors the command returns without any output. Use the flag
+`--response` to show the response from the server.
+
+If you pass multiple query IDs and an error occurs then the command will stop
+the execution. Use the flag `--ignore` to execute the command for all IDs
+ignoring any errors.
 
 # Get Connection
 
@@ -52,6 +288,96 @@ See [Output](output.md) for other output formats.
 The command `aepctl psql` uses this information to start the `psql` client for
 you, see section [PSQL](#PSQL) for more information.
 
+# Get Query
+
+The `get query` command returns the status of the query with the passed ID:
+
+```terminal
+aepctl get query 87907703-b1fe-4e41-be6e-8f017bdd6eeb
+```
+
+The default view shows a table with the columns ID, NAME, STATE and LAST MODIFIED:
+
+```terminal
+ID                                   NAME         STATE   LAST MODIFIED
+87907703-b1fe-4e41-be6e-8f017bdd6eeb First Call   SUCCESS 30 Sep 21 06:16 CEST
+```
+
+The flag `-o wide` adds the column SQL:
+
+```terminal
+ID                                   NAME          LAST MODIFIED       SQL
+87907703-b1fe-4e41-be6e-8f017bdd6eeb First Call    11 Dec 20 18:30 CET SHOW TABLES;
+```
+
+See [Output](output.md) for other output formats.
+
+# Get Query Template
+
+The `get template` command returns the query-template with the passed ID:
+
+```terminal
+aepctl get template ab1f5dda-3e7c-4383-b670-593e6abe885b
+```
+
+The default view shows a table with the columns ID, NAME, STATE and LAST MODIFIED:
+
+```terminal
+ID                                   NAME        STATE   LAST MODIFIED
+a9941df4-be98-417a-ae9f-5ad8ad2d3c45 My Example  SUCCESS 30 Sep 21 06:16 CEST
+```
+
+The flag `-o wide` adds the column SQL:
+
+```terminal
+ID                                   NAME        STATE   LAST MODIFIED         SQL
+a9941df4-be98-417a-ae9f-5ad8ad2d3c45 My Example  SUCCESS 30 Sep 21 06:16 CEST  SHOW TABLES;
+```
+
+See [Output](output.md) for other output formats.
+
+# Get Scheduled Query
+
+The `get schedule` command returns the status of the scheduled query with the passed ID:
+
+```terminal
+aepctl get schedule 907075e95bf479ec0a495c73_68b9c64d-0dde-4db5-b9c6-4d0ddebdb5a7_my_scheduled_querywvo1ozznm5_bsngzg
+```
+
+The default view shows a table with the columns ID, NAME, STATE and LAST MODIFIED:
+
+```terminal
+ID                                                                                                             NAME                            STATE   LAST MODIFIED
+907075e95bf479ec0a495c73_68b9c64d-0dde-4db5-b9c6-4d0ddebdb5a7_my_scheduled_querywvo1ozznm5_bsngzg My Scheduled Query ENABLED 07 Sep 21 11:48 CEST
+```
+
+The flag `-o wide` adds the columns SCHEDULE, START DATE and SQL:
+
+```terminal
+907075e95bf479ec0a495c73_68b9c64d-0dde-4db5-b9c6-4d0ddebdb5a7_my_scheduled_querywvo1ozznm5_bsngzg My Scheduled Query ENABLED 07 Sep 21 11:48 CEST 30 * * * * 2021-09-08T12:00:00.000Z SELECT * FROM callcenter_interaction_analysis LIMIT 5;
+```
+
+See [Output](output.md) for other output formats.
+
+# Get Scheduled Query Run
+
+The `get rund` command returns the status of the scheduled query run with the
+passed IDs for the scheduled query (first argument) and the run (second argument):
+
+```terminal
+aepctl get schedule 907075e95bf479ec0a495c73_68b9c64d-0dde-4db5-b9c6-4d0ddebdb5a7_my_scheduled_querywvo1ozznm5_bsngzg c2NoZWR1bGVkX18yMDIxLTA5LTEwVDExOjMwOjAwKzAwOjAw
+```
+
+The default view shows a table with the columns TASK ID, STATE, MESSAGE,
+DURATION, START DATE, END DATE:
+
+```terminal
+TASK ID    STATE  MESSAGE           DURATION START DATE           END DATE
+wvo1oZzNm5 FAILED Processing Failed 370      10 Sep 21 14:53 CEST 10 Sep 21 14:59 CEST
+```
+
+See [Output](output.md) for other output formats.
+
 # List Queries
 
 The `ls queries` command returns a list of all queries:
@@ -60,7 +386,7 @@ The `ls queries` command returns a list of all queries:
 aepctl ls queries
 ```
 
-The default view shows a table with the columns ID, NAME and LAST MODIFIED
+The default view shows a table with the columns ID, NAME and LAST MODIFIED:
 
 ```terminal
 ID                                   NAME                 LAST MODIFIED
@@ -146,6 +472,110 @@ Other flags to control the number of results:
   doesn't have to be set).
 * `--exclude-hidden=false` to show system generated queries (`true` is default
   and doesn't have to be set).
+
+See [Output](output.md) for other output formats.
+
+# List Query Templates
+
+The `ls templates` command returns a list of all query templates:
+
+```terminal
+aepctl ls templates
+```
+
+The default view shows a table with the columns ID, NAME and LAST MODIFIED:
+
+```terminal
+ID                                   NAME                                                          LAST MODIFIED
+179a0264-9946-4bf2-af40-231a55cc6d46 Target Audience                                               05 Oct 21 19:02 CEST
+ac1f5dda-3e7c-4283-b670-593e6abe885b High Intent Shoppers                                          20 Sep 21 22:40 CEST
+97336c6d-d9e4-38d7-9452-ce479d633e12 Test Group                                                    06 Sep 21 14:01 CEST
+…
+```
+
+The flag `-o wide` adds the column SQL:
+
+```terminal
+ID                                   NAME                                                          LAST MODIFIED    SQL
+179a0264-9946-4bf2-af40-231a55cc6d46 Target Audience                                               05 Oct 21 19:02 CEST  SHOW TABLES;
+ac1f5dda-3e7c-4283-b670-593e6abe885b High Intent Shoppers                                          20 Sep 21 22:40 CEST  SELECT * FROM hight_intent_shoppers WHERE value > 1000;
+97336c6d-d9e4-38d7-9452-ce479d633e12 Test Group                                                    06 Sep 21 14:01 CEST  SELECT * FROM test_group;
+…
+```
+
+The number of results can be reduced by the flag `--filter` with comma separated
+definitions:
+
+Supported properties:
+
+* created (with operators `>` greater than and `<` less than)
+* lastUpdatedBy (with operator `==`)
+* name (with operator `==` equal to and `~` contains)
+* userId (with operator `==`)
+
+See [Output](output.md) for other output formats.
+
+# List Scheduled Queries
+
+The `ls schedules` command returns a list of all queries:
+
+```terminal
+aepctl ls schedules
+```
+
+The default view shows a table with the columns ID, NAME, STATE and LAST MODIFIED:
+
+```terminal
+ID                                                                                                             NAME                            STATE   LAST MODIFIED
+907075e95bf479ec0a495c73_68b9c64d-0dde-4db5-b9c6-4d0ddebdb5a7_my_scheduled_querywvo1ozznm5_bsngzg My Scheduled Query ENABLED 07 Sep 21 11:48 CEST
+907075e95bf479ec0a495c73_68b9c64d-0dde-4db5-b9c6-4d0ddebdb5a7_my_scheduled_queryigvl8ysbd3_tf6vgf My Scheduled Query ENABLED 07 Sep 21 13:21 CEST
+…
+```
+
+The flag `-o wide` adds the columns SCHEDULE, START DATE and SQL:
+
+```terminal
+907075e95bf479ec0a495c73_68b9c64d-0dde-4db5-b9c6-4d0ddebdb5a7_my_scheduled_querywvo1ozznm5_bsngzg My Scheduled Query ENABLED 07 Sep 21 11:48 CEST 30 * * * * 2021-09-08T12:00:00.000Z SELECT * FROM callcenter_interaction_analysis LIMIT 5;
+907075e95bf479ec0a495c73_68b9c64d-0dde-4db5-b9c6-4d0ddebdb5a7_my_scheduled_queryigvl8ysbd3_tf6vgf My Scheduled Query ENABLED 07 Sep 21 13:21 CEST 30 * * * * 2021-09-07T12:00:00.000Z SELECT * FROM store_interaction_analysis LIMIT 5;
+```
+
+The number of results can be reduced by the flag `--filter` with comma separated
+definitions:
+
+Supported properties:
+
+* created (with operators `>` greater than and `<` less than)
+* templateId (with operator `==`)
+* userId (with operator `==`)
+
+See [Output](output.md) for other output formats.
+
+# List Scheduled Query Runs
+
+The `ls runs` command returns a list of all runs for a scheduled query:
+
+```terminal
+aepctl ls runs 
+```
+
+The default view shows a table with the columns ID, STATE and CREATED:
+
+```terminal
+ID                                               STATE   CREATED
+c2NoZWR1bGVkX18yMDIxLTA5LTA4VDExOjMwOjAwKzAwOjAw SUCCESS 08 Sep 21 13:30 CEST
+c2NoZWR1bGVkX18yMDIxLTA5LTA4VDEyOjMwOjAwKzAwOjAw FAILED  08 Sep 21 14:30 CEST
+c2NoZWR1bGVkX18yMDIxLTA5LTA4VDEzOjMwOjAwKzAwOjAw FAILED  08 Sep 21 15:30 CEST
+…
+```
+
+The number of results can be reduced by the flag `--filter` with comma separated
+definitions:
+
+Supported properties:
+
+* created (with operators `>` greater than and `<` less than)
+* state (with operators `==` equal to and `!=` not equal to)
+* externalTrigger (with operator `==`)
 
 See [Output](output.md) for other output formats.
 

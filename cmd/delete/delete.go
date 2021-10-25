@@ -49,11 +49,15 @@ func NewCommand(conf *helper.Configuration) *cobra.Command {
 	cmd.AddCommand(NewDeleteDataTypeCommand(conf))
 	cmd.AddCommand(NewDeleteDescriptorCommand(conf))
 	cmd.AddCommand(NewDeleteFieldGroupCommand(conf))
+	cmd.AddCommand(NewDeleteQueryCommand(conf))
+	cmd.AddCommand(NewDeleteScheduledQueryCommand(conf))
+	cmd.AddCommand(NewDeleteQueryTemplateCommand(conf))
 	cmd.AddCommand(NewDeleteSchemaCommand(conf))
 	return cmd
 }
 
 func NewDeleteCommand(conf *helper.Configuration, f api.FuncID, use, short, long, example string, aliases ...string) *cobra.Command {
+	var response, ignore bool
 	cmd := &cobra.Command{
 		Use:     use,
 		Short:   short,
@@ -63,10 +67,23 @@ func NewDeleteCommand(conf *helper.Configuration, f api.FuncID, use, short, long
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErr(conf.Validate(cmd))
 			ctx := context.Background()
+			var err error
 			for _, id := range args {
-				helper.CheckErr(api.DropResponse(f(ctx, conf.Authentication, id)))
+				if response {
+					err = api.PrintResponse(f(ctx, conf.Authentication, id))
+				} else {
+					err = api.DropResponse(f(ctx, conf.Authentication, id))
+				}
+				if ignore {
+					helper.CheckErrInfo(err)
+				} else {
+					helper.CheckErr(err)
+				}
 			}
 		},
 	}
+	flags := cmd.Flags()
+	flags.BoolVar(&response, "response", false, "Print out response")
+	flags.BoolVar(&ignore, "ignore", false, "Ignore errors (for multiple arguments)")
 	return cmd
 }

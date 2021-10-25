@@ -51,6 +51,7 @@ func NewCommand(conf *helper.Configuration) *cobra.Command {
 	cmd.AddCommand(NewFieldGroupCommand(conf))
 	cmd.AddCommand(NewSchemaCommand(conf))
 	cmd.AddCommand(NewNamespaceCommand(conf))
+	cmd.AddCommand(NewQueryTemplateCommand(conf))
 	return cmd
 }
 

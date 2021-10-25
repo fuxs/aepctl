@@ -1,0 +1,12 @@
+{
+    "query": {
+        "dbName": "aepenablementfy21:all",
+        "sql": "SELECT * FROM peiselt_callcenter_interaction_analysis LIMIT 5;",
+        "name": "mbungens Sample Scheduled Query",
+        "description": "A sample of a scheduled query."
+    }, 
+    "schedule": {
+        "schedule": "30 * * * *",
+        "startDate": "2021-09-07T12:00:00Z"
+    }
+}

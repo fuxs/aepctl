@@ -1,0 +1,9 @@
+{
+    "sql": "SELECT $key from $key1 where $key > $key2;",
+    "queryParameters": {
+        "key": "value",
+        "key1": "value1",
+        "key2": "value2"
+    },
+    "name": "My query template"
+}

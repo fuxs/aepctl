@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"github.com/fuxs/aepctl/cmd/audit"
+	"github.com/fuxs/aepctl/cmd/cancel"
 	"github.com/fuxs/aepctl/cmd/completion"
 	"github.com/fuxs/aepctl/cmd/configure"
 	"github.com/fuxs/aepctl/cmd/create"
@@ -58,6 +59,7 @@ func NewCommand() *cobra.Command {
 	}
 	gcfg := util.NewRootConfig("aepctl", Version, cmd)
 	conf := helper.NewConfiguration(gcfg)
+	cmd.AddCommand(cancel.NewCommand(conf))
 	cmd.AddCommand(create.NewCommand(conf))
 	cmd.AddCommand(get.NewCommand(conf))
 	cmd.AddCommand(delete.NewCommand(conf))

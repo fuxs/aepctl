@@ -1,5 +1,5 @@
 /*
-Package create is the base for all create commands.
+Package cancel is the base for all cancel commands.
 
 Copyright 2021 Michael Bungenstock
 
@@ -14,7 +14,7 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 */
-package create
+package cancel
 
 import (
 	"context"
@@ -38,58 +38,39 @@ var (
 // NewCommand creates an initialized command object
 func NewCommand(conf *helper.Configuration) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:                   "create",
-		Short:                 "Create a resource",
+		Use:                   "cancel",
+		Short:                 "Cancel one or many tasks",
 		Long:                  longDesc,
 		DisableFlagsInUseLine: true,
 	}
 	conf.AddAuthenticationFlags(cmd)
-	cmd.AddCommand(NewODCommand(conf))
-	cmd.AddCommand(NewCatalogCommand(conf))
-	cmd.AddCommand(NewNamespaceCommand(conf))
-	cmd.AddCommand(NewClassCommand(conf))
-	cmd.AddCommand(NewDataTypeCommand(conf))
-	cmd.AddCommand(NewDescriptorCommand(conf))
-	cmd.AddCommand(NewFieldGroupCommand(conf))
-	cmd.AddCommand(NewQueryCommand(conf))
-	cmd.AddCommand(NewQueryTemplateCommand(conf))
-	cmd.AddCommand(NewScheduleCommand(conf))
-	cmd.AddCommand(NewSchemaCommand(conf))
+	cmd.AddCommand(NewCancelQueryCommand(conf))
 	return cmd
 }
 
-// NewCreateCommand creates an initialized command object
-func NewCreateCommand(conf *helper.Configuration, f api.FuncPost, use, short, long, example string, aliases ...string) *cobra.Command {
+func NewCancelCommand(conf *helper.Configuration, f api.FuncID, use, short, long, example string, aliases ...string) *cobra.Command {
 	var response, ignore bool
 	cmd := &cobra.Command{
-		Use:                   use,
-		Aliases:               aliases,
-		Short:                 short,
-		Long:                  long,
-		Example:               example,
-		DisableFlagsInUseLine: true,
+		Use:     use,
+		Short:   short,
+		Long:    long,
+		Example: example,
+		Aliases: aliases,
 		Run: func(cmd *cobra.Command, args []string) {
 			helper.CheckErr(conf.Validate(cmd))
 			ctx := context.Background()
-			fr := util.MultiFileReader{Files: args}
-			if response {
-				helper.CheckErr(fr.ReadAll(func(data []byte) error {
-					err := api.PrintResponse(f(ctx, conf.Authentication, data))
-					if ignore {
-						helper.CheckErrInfo(err)
-						return nil
-					}
-					return err
-				}))
-			} else {
-				helper.CheckErr(fr.ReadAll(func(data []byte) error {
-					err := api.DropResponse(f(ctx, conf.Authentication, data))
-					if ignore {
-						helper.CheckErrInfo(err)
-						return nil
-					}
-					return err
-				}))
+			var err error
+			for _, id := range args {
+				if response {
+					err = api.PrintResponse(f(ctx, conf.Authentication, id))
+				} else {
+					err = api.DropResponse(f(ctx, conf.Authentication, id))
+				}
+				if ignore {
+					helper.CheckErrInfo(err)
+				} else {
+					helper.CheckErr(err)
+				}
 			}
 		},
 	}

@@ -331,7 +331,6 @@ func SRImportStream(ctx context.Context, a *AuthenticationConfig, r io.Reader) (
 }
 
 func srDelete(ctx context.Context, a *AuthenticationConfig, resource, id string) (*http.Response, error) {
-	url.PathEscape(resource)
 	return a.DeleteRequestRaw(ctx,
 		"https://platform.adobe.io/data/foundation/schemaregistry/tenant/%s/%s",
 		url.PathEscape(resource),
