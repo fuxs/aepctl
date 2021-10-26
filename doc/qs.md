@@ -22,12 +22,25 @@ aepctl ls namespaces
 
 The following verbs are supported by Query Service:
 
-* `cancel` ([Cancel Query](#Cancel-Query))
-* `create` ([Create Query](#Create-Query), [Create Query Template](#Create-Query-Template) and [Create Scheduled Query](#Create-Scheduled-Query))
-* `delete` ([Delete Query](#Delete-Query))
-* `get` ([Get Connection](#Get-Connection), [Get Query](#Get-Query), [Get Query Template](#Get-Query-Template) and [Get Scheduled Query](#Get-Scheduled-Query))
-* `ls` or `list` ([List Queries](#List-Queries), [List Scheduled Queries](#List-Scheduled-Queries) and [List Scheduled Query Runs](#List-Scheduled-Query-Runs))
+* `cancel` ([Cancel Query](#Cancel-Query) and [Cancel Scheduled Query
+  Run](#Cancel-Scheduled-Query-Run))
+* `create` ([Create Query](#Create-Query), [Create Query
+  Template](#Create-Query-Template) and [Create Scheduled
+  Query](#Create-Scheduled-Query))
+* `delete` ([Delete Query](#Delete-Query), [Delete Query
+  Template](#Delete-Query-Template) and [Delete Scheduled
+  Query](#Delete-Scheduled-Query))
+* `get` ([Get Connection](#Get-Connection), [Get Query](#Get-Query), [Get Query
+  Template](#Get-Query-Template), [Get Scheduled Query](#Get-Scheduled-Query)
+  and [Get Scheduled Query Run](#Get-Scheduled-Query-Run))
+* `ls` or `list` ([List Queries](#List-Queries), [List Query
+  Templates](#List-Query-Templates), [List Scheduled
+  Queries](#List-Scheduled-Queries) and [List Scheduled Query
+  Runs](#List-Scheduled-Query-Runs))
 * `psql` ([PSQL](#PSQL))
+* `trigger` ([Trigger Scheduled Query Run](#Trigger-Scheduled-Query-Run))
+* `update` ([Update Query Template](#Update-Query-Template) and [Update
+  Scheduled Query](#Update-Scheduled-Query))
 
 # Cancel Query
 
@@ -55,9 +68,24 @@ The command should return something like:
   "statusCode": 202
 }
 ```
+
 If you pass multiple query IDs and an error occurs then the command will stop
 the execution. Use the flag `--ignore` to execute the command for all IDs
 ignoring any errors.
+
+# Cancel Scheduled Query Run
+
+The `cancel run` command cancels a specific run of a scheduled query. It
+requires the ID of the scheduled query (e.g. list scheduled queries with `aepctl
+ls schedules`) and the ID of the run (e.g. list runs with `aepctl ls runs
+SCHEDULED_QUERY_ID`).
+
+```terminal
+aepctl cancel run 907075e95bf479ec0a495c73_68b9c64d-0dde-4db5-b9c6-4d0ddebdb5a7_my_scheduled_querywvo1ozznm5_bsngzg c2NoZWR1bGVkX18yMDIxLTEwLTI2VDA1OjMwOjAwKzAwOjAw
+```
+
+In case of no errors the command returns without any output. Use the flag
+`--response` to show the response from the server.
 
 # Create Query
 
@@ -94,6 +122,7 @@ aepctl create query << EOF
   "name": "Sample Query",
   "description": "A sample of a query."
 }
+EOF
 ```
 
 In case of no errors the command returns without any output. Use the flag
@@ -145,6 +174,7 @@ aepctl create template << EOF
   },
   "name": "Sample-Template"
 }
+EOF
 ```
 
 In case of no errors the command returns without any output. Use the flag
@@ -202,6 +232,7 @@ aepctl create schedule << EOF
       "startDate": "2021-09-07T12:00:00Z"
   }
 }
+EOF
 ```
 
 In case of no errors the command returns without any output. Use the flag
@@ -247,6 +278,21 @@ If you pass multiple query IDs and an error occurs then the command will stop
 the execution. Use the flag `--ignore` to execute the command for all IDs
 ignoring any errors.
 
+# Delete Query Template
+
+The `delete template` command deletes one or more query templates.
+
+```terminal
+aepctl delete template 169a0264-9946-4cf2-af40-231a55cc6d47 ab1f5dda-3e7c-4383-b670-593e6abe885c
+```
+
+In case of no errors the command returns without any output. Use the flag
+`--response` to show the response from the server.
+
+If you pass multiple query template IDs and an error occurs then the command will stop
+the execution. Use the flag `--ignore` to execute the command for all IDs
+ignoring any errors.
+
 # Delete Scheduled Query
 
 The `delete schedule` command deletes one or more scheduled queries.
@@ -258,8 +304,8 @@ aepctl delete schedule 907075e95bf479ec0a495c73_68b9c64d-0dde-4db5-b9c6-4d0ddebd
 In case of no errors the command returns without any output. Use the flag
 `--response` to show the response from the server.
 
-If you pass multiple query IDs and an error occurs then the command will stop
-the execution. Use the flag `--ignore` to execute the command for all IDs
+If you pass multiple schedules IDs and an error occurs then the command will
+stop the execution. Use the flag `--ignore` to execute the command for all IDs
 ignoring any errors.
 
 # Get Connection
@@ -588,3 +634,86 @@ specific version is required then use the flag `--command=/usr/local/bin/psql`
 
 The flag `--print` just prints the command with all parameters. Use the command
 `aepctl get connection` for a structured output of all parameters.
+
+# Trigger Scheduled Query Run
+
+The command `trigger run` triggers the immediate execution of one or multiple
+scheduled queries.
+
+```terminal
+aepctl trigger run 907075e95bf479ec0a495c73_68b9c64d-0dde-4db5-b9c6-4d0ddebdb5a7_my_scheduled_querywvo1ozznm5_bsngzg
+```
+
+In case of no errors the command returns without any output. Use the flag
+`--response` to show the response from the server.
+
+If you pass multiple scheduled query IDs and an error occurs then the command
+will stop the execution. Use the flag `--ignore` to execute the command for all
+IDs ignoring any errors.
+
+# Update Query Template
+
+The `update` command replaces an existing query template with the passed
+payload, hence all fields have to be provided. See [Create Query
+Template](#Create-Query-Template) for the exact JSON payload.
+
+
+This payload can be provided in a file, e.g. `query-template.json` in the folder
+`examples/update`:
+
+
+```terminal
+aepctl update template --id 169a0264-9946-4cf2-af41-231a55cc6d46 examples/update/query-template.json
+```
+
+In heredoc:
+
+```terminal
+aepctl update template --id 169a0264-9946-4cf2-af41-231a55cc6d46 << EOF
+{
+  "sql": "SELECT $key from $key1 where $key > $key2;",
+  "queryParameters": {
+    "key": "value",
+    "key1": "value1",
+    "key2": "value2"
+  },
+  "name": "My updated query template"
+}
+EOF
+```
+
+In case of no errors the command returns without any output. Use the flag
+`--response` to show the response from the server.
+
+# Update Scheduled Query
+
+The `update` command supports the replacement of selected values. The payload
+body contains an array with JSON objects having the attributes `op` (mandatory
+operator), `path` (optional path to attribute) and the new value `value`
+(optional).
+
+This payload can be provided in a file, e.g. `schedule.json` in the folder
+`examples/update`:
+
+```terminal
+aepctl update schedule --id 907075e95bf479ec0a495c73_68b9c64d-0dde-4db5-b9c6-4d0ddebdb5a7_my_scheduled_querywvo1ozznm5_bsngzg examples/update/schedule.json
+```
+
+In heredoc:
+
+```terminal
+aepctl update schedule --id 907075e95bf479ec0a495c73_68b9c64d-0dde-4db5-b9c6-4d0ddebdb5a7_my_scheduled_querywvo1ozznm5_bsngzg << EOF
+{
+    "body": [
+        {
+            "op": "replace",
+            "path": "/state",
+            "value": "disable"
+        }
+    ]
+}
+EOF
+```
+
+In case of no errors the command returns without any output. Use the flag
+`--response` to show the response from the server.

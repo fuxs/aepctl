@@ -1,5 +1,5 @@
 /*
-Package cancel is the base for all cancel commands.
+Package trigger contains trigger command related functions.
 
 Copyright 2021 Michael Bungenstock
 
@@ -14,12 +14,9 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 */
-package cancel
+package trigger
 
 import (
-	"context"
-
-	"github.com/fuxs/aepctl/api"
 	"github.com/fuxs/aepctl/cmd/helper"
 	"github.com/fuxs/aepctl/util"
 	"github.com/spf13/cobra"
@@ -38,45 +35,12 @@ var (
 // NewCommand creates an initialized command object
 func NewCommand(conf *helper.Configuration) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:                   "cancel",
-		Short:                 "Cancel one or many tasks",
+		Use:                   "trigger",
+		Short:                 "Trigger a resource",
 		Long:                  longDesc,
 		DisableFlagsInUseLine: true,
 	}
 	conf.AddAuthenticationFlags(cmd)
-	cmd.AddCommand(NewCancelQueryCommand(conf))
-	cmd.AddCommand(NewCancelRunCommand(conf))
-	return cmd
-}
-
-func NewCancelCommand(conf *helper.Configuration, f api.FuncID, use, short, long, example string, aliases ...string) *cobra.Command {
-	var response, ignore bool
-	cmd := &cobra.Command{
-		Use:     use,
-		Short:   short,
-		Long:    long,
-		Example: example,
-		Aliases: aliases,
-		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErr(conf.Validate(cmd))
-			ctx := context.Background()
-			var err error
-			for _, id := range args {
-				if response {
-					err = api.PrintResponse(f(ctx, conf.Authentication, id))
-				} else {
-					err = api.DropResponse(f(ctx, conf.Authentication, id))
-				}
-				if ignore {
-					helper.CheckErrInfo(err)
-				} else {
-					helper.CheckErr(err)
-				}
-			}
-		},
-	}
-	flags := cmd.Flags()
-	flags.BoolVar(&response, "response", false, "Print out response")
-	flags.BoolVar(&ignore, "ignore", false, "Ignore errors (for multiple arguments)")
+	cmd.AddCommand(NewTriggerRunCommand(conf))
 	return cmd
 }

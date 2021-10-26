@@ -33,3 +33,15 @@ func NewQueryTemplateCommand(conf *helper.Configuration) *cobra.Command {
 		"templates",
 	)
 }
+
+// NewScheduleCommand creates an initialized command object
+func NewScheduleCommand(conf *helper.Configuration) *cobra.Command {
+	return NewUpdateCommand(conf,
+		api.QSUpdateSchedule,
+		"schedule",
+		"Update a scheduled query (Schema Registry)",
+		"long",
+		"example",
+		"schedules",
+	)
+}

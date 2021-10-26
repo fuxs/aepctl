@@ -317,9 +317,9 @@ aepctl ls namespaces --ims-org 792D3C635C5CDF980A395CB2@AdobeOrg
 
 # Update Namespaces
 
-The `update` command replaces an existing namespace with a new one, hence all
-fields have to be provided. See [Create Namespaces](#create-namespaces) for the
-exact JSON payload.
+The `update` command replaces an existing namespace with the passed payload,
+hence all fields have to be provided. See [Create
+Namespaces](#create-namespaces) for the exact JSON payload.
 
 
 This payload can be provided in a file, e.g. `namespace.json` in the folder

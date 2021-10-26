@@ -119,6 +119,17 @@ func QSGetSchedule(ctx context.Context, a *AuthenticationConfig, id string) (*ht
 	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/schedules/%s", url.PathEscape(id))
 }
 
+func QSUpdateSchedule(ctx context.Context, a *AuthenticationConfig, id string, payload []byte) (*http.Response, error) {
+	header := map[string]string{
+		"Content-Type": "application/json",
+	}
+	return a.PatchRequestRaw(ctx,
+		header,
+		payload,
+		"https://platform.adobe.io/data/foundation/query/schedules/%s",
+		url.PathEscape(id))
+}
+
 // QSGetRun returns the details of a scheduled query run by id
 func QSGetRun(ctx context.Context, a *AuthenticationConfig, scheduleId, runId string) (*http.Response, error) {
 	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/schedules/%s/runs/%s", url.PathEscape(scheduleId), url.PathEscape(runId))
@@ -127,6 +138,19 @@ func QSGetRun(ctx context.Context, a *AuthenticationConfig, scheduleId, runId st
 // QSListRunsP calls the query service to list runs for a
 func QSListRunsP(ctx context.Context, a *AuthenticationConfig, p *Request) (*http.Response, error) {
 	return a.GetRequestRaw(ctx, "https://platform.adobe.io/data/foundation/query/schedules/%s/runs%s", p.GetValuePath("id"), p.EncodedQuery())
+}
+
+func QSCancelRun(ctx context.Context, a *AuthenticationConfig, scheduleId, runId string) (*http.Response, error) {
+	body := `{"op": "cancel"}`
+	header := map[string]string{
+		"Content-Type": "application/json",
+	}
+	return a.PatchRequestRaw(ctx, header, []byte(body), "https://platform.adobe.io/data/foundation/query/schedules/%s/runs/%s", url.PathEscape(scheduleId), url.PathEscape(runId))
+}
+
+// QSTriggerRun triggers an immediate scheduled trigger run
+func QSTriggerRun(ctx context.Context, a *AuthenticationConfig, scheduleId string) (*http.Response, error) {
+	return a.PostRequestRaw(ctx, nil, nil, "https://platform.adobe.io/data/foundation/query/schedules/%s/runs", url.PathEscape(scheduleId))
 }
 
 // QSGetTemplate returns the details of a query template by id

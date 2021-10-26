@@ -1,5 +1,5 @@
 /*
-Package delete is the base for all delete commands.
+Package trigger contains trigger command related functions.
 
 Copyright 2021 Michael Bungenstock
 
@@ -14,7 +14,7 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 */
-package cancel
+package trigger
 
 import (
 	"context"
@@ -24,37 +24,35 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewCancelQueryCommand creates an initialized command object
-func NewCancelQueryCommand(conf *helper.Configuration) *cobra.Command {
-	return NewCancelCommand(conf,
-		api.QSCancelQuery,
-		"query",
-		"Cancel a query (Query Service)",
-		"long",
-		"example",
-		"classes")
-}
-
 // NewCancelRunCommand creates an initialized command object
-func NewCancelRunCommand(conf *helper.Configuration) *cobra.Command {
-	var response bool
+func NewTriggerRunCommand(conf *helper.Configuration) *cobra.Command {
+	var response, ignore bool
 	cmd := &cobra.Command{
-		Use:                   "run scheduleId runId",
-		Short:                 "Cancel scheduled query run (Query Service)",
+		Use:                   "run scheduleId",
+		Short:                 "Triggers an immediate scheduled query run (Query Service)",
 		Long:                  "long",
 		Example:               "example",
 		DisableFlagsInUseLine: true,
-		Args:                  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			helper.CheckErrs(conf.Validate(cmd))
-			if response {
-				helper.CheckErr(api.PrintResponse(api.QSCancelRun(context.Background(), conf.Authentication, args[0], args[1])))
-			} else {
-				helper.CheckErr(api.DropResponse(api.QSCancelRun(context.Background(), conf.Authentication, args[0], args[1])))
+			helper.CheckErr(conf.Validate(cmd))
+			ctx := context.Background()
+			var err error
+			for _, id := range args {
+				if response {
+					err = api.PrintResponse(api.QSTriggerRun(ctx, conf.Authentication, id))
+				} else {
+					err = api.DropResponse(api.QSTriggerRun(ctx, conf.Authentication, id))
+				}
+				if ignore {
+					helper.CheckErrInfo(err)
+				} else {
+					helper.CheckErr(err)
+				}
 			}
 		},
 	}
 	flags := cmd.Flags()
 	flags.BoolVar(&response, "response", false, "Print out response")
+	flags.BoolVar(&ignore, "ignore", false, "Ignore errors (for multiple arguments)")
 	return cmd
 }

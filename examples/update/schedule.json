@@ -1,0 +1,9 @@
+{
+    "body": [
+        {
+            "op": "replace",
+            "path": "/state",
+            "value": "disable"
+        }
+    ]
+}
