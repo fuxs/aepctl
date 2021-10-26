@@ -449,12 +449,12 @@ ID                                   NAME          LAST MODIFIED       SQL
 87907703-b1fe-4e41-be6e-8f017bdd6eeb First Call    11 Dec 20 18:30 CET show tables
 78764d94-c458-438a-8326-21f80d43f248 Get Events    11 Dec 20 18:31 CET select * from demo_system_event_dataset_for_website_global_v1_1
 0a105db0-283b-4dc9-80ad-6b3936134ee1 -             11 Dec 20 18:31 CET select date_format( timestamp , 'yyyy-MM-dd') AS Day,
-                                                                     count(*) AS productViews
-                                                              from   website_events
-                                                              where  _experienceplatform.demoEnvironment.category IN ('Wurstwaren', 'Eisenwaren')
-                                                              and    _eventType = 'productView'
-                                                              group by Day
-                                                              limit 10
+                                                                       count(*) AS productViews
+                                                                       from   website_events
+                                                                       where  _experienceplatform.demoEnvironment.category IN ('Wurstwaren', 'Eisenwaren')
+                                                                       and    _eventType = 'productView'
+                                                                       group by Day
+                                                                       limit 10
 ```
 
 The number of results can be very high. The command uses paging, by default each
@@ -532,20 +532,20 @@ aepctl ls templates
 The default view shows a table with the columns ID, NAME and LAST MODIFIED:
 
 ```terminal
-ID                                   NAME                                                          LAST MODIFIED
-179a0264-9946-4bf2-af40-231a55cc6d46 Target Audience                                               05 Oct 21 19:02 CEST
-ac1f5dda-3e7c-4283-b670-593e6abe885b High Intent Shoppers                                          20 Sep 21 22:40 CEST
-97336c6d-d9e4-38d7-9452-ce479d633e12 Test Group                                                    06 Sep 21 14:01 CEST
+ID                                   NAME                  LAST MODIFIED
+179a0264-9946-4bf2-af40-231a55cc6d46 Target Audience       05 Oct 21 19:02 CEST
+ac1f5dda-3e7c-4283-b670-593e6abe885b High Intent Shoppers  20 Sep 21 22:40 CEST
+97336c6d-d9e4-38d7-9452-ce479d633e12 Test Group            06 Sep 21 14:01 CEST
 …
 ```
 
 The flag `-o wide` adds the column SQL:
 
 ```terminal
-ID                                   NAME                                                          LAST MODIFIED    SQL
-179a0264-9946-4bf2-af40-231a55cc6d46 Target Audience                                               05 Oct 21 19:02 CEST  SHOW TABLES;
-ac1f5dda-3e7c-4283-b670-593e6abe885b High Intent Shoppers                                          20 Sep 21 22:40 CEST  SELECT * FROM hight_intent_shoppers WHERE value > 1000;
-97336c6d-d9e4-38d7-9452-ce479d633e12 Test Group                                                    06 Sep 21 14:01 CEST  SELECT * FROM test_group;
+ID                                   NAME                  LAST MODIFIED    SQL
+179a0264-9946-4bf2-af40-231a55cc6d46 Target Audience       05 Oct 21 19:02 CEST  SHOW TABLES;
+ac1f5dda-3e7c-4283-b670-593e6abe885b High Intent Shoppers  20 Sep 21 22:40 CEST  SELECT * FROM hight_intent_shoppers WHERE value > 1000;
+97336c6d-d9e4-38d7-9452-ce479d633e12 Test Group            06 Sep 21 14:01 CEST  SELECT * FROM test_group;
 …
 ```
 
@@ -572,7 +572,7 @@ aepctl ls schedules
 The default view shows a table with the columns ID, NAME, STATE and LAST MODIFIED:
 
 ```terminal
-ID                                                                                                             NAME                            STATE   LAST MODIFIED
+ID                                                                                                NAME               STATE   LAST MODIFIED
 907075e95bf479ec0a495c73_68b9c64d-0dde-4db5-b9c6-4d0ddebdb5a7_my_scheduled_querywvo1ozznm5_bsngzg My Scheduled Query ENABLED 07 Sep 21 11:48 CEST
 907075e95bf479ec0a495c73_68b9c64d-0dde-4db5-b9c6-4d0ddebdb5a7_my_scheduled_queryigvl8ysbd3_tf6vgf My Scheduled Query ENABLED 07 Sep 21 13:21 CEST
 …
